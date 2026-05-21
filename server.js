@@ -1,4 +1,4 @@
-const http = require("http");
+ï»¿const http = require("http");
 const fs = require("fs");
 const fsp = require("fs/promises");
 const path = require("path");
@@ -33,7 +33,7 @@ const SESSION_SECRET_FILE = path.join(DATA_DIR, "session-secret");
 const BACKUP_DIR = path.join(DATA_DIR, "backups");
 const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_BYTES || 20 * 1024 * 1024);
 const THUMB_WIDTH = Number(process.env.THUMB_WIDTH || 900);
-const DEFAULT_ALBUM = "Ä¬ÈÏÏà²á";
+const DEFAULT_ALBUM = "é»˜è®¤ç›¸å†Œ";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const WORK_LOGIN_USER = process.env.WORK_LOGIN_USER || "xx";
 const WORK_LOGIN_PASS = requiredEnv("WORK_LOGIN_PASS");
@@ -52,7 +52,7 @@ const SMTP_CONFIG = {
 };
 const WEATHER_CONFIG = {
   enabled: String(process.env.WEATHER_ENABLED || "true") !== "false",
-  location: process.env.WEATHER_LOCATION || "Ì«Ô­Àí¹¤´óÑ§»¢ÓøĞ£Çø",
+  location: process.env.WEATHER_LOCATION || "å¤ªåŸç†å·¥å¤§å­¦è™å³ªæ ¡åŒº",
   latitude: Number(process.env.WEATHER_LAT || 37.85261),
   longitude: Number(process.env.WEATHER_LON || 112.51659),
   timezone: process.env.WEATHER_TIMEZONE || "Asia/Shanghai"
@@ -74,51 +74,51 @@ const allowedTypes = new Map([
 ]);
 
 const BUILTIN_RESULT_METRICS = [
-  { id: "compressionStrength", label: "¿¹Ñ¹Ç¿¶È", placeholder: "Àı£º36.8MPa" },
-  { id: "flexuralStrength", label: "¿¹ÕÛÇ¿¶È", placeholder: "Àı£º5.2MPa" },
-  { id: "splitTensileStrength", label: "ÅüÁÑ¿¹À­Ç¿¶È", placeholder: "Àı£º3.4MPa" },
-  { id: "elasticModulus", label: "µ¯ĞÔÄ£Á¿", placeholder: "Àı£º32.5GPa" },
-  { id: "impermeability", label: "¿¹ÉøµÈ¼¶", placeholder: "Àı£ºP8" },
-  { id: "mass", label: "ÊÔ¼şÖØÁ¿", placeholder: "Àı£º8.2kg" },
-  { id: "failureMode", label: "ÆÆ»µĞÎÌ¬", placeholder: "Àı£ºÕı³£ÆÆ»µ" }
+  { id: "compressionStrength", label: "æŠ—å‹å¼ºåº¦", placeholder: "ä¾‹ï¼š36.8MPa" },
+  { id: "flexuralStrength", label: "æŠ—æŠ˜å¼ºåº¦", placeholder: "ä¾‹ï¼š5.2MPa" },
+  { id: "splitTensileStrength", label: "åŠˆè£‚æŠ—æ‹‰å¼ºåº¦", placeholder: "ä¾‹ï¼š3.4MPa" },
+  { id: "elasticModulus", label: "å¼¹æ€§æ¨¡é‡", placeholder: "ä¾‹ï¼š32.5GPa" },
+  { id: "impermeability", label: "æŠ—æ¸—ç­‰çº§", placeholder: "ä¾‹ï¼šP8" },
+  { id: "mass", label: "è¯•ä»¶é‡é‡", placeholder: "ä¾‹ï¼š8.2kg" },
+  { id: "failureMode", label: "ç ´åå½¢æ€", placeholder: "ä¾‹ï¼šæ­£å¸¸ç ´å" }
 ];
 const DEFAULT_RESULT_METRIC_IDS = ["compressionStrength"];
 
 const BUILTIN_RECIPE_MATERIALS = [
-  { id: "cement", label: "¹èËáÑÎË®Äà", category: "binder", placeholder: "Àı£º1485g" },
-  { id: "flyAsh", label: "·ÛÃº»Ò", category: "binder", placeholder: "Àı£º50g" },
-  { id: "mineralPowder", label: "¿ó·Û", category: "binder", placeholder: "Àı£º30g" },
-  { id: "silicaFume", label: "¹è»Ò", category: "binder", placeholder: "Àı£º20g" },
-  { id: "admixture", label: "Íâ¼Ó¼Á", category: "admixture", placeholder: "Àı£º6.2g" },
-  { id: "expansiveAgent", label: "ÅòÕÍ¼Á", category: "admixture", placeholder: "Àı£º8g" },
-  { id: "accelerator", label: "ËÙÄı¼Á", category: "admixture", placeholder: "Àı£º4g" },
-  { id: "fiber", label: "ÏËÎ¬", category: "admixture", placeholder: "Àı£º0.9g" },
-  { id: "sand", label: "É°", category: "aggregate", placeholder: "Àı£º760g" },
-  { id: "stone", label: "Ê¯×Ó", category: "aggregate", placeholder: "Àı£º1080g" },
-  { id: "water", label: "Ë®", category: "water", placeholder: "Àı£º165g" }
+  { id: "cement", label: "ç¡…é…¸ç›æ°´æ³¥", category: "binder", placeholder: "ä¾‹ï¼š1485g" },
+  { id: "flyAsh", label: "ç²‰ç…¤ç°", category: "binder", placeholder: "ä¾‹ï¼š50g" },
+  { id: "mineralPowder", label: "çŸ¿ç²‰", category: "binder", placeholder: "ä¾‹ï¼š30g" },
+  { id: "silicaFume", label: "ç¡…ç°", category: "binder", placeholder: "ä¾‹ï¼š20g" },
+  { id: "admixture", label: "å¤–åŠ å‰‚", category: "admixture", placeholder: "ä¾‹ï¼š6.2g" },
+  { id: "expansiveAgent", label: "è†¨èƒ€å‰‚", category: "admixture", placeholder: "ä¾‹ï¼š8g" },
+  { id: "accelerator", label: "é€Ÿå‡å‰‚", category: "admixture", placeholder: "ä¾‹ï¼š4g" },
+  { id: "fiber", label: "çº¤ç»´", category: "admixture", placeholder: "ä¾‹ï¼š0.9g" },
+  { id: "sand", label: "ç ‚", category: "aggregate", placeholder: "ä¾‹ï¼š760g" },
+  { id: "stone", label: "çŸ³å­", category: "aggregate", placeholder: "ä¾‹ï¼š1080g" },
+  { id: "water", label: "æ°´", category: "water", placeholder: "ä¾‹ï¼š165g" }
 ];
-const DEFAULT_RECIPE_MATERIAL_IDS = ["cement", "flyAsh", "ÉúÊ¯»Ò", "Ãºí·Ê¯", "ÁòËáÄÆ", "accelerator", "water"];
-const EXPERIMENT_MATERIAL_LABELS = ["¹èËáÑÎË®Äà", "·ÛÃº»Ò", "ÉúÊ¯»Ò", "Ãºí·Ê¯", "ÁòËáÄÆ", "ËÙÄı¼Á", "Ë®"];
+const DEFAULT_RECIPE_MATERIAL_IDS = ["cement", "flyAsh", "ç”ŸçŸ³ç°", "ç…¤çŸ¸çŸ³", "ç¡«é…¸é’ ", "accelerator", "water"];
+const EXPERIMENT_MATERIAL_LABELS = ["ç¡…é…¸ç›æ°´æ³¥", "ç²‰ç…¤ç°", "ç”ŸçŸ³ç°", "ç…¤çŸ¸çŸ³", "ç¡«é…¸é’ ", "é€Ÿå‡å‰‚", "æ°´"];
 const BLOCK_CATEGORIES = [
-  { id: "spray", label: "Åç½¬", scheme: "A", note: "0.15-4.75mm£¬Ä¬ÈÏ´øËÙÄı¼Á" },
-  { id: "road", label: "µÀÂ·", scheme: "B", note: "0.15-16mm£¬¿ÉÑ¡ËÙÄı¼Á" }
+  { id: "spray", label: "å–·æµ†", scheme: "A", note: "0.15-4.75mmï¼Œé»˜è®¤å¸¦é€Ÿå‡å‰‚" },
+  { id: "road", label: "é“è·¯", scheme: "B", note: "0.15-16mmï¼Œå¯é€‰é€Ÿå‡å‰‚" }
 ];
 const GRADATION_SCHEMES = {
   spray: {
-    label: "·½°¸ A£º0.15-4.75mm",
+    label: "æ–¹æ¡ˆ Aï¼š0.15-4.75mm",
     ranges: ["0.15-0.30", "0.30-0.60", "0.60-1.18", "1.18-2.36", "2.36-4.75"],
     templates: {
-      raw: { label: "Ô­Ê¼¼¶Åä", nValue: "", weights: null },
+      raw: { label: "åŸå§‹çº§é…", nValue: "", weights: null },
       n04: { label: "n=0.4", nValue: "0.4", weights: [424, 560, 718, 968, 1290] },
       n05: { label: "n=0.5", nValue: "0.5", weights: [354, 501, 689, 994, 1422] },
       n06: { label: "n=0.6", nValue: "0.6", weights: [294, 445, 655, 1013, 1553] }
     }
   },
   road: {
-    label: "·½°¸ B£º0.15-16mm",
+    label: "æ–¹æ¡ˆ Bï¼š0.15-16mm",
     ranges: ["0.15-0.30", "0.30-0.60", "0.60-1.18", "1.18-2.36", "2.36-4.75", "4.75-9.5", "9.5-16"],
     templates: {
-      raw: { label: "Ô­Ê¼¼¶Åä", nValue: "", weights: null },
+      raw: { label: "åŸå§‹çº§é…", nValue: "", weights: null },
       n04: { label: "n=0.4", nValue: "0.4", weights: [231, 305, 391, 527, 703, 921, 882] },
       n05: { label: "n=0.5", nValue: "0.5", weights: [176, 249, 342, 493, 705, 990, 1005] },
       n06: { label: "n=0.6", nValue: "0.6", weights: [132, 200, 294, 455, 697, 1049, 1133] }
@@ -127,44 +127,44 @@ const GRADATION_SCHEMES = {
 };
 const WEIGHING_TEMPLATES = {
   withAccelerator: {
-    label: "ÓĞËÙÄı¼Á",
+    label: "æœ‰é€Ÿå‡å‰‚",
     totalWithoutWater: "6098.4",
-    values: { "¹èËáÑÎË®Äà": "1485", "·ÛÃº»Ò": "435.6", "ÉúÊ¯»Ò": "59.4", "Ãºí·Ê¯": "3960", "ÁòËáÄÆ": "59.4", "ËÙÄı¼Á": "99.0", "Ë®": "825" }
+    values: { "ç¡…é…¸ç›æ°´æ³¥": "1485", "ç²‰ç…¤ç°": "435.6", "ç”ŸçŸ³ç°": "59.4", "ç…¤çŸ¸çŸ³": "3960", "ç¡«é…¸é’ ": "59.4", "é€Ÿå‡å‰‚": "99.0", "æ°´": "825" }
   },
   withoutAccelerator: {
-    label: "ÎŞËÙÄı¼Á",
+    label: "æ— é€Ÿå‡å‰‚",
     totalWithoutWater: "5999.4",
-    values: { "¹èËáÑÎË®Äà": "1485", "·ÛÃº»Ò": "435.6", "ÉúÊ¯»Ò": "59.4", "Ãºí·Ê¯": "3960", "ÁòËáÄÆ": "59.4", "Ë®": "825" }
+    values: { "ç¡…é…¸ç›æ°´æ³¥": "1485", "ç²‰ç…¤ç°": "435.6", "ç”ŸçŸ³ç°": "59.4", "ç…¤çŸ¸çŸ³": "3960", "ç¡«é…¸é’ ": "59.4", "æ°´": "825" }
   },
   strengthBoost: {
-    label: "Ç¿¶È¼ÓÇ¿£º40%½ºÄı²ÄÁÏ + Ë®825",
+    label: "å¼ºåº¦åŠ å¼ºï¼š40%èƒ¶å‡ææ–™ + æ°´825",
     totalWithoutWater: "6130",
-    values: { "¹èËáÑÎË®Äà": "1782", "·ÛÃº»Ò": "523", "ÉúÊ¯»Ò": "71", "Ãºí·Ê¯": "3564", "ÁòËáÄÆ": "71", "ËÙÄı¼Á": "119", "Ë®": "825" },
-    note: "Ç¿¶È¼ÓÇ¿·½°¸£º40%½ºÄı²ÄÁÏ + Ë®825"
+    values: { "ç¡…é…¸ç›æ°´æ³¥": "1782", "ç²‰ç…¤ç°": "523", "ç”ŸçŸ³ç°": "71", "ç…¤çŸ¸çŸ³": "3564", "ç¡«é…¸é’ ": "71", "é€Ÿå‡å‰‚": "119", "æ°´": "825" },
+    note: "å¼ºåº¦åŠ å¼ºæ–¹æ¡ˆï¼š40%èƒ¶å‡ææ–™ + æ°´825"
   }
 };
 const RECIPE_MATERIAL_CATEGORIES = [
-  { id: "binder", label: "½ºÄı²ÄÁÏ" },
-  { id: "admixture", label: "Íâ¼Ó¼Á" },
-  { id: "aggregate", label: "¹ÇÁÏ" },
-  { id: "water", label: "Ë®" }
+  { id: "binder", label: "èƒ¶å‡ææ–™" },
+  { id: "admixture", label: "å¤–åŠ å‰‚" },
+  { id: "aggregate", label: "éª¨æ–™" },
+  { id: "water", label: "æ°´" }
 ];
 const LAB_IMAGE_KINDS = [
-  { id: "gangueRaw", label: "í·Ê¯Ô­Ê¼Í¼" },
-  { id: "gradation", label: "¼¶Åä/³ÆÖØÍ¼" },
-  { id: "crushing", label: "Ñ¹ËéÖµÊÔÑéÍ¼" },
-  { id: "density", label: "ÃÜ¶È/ÎüË®ÂÊÍ¼" },
-  { id: "flakiness", label: "ÕëÆ¬×´ÊÔÑéÍ¼" },
-  { id: "forming", label: "³ÉĞÍ/²ğÄ£Í¼" },
-  { id: "demold", label: "²ğÄ£Í¼" },
-  { id: "curing", label: "Ñø»¤¹ı³ÌÍ¼" },
-  { id: "pressureReading", label: "Ñ¹Á¦¶ÁÊıÍ¼" },
-  { id: "compressionFailure", label: "¿¹Ñ¹ÆÆ»µÍ¼" },
-  { id: "splitSection", label: "ÅüÁÑ¶ÏÃæÍ¼" },
-  { id: "flexuralFailure", label: "¿¹ÕÛÆÆ»µÍ¼" },
-  { id: "block", label: "ÊÔ¿éÍ¼Æ¬" },
-  { id: "split", label: "ÅüÁÑ/ÆÆ»µºó" },
-  { id: "other", label: "ÆäËûÊµÑéÍ¼" }
+  { id: "gangueRaw", label: "çŸ¸çŸ³åŸå§‹å›¾" },
+  { id: "gradation", label: "çº§é…/ç§°é‡å›¾" },
+  { id: "crushing", label: "å‹ç¢å€¼è¯•éªŒå›¾" },
+  { id: "density", label: "å¯†åº¦/å¸æ°´ç‡å›¾" },
+  { id: "flakiness", label: "é’ˆç‰‡çŠ¶è¯•éªŒå›¾" },
+  { id: "forming", label: "æˆå‹/æ‹†æ¨¡å›¾" },
+  { id: "demold", label: "æ‹†æ¨¡å›¾" },
+  { id: "curing", label: "å…»æŠ¤è¿‡ç¨‹å›¾" },
+  { id: "pressureReading", label: "å‹åŠ›è¯»æ•°å›¾" },
+  { id: "compressionFailure", label: "æŠ—å‹ç ´åå›¾" },
+  { id: "splitSection", label: "åŠˆè£‚æ–­é¢å›¾" },
+  { id: "flexuralFailure", label: "æŠ—æŠ˜ç ´åå›¾" },
+  { id: "block", label: "è¯•å—å›¾ç‰‡" },
+  { id: "split", label: "åŠˆè£‚/ç ´åå" },
+  { id: "other", label: "å…¶ä»–å®éªŒå›¾" }
 ];
 const GANGUE_LAB_IMAGE_KIND_IDS = ["gangueRaw", "gradation", "crushing", "density", "flakiness", "other"];
 const BLOCK_LAB_IMAGE_KIND_IDS = ["forming", "demold", "curing", "pressureReading", "compressionFailure", "splitSection", "flexuralFailure", "block", "split", "other"];
@@ -172,26 +172,26 @@ const BLOCK_LAB_IMAGE_KIND_IDS = ["forming", "demold", "curing", "pressureReadin
 let sessionSecret = "";
 
 const defaultContent = {
-  siteTitle: "xx520 Ğ¡Õ¾",
-  brandName: "xx520 Ğ¡Õ¾",
+  siteTitle: "xx520 å°ç«™",
+  brandName: "xx520 å°ç«™",
   eyebrow: "Quiet notes, tiny tools, daily traces",
-  heroTitle: "°ÑÁãÉ¢µÄÏë·¨£¬ÂıÂıÕûÀí³ÉÒ»¸öĞ¡Õ¾¡£",
-  lead: "ÕâÀï»á·ÅÒ»Ğ©ÈÕ³£±Ê¼Ç¡¢ÕÛÌÚ¼ÇÂ¼ºÍĞ¡ÏîÄ¿Ïë·¨¡£ÏÈ°Ñ¿Õ¼ä´îÆğÀ´£¬ÄÚÈİÔÙÒ»µãµã³¤³öÀ´¡£",
-  aboutKicker: "¹ØÓÚÕâÀï",
-  aboutTitle: "Ò»¸öÇáÁ¿¡¢°²¾²¡¢¿É³ÖĞøÎ¬»¤µÄ¸öÈËÖ÷Ò³¡£",
-  aboutBody: "Ğ¡Õ¾ÏÈ±£³Ö¼òµ¥£º²»×·Çó¸´ÔÓ¹¦ÄÜ£¬Ö»ÁôÏÂÄÜ³¤ÆÚ¸üĞÂµÄ½á¹¹¡£ÒÔºó¿ÉÒÔ¼ÌĞø¼ÓÎÄÕÂ¡¢ÏîÄ¿¼ÇÂ¼¡¢ÊéÇ©ºÍ×´Ì¬Ò³¡£",
+  heroTitle: "æŠŠé›¶æ•£çš„æƒ³æ³•ï¼Œæ…¢æ…¢æ•´ç†æˆä¸€ä¸ªå°ç«™ã€‚",
+  lead: "è¿™é‡Œä¼šæ”¾ä¸€äº›æ—¥å¸¸ç¬”è®°ã€æŠ˜è…¾è®°å½•å’Œå°é¡¹ç›®æƒ³æ³•ã€‚å…ˆæŠŠç©ºé—´æ­èµ·æ¥ï¼Œå†…å®¹å†ä¸€ç‚¹ç‚¹é•¿å‡ºæ¥ã€‚",
+  aboutKicker: "å…³äºè¿™é‡Œ",
+  aboutTitle: "ä¸€ä¸ªè½»é‡ã€å®‰é™ã€å¯æŒç»­ç»´æŠ¤çš„ä¸ªäººä¸»é¡µã€‚",
+  aboutBody: "å°ç«™å…ˆä¿æŒç®€å•ï¼šä¸è¿½æ±‚å¤æ‚åŠŸèƒ½ï¼Œåªç•™ä¸‹èƒ½é•¿æœŸæ›´æ–°çš„ç»“æ„ã€‚ä»¥åå¯ä»¥ç»§ç»­åŠ æ–‡ç« ã€é¡¹ç›®è®°å½•ã€ä¹¦ç­¾å’ŒçŠ¶æ€é¡µã€‚",
   notes: [
     {
       date: "2026-05-08",
-      title: "Ğ¡Õ¾ÉÏÏß¼ÇÂ¼",
-      body: "´ÓÒ»¸ö¸É¾»µÄ¾²Ì¬Ò³Ãæ¿ªÊ¼£¬ÏÈ°ÑÈë¿Ú¡¢°æÊ½ºÍ¸üĞÂ½Ú×à¶¨ÏÂÀ´¡£"
+      title: "å°ç«™ä¸Šçº¿è®°å½•",
+      body: "ä»ä¸€ä¸ªå¹²å‡€çš„é™æ€é¡µé¢å¼€å§‹ï¼Œå…ˆæŠŠå…¥å£ã€ç‰ˆå¼å’Œæ›´æ–°èŠ‚å¥å®šä¸‹æ¥ã€‚"
     }
   ],
   ideas: [
     {
       tag: "Notes",
-      title: "¹«¿ª±Ê¼Ç",
-      body: "Ğ´Ò»Ğ©¶Ì¼ÇÂ¼£¬·½±ã»Ø¿´£¬Ò²·½±ãÖ®ºóÀ©Õ¹³É²©¿Í¡£"
+      title: "å…¬å¼€ç¬”è®°",
+      body: "å†™ä¸€äº›çŸ­è®°å½•ï¼Œæ–¹ä¾¿å›çœ‹ï¼Œä¹Ÿæ–¹ä¾¿ä¹‹åæ‰©å±•æˆåšå®¢ã€‚"
     }
   ],
   gallery: [],
@@ -200,7 +200,7 @@ const defaultContent = {
   dismissedAnomalies: [],
   coalGangueDb: [],
   testBlocks: [],
-  footerName: "xx520 Ğ¡Õ¾",
+  footerName: "xx520 å°ç«™",
   updatedAt: "2026-05-08"
 };
 
@@ -328,7 +328,7 @@ function optionalDateValue(value) {
 function normalizeAges(value) {
   const raw = Array.isArray(value) ? value.join(",") : String(value || "");
   const ages = raw
-    .split(/[\s,£¬¡¢;£»/]+/)
+    .split(/[\s,ï¼Œã€;ï¼›/]+/)
     .map((item) => Number.parseInt(item, 10))
     .filter((age) => Number.isInteger(age) && age > 0 && age <= 365);
   return [...new Set(ages)].sort((a, b) => a - b);
@@ -362,7 +362,7 @@ function metricIdFromLabel(label) {
 
 function splitMetricText(value) {
   return String(value || "")
-    .split(/[\n,£¬¡¢;£»/]+/)
+    .split(/[\n,ï¼Œã€;ï¼›/]+/)
     .map((item) => item.trim())
     .filter(Boolean);
 }
@@ -383,7 +383,7 @@ function normalizeResultMetrics(value, customValue = "", options = {}) {
         return;
       }
       const label = text.slice(0, 32);
-      metrics.set(metricIdFromLabel(label), { id: metricIdFromLabel(label), label, placeholder: "ÌîĞ´¼ì²âÖµ", custom: true });
+      metrics.set(metricIdFromLabel(label), { id: metricIdFromLabel(label), label, placeholder: "å¡«å†™æ£€æµ‹å€¼", custom: true });
       return;
     }
     if (typeof item === "object") {
@@ -399,7 +399,7 @@ function normalizeResultMetrics(value, customValue = "", options = {}) {
       metrics.set(metricId, {
         id: metricId,
         label: label.slice(0, 32),
-        placeholder: String(item.placeholder || "ÌîĞ´¼ì²âÖµ").trim() || "ÌîĞ´¼ì²âÖµ",
+        placeholder: String(item.placeholder || "å¡«å†™æ£€æµ‹å€¼").trim() || "å¡«å†™æ£€æµ‹å€¼",
         custom: true
       });
     }
@@ -438,7 +438,7 @@ function parseResultSamples(value) {
       .slice(0, 12);
   }
   return String(value || "")
-    .split(/[\s,£¬¡¢;£»/|]+/)
+    .split(/[\s,ï¼Œã€;ï¼›/|]+/)
     .map((item) => item.trim())
     .filter((item) => item && parseMeasurementNumber(item) !== null)
     .slice(0, 12);
@@ -448,7 +448,7 @@ function calculateResultSamples(samples) {
   const values = parseResultSamples(samples);
   const numbers = values.map(parseMeasurementNumber).filter((number) => number !== null);
   if (!numbers.length) {
-    return { values, mean: "", std: "", cv: "", meanSource: "Î´Â¼Èë" };
+    return { values, mean: "", std: "", cv: "", meanSource: "æœªå½•å…¥" };
   }
   const mean = numbers.reduce((total, number) => total + number, 0) / numbers.length;
   const variance = numbers.length > 1
@@ -461,7 +461,7 @@ function calculateResultSamples(samples) {
     mean: formatRecipeNumber(mean, 3),
     std: std === "" ? "" : formatRecipeNumber(std, 3),
     cv: cv === "" ? "" : formatRecipeNumber(cv, 2),
-    meanSource: numbers.length >= 3 ? "Èı¿é¼ÆËã" : numbers.length === 2 ? "¶à¿é¼ÆËã" : "µ¥¿é¼ÆËã"
+    meanSource: numbers.length >= 3 ? "ä¸‰å—è®¡ç®—" : numbers.length === 2 ? "å¤šå—è®¡ç®—" : "å•å—è®¡ç®—"
   };
 }
 
@@ -526,9 +526,9 @@ function normalizeMetricResultEntry(value, legacyValue = "", options = {}) {
   const sampleStats = calculateResultSamples(sampleValues);
   const hasSamples = sampleStats.values.length > 0;
   const mean = hasSamples ? sampleStats.mean : manualMean;
-  const sourceLabel = hasSamples ? sampleStats.meanSource : (manualMean ? "ÊÖ¶¯Â¼Èë" : "Î´Â¼Èë");
-  const measurementFailureMode = sampleMeasurements.map((item) => item.failureMode).filter(Boolean).join("£»");
-  const measurementRemark = sampleMeasurements.map((item) => item.remark).filter(Boolean).join("£»");
+  const sourceLabel = hasSamples ? sampleStats.meanSource : (manualMean ? "æ‰‹åŠ¨å½•å…¥" : "æœªå½•å…¥");
+  const measurementFailureMode = sampleMeasurements.map((item) => item.failureMode).filter(Boolean).join("ï¼›");
+  const measurementRemark = sampleMeasurements.map((item) => item.remark).filter(Boolean).join("ï¼›");
   return {
     age: String(source.age || options.age || "").trim(),
     metric: String(source.metric || options.metric || "").trim(),
@@ -567,11 +567,11 @@ function formatMpaNumberInput(value) {
 
 function metricResultDisplay(entry) {
   const item = normalizeMetricResultEntry(entry);
-  if (!metricResultFilled(item)) return "Î´Â¼Èë";
+  if (!metricResultFilled(item)) return "æœªå½•å…¥";
   const main = item.mean || item.manualMean || "";
   const mainText = formatMpaValue(main) || main;
-  const cv = item.cv ? `£¬CV ${item.cv}%` : "";
-  return `${mainText}${cv} ¡¤ ${item.meanSource}`;
+  const cv = item.cv ? `ï¼ŒCV ${item.cv}%` : "";
+  return `${mainText}${cv} Â· ${item.meanSource}`;
 }
 
 function metricsFromParams(params) {
@@ -589,25 +589,25 @@ function normalizeRecipeMaterialCategory(value, fallback = "binder") {
 
 function inferRecipeMaterialCategory(label) {
   const text = String(label || "");
-  if (/^(Ë®|°èºÏË®|ÓÃË®)$/.test(text)) return "water";
-  if (/ÁòËáÄÆ|Íâ¼Ó¼Á|¼õË®|ÅòÕÍ|ËÙÄı|»ºÄı|ÒıÆø|±ÃËÍ|ÔçÇ¿|ÏËÎ¬|¼Á/.test(text)) return "admixture";
-  if (/Ë®Äà|·ÛÃº»Ò|¿ó·Û|¹è»Ò|Ê¯»Ò|ÉúÊ¯»Ò|Ë®Ôü/.test(text)) return "binder";
-  if (/É°|Ê¯|¹ÇÁÏ|ËéÊ¯|ÂÑÊ¯|»úÖÆÉ°|ºÓÉ°|Ãºí·Ê¯/.test(text)) return "aggregate";
+  if (/^(æ°´|æ‹Œåˆæ°´|ç”¨æ°´)$/.test(text)) return "water";
+  if (/ç¡«é…¸é’ |å¤–åŠ å‰‚|å‡æ°´|è†¨èƒ€|é€Ÿå‡|ç¼“å‡|å¼•æ°”|æ³µé€|æ—©å¼º|çº¤ç»´|å‰‚/.test(text)) return "admixture";
+  if (/æ°´æ³¥|ç²‰ç…¤ç°|çŸ¿ç²‰|ç¡…ç°|çŸ³ç°|ç”ŸçŸ³ç°|æ°´æ¸£/.test(text)) return "binder";
+  if (/ç ‚|çŸ³|éª¨æ–™|ç¢çŸ³|åµçŸ³|æœºåˆ¶ç ‚|æ²³ç ‚|ç…¤çŸ¸çŸ³/.test(text)) return "aggregate";
   return "binder";
 }
 
 function recipeMaterialCategory(material) {
   const label = String(material && material.label || "").trim();
   const inferred = inferRecipeMaterialCategory(label);
-  if (/^(Ë®|°èºÏË®|ÓÃË®)$/.test(label)) return "water";
-  if (/ÁòËáÄÆ|ËÙÄı¼Á|Íâ¼Ó¼Á|¼õË®|ÅòÕÍ|»ºÄı|ÒıÆø|±ÃËÍ|ÔçÇ¿|ÏËÎ¬|¼Á/.test(label)) return "admixture";
-  if (/¹èËáÑÎË®Äà|Ë®Äà|·ÛÃº»Ò|¿ó·Û|¹è»Ò|Ê¯»Ò|ÉúÊ¯»Ò|Ë®Ôü/.test(label)) return "binder";
-  if (/Ãºí·Ê¯|É°|Ê¯|¹ÇÁÏ|ËéÊ¯|ÂÑÊ¯|»úÖÆÉ°|ºÓÉ°/.test(label)) return "aggregate";
+  if (/^(æ°´|æ‹Œåˆæ°´|ç”¨æ°´)$/.test(label)) return "water";
+  if (/ç¡«é…¸é’ |é€Ÿå‡å‰‚|å¤–åŠ å‰‚|å‡æ°´|è†¨èƒ€|ç¼“å‡|å¼•æ°”|æ³µé€|æ—©å¼º|çº¤ç»´|å‰‚/.test(label)) return "admixture";
+  if (/ç¡…é…¸ç›æ°´æ³¥|æ°´æ³¥|ç²‰ç…¤ç°|çŸ¿ç²‰|ç¡…ç°|çŸ³ç°|ç”ŸçŸ³ç°|æ°´æ¸£/.test(label)) return "binder";
+  if (/ç…¤çŸ¸çŸ³|ç ‚|çŸ³|éª¨æ–™|ç¢çŸ³|åµçŸ³|æœºåˆ¶ç ‚|æ²³ç ‚/.test(label)) return "aggregate";
   return normalizeRecipeMaterialCategory(material && material.category, inferred);
 }
 
 function recipeMaterialCategoryLabel(categoryId) {
-  return RECIPE_MATERIAL_CATEGORIES.find((category) => category.id === categoryId)?.label || "½ºÄı²ÄÁÏ";
+  return RECIPE_MATERIAL_CATEGORIES.find((category) => category.id === categoryId)?.label || "èƒ¶å‡ææ–™";
 }
 
 function recipeMaterialCategoryOptions(selected) {
@@ -624,13 +624,13 @@ function normalizeBlockCategory(value, fallback = "road") {
 }
 
 function blockCategoryLabelV3(value) {
-  return BLOCK_CATEGORIES.find((item) => item.id === normalizeBlockCategory(value))?.label || "µÀÂ·";
+  return BLOCK_CATEGORIES.find((item) => item.id === normalizeBlockCategory(value))?.label || "é“è·¯";
 }
 
 function blockCategoryOptionsV3(selected) {
   const current = normalizeBlockCategory(selected, "spray");
   return BLOCK_CATEGORIES
-    .map((item) => `<option value="${attr(item.id)}" ${item.id === current ? "selected" : ""}>${html(item.label)} ¡¤ ${html(item.note)}</option>`)
+    .map((item) => `<option value="${attr(item.id)}" ${item.id === current ? "selected" : ""}>${html(item.label)} Â· ${html(item.note)}</option>`)
     .join("");
 }
 
@@ -647,14 +647,14 @@ function experimentMaterialForLabel(label) {
   const text = String(label || "").trim();
   if (!text) return null;
   const builtin = BUILTIN_RECIPE_MATERIALS.find((item) => (
-    item.label === text || (item.id === "cement" && /^(Ë®Äà|¹èËáÑÎË®Äà)$/.test(text))
+    item.label === text || (item.id === "cement" && /^(æ°´æ³¥|ç¡…é…¸ç›æ°´æ³¥)$/.test(text))
   ));
   if (builtin) return { ...builtin, custom: false };
   return {
     id: materialIdFromLabel(text),
     label: text.slice(0, 32),
     category: inferRecipeMaterialCategory(text),
-    placeholder: "ÌîĞ´gÖØ",
+    placeholder: "å¡«å†™gé‡",
     custom: true
   };
 }
@@ -666,7 +666,7 @@ function normalizeWeighingTemplate(value, category = "spray") {
 }
 
 function templateUsesAccelerator(key) {
-  return Object.hasOwn(WEIGHING_TEMPLATES[normalizeWeighingTemplate(key)].values, "ËÙÄı¼Á");
+  return Object.hasOwn(WEIGHING_TEMPLATES[normalizeWeighingTemplate(key)].values, "é€Ÿå‡å‰‚");
 }
 
 function weighingTemplateOptionsV3(selected, category = "spray") {
@@ -689,7 +689,7 @@ function materialIdForTemplateLabel(materials, label) {
   const text = String(label || "").trim();
   const normalized = normalizeRecipeMaterials(materials, "", { fallbackToDefault: false });
   const matched = normalized.find((item) => item.label === text)
-    || (/^(Ë®Äà|¹èËáÑÎË®Äà)$/.test(text) ? normalized.find((item) => item.id === "cement") : null)
+    || (/^(æ°´æ³¥|ç¡…é…¸ç›æ°´æ³¥)$/.test(text) ? normalized.find((item) => item.id === "cement") : null)
     || normalized.find((item) => item.id === materialIdFromLabel(text));
   return matched?.id || "";
 }
@@ -706,7 +706,7 @@ function applyWeighingTemplateToRecipeValues(recipeValues, materials, templateKe
     if (id) values[id] = amount;
   });
   if (!templateUsesAccelerator(templateKey)) {
-    const acceleratorId = materialIdForTemplateLabel(materials, "ËÙÄı¼Á");
+    const acceleratorId = materialIdForTemplateLabel(materials, "é€Ÿå‡å‰‚");
     if (acceleratorId) values[acceleratorId] = "";
   }
   return values;
@@ -771,14 +771,14 @@ function blockGradationWeightsFromParams(params, category = "road", templateKey 
 function blockHasAcceleratorV3(block) {
   const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
   return normalizeRecipeMaterials(block.recipeMaterials || record.recipeMaterials, "", { fallbackToDefault: false })
-    .some((material) => material.id === "accelerator" || /ËÙÄı¼Á/.test(material.label));
+    .some((material) => material.id === "accelerator" || /é€Ÿå‡å‰‚/.test(material.label));
 }
 
 function inferBlockCategoryV3(item) {
   const explicit = String(item.blockCategory || item.category || item.blockType || "").trim();
   if (explicit) return normalizeBlockCategory(explicit);
   const name = String(item.name || item.part || "").trim();
-  if (/Åç½¬|ÅçÉä/.test(name)) return "spray";
+  if (/å–·æµ†|å–·å°„/.test(name)) return "spray";
   if (blockHasAcceleratorV3(item)) return "spray";
   return "road";
 }
@@ -800,7 +800,7 @@ function normalizeRecipeMaterials(value, customValue = "", options = {}) {
       id,
       label: label.slice(0, 32),
       category,
-      placeholder: String(item.placeholder || "ÌîĞ´gÖØ»òĞÍºÅ").trim() || "ÌîĞ´gÖØ»òĞÍºÅ",
+      placeholder: String(item.placeholder || "å¡«å†™gé‡æˆ–å‹å·").trim() || "å¡«å†™gé‡æˆ–å‹å·",
       custom: !builtins.has(id)
     };
     library.set(id, normalized);
@@ -824,7 +824,7 @@ function normalizeRecipeMaterials(value, customValue = "", options = {}) {
       }
       const label = text.slice(0, 32);
       const category = normalizeRecipeMaterialCategory(options.customCategory, inferRecipeMaterialCategory(label));
-      materials.set(materialIdFromLabel(label), { id: materialIdFromLabel(label), label, category, placeholder: "ÌîĞ´gÖØ»òĞÍºÅ", custom: true });
+      materials.set(materialIdFromLabel(label), { id: materialIdFromLabel(label), label, category, placeholder: "å¡«å†™gé‡æˆ–å‹å·", custom: true });
       return;
     }
     if (typeof item === "object") {
@@ -842,7 +842,7 @@ function normalizeRecipeMaterials(value, customValue = "", options = {}) {
         id: materialId,
         label: label.slice(0, 32),
         category,
-        placeholder: String(item.placeholder || "ÌîĞ´gÖØ»òĞÍºÅ").trim() || "ÌîĞ´gÖØ»òĞÍºÅ",
+        placeholder: String(item.placeholder || "å¡«å†™gé‡æˆ–å‹å·").trim() || "å¡«å†™gé‡æˆ–å‹å·",
         custom: true
       });
     }
@@ -1056,7 +1056,7 @@ function normalizeLabImageKind(value) {
 }
 
 function labImageKindLabel(value) {
-  return LAB_IMAGE_KINDS.find((item) => item.id === normalizeLabImageKind(value))?.label || "ÆäËûÊµÑéÍ¼";
+  return LAB_IMAGE_KINDS.find((item) => item.id === normalizeLabImageKind(value))?.label || "å…¶ä»–å®éªŒå›¾";
 }
 
 function labImageKindsForTarget(targetType) {
@@ -1143,7 +1143,7 @@ function normalizeContent(input) {
       const blockCategory = inferBlockCategoryV3({ ...item, ages, metrics, recipeMaterials });
       return {
         id: String(item.id || crypto.randomUUID()),
-        name: String(item.name || item.part || "Î´ÃüÃûÊÔ¿é").trim() || "Î´ÃüÃûÊÔ¿é",
+        name: String(item.name || item.part || "æœªå‘½åè¯•å—").trim() || "æœªå‘½åè¯•å—",
         blockCategory,
         madeDate: normalizeDateValue(item.madeDate || item.date),
         quantity: Math.max(1, Number.parseInt(item.quantity, 10) || 1),
@@ -1376,7 +1376,7 @@ function getTestBlocks(content) {
 
 function splitParticleRanges(value) {
   return String(value || "")
-    .split(/[\n,£¬¡¢;£»]+/)
+    .split(/[\n,ï¼Œã€;ï¼›]+/)
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 24);
@@ -1400,7 +1400,7 @@ function averageMeasurement(values) {
 }
 
 function measurementSuffix(values, fallback = "%") {
-  return values.some((value) => /%|£¥/.test(String(value || ""))) ? "%" : fallback;
+  return values.some((value) => /%|ï¼…/.test(String(value || ""))) ? "%" : fallback;
 }
 
 function formatMeasurementAverage(values) {
@@ -1467,7 +1467,7 @@ function normalizeCoalGangueItem(item = {}) {
   const summary = calculateGangueCrushingSummary({ particleRanges: ranges, crushingTests });
   return {
     id: String(item.id || crypto.randomUUID()),
-    name: String(item.name || "Î´ÃüÃûÃºí·Ê¯").trim() || "Î´ÃüÃûÃºí·Ê¯",
+    name: String(item.name || "æœªå‘½åç…¤çŸ¸çŸ³").trim() || "æœªå‘½åç…¤çŸ¸çŸ³",
     source: String(item.source || item.origin || "").trim(),
     particleRanges: ranges,
     crushingValues,
@@ -1587,7 +1587,7 @@ function formatDateCn(dateText) {
 
 function formatMonthCn(monthKey) {
   const [year, month] = monthKey.split("-");
-  return `${year}Äê${Number(month)}ÔÂ`;
+  return `${year}å¹´${Number(month)}æœˆ`;
 }
 
 function pageHead(content, title, description = "") {
@@ -1596,7 +1596,7 @@ function pageHead(content, title, description = "") {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="${attr(description || `${content.siteTitle}£¬Ò»¸ö°²¾²ÕûÀí±Ê¼Ç¡¢Ïë·¨ºÍÍ¼Æ¬µÄµØ·½¡£`)}">
+  <meta name="description" content="${attr(description || `${content.siteTitle}ï¼Œä¸€ä¸ªå®‰é™æ•´ç†ç¬”è®°ã€æƒ³æ³•å’Œå›¾ç‰‡çš„åœ°æ–¹ã€‚`)}">
   <title>${html(title)}</title>
   <link rel="stylesheet" href="/styles.css">
 </head>`;
@@ -1604,18 +1604,18 @@ function pageHead(content, title, description = "") {
 
 function publicHeader(content) {
   return `<header class="site-header">
-    <nav class="nav" aria-label="Ö÷µ¼º½">
-      <a class="brand" href="/" aria-label="${attr(content.brandName)}Ê×Ò³">
+    <nav class="nav" aria-label="ä¸»å¯¼èˆª">
+      <a class="brand" href="/" aria-label="${attr(content.brandName)}é¦–é¡µ">
         <span class="brand-mark" aria-hidden="true"></span>
         <span>${html(content.brandName)}</span>
       </a>
-      <div class="nav-links" aria-label="Ò³ÃæÕÂ½Ú">
-        <a href="/notes/">±Ê¼Ç</a>
-        <a href="/gallery/">Ïà²á</a>
-        <a href="${PRIVATE_GALLERY_PATH}/">Ë½ÃÜÏà²á</a>
-        <a href="${WORK_PATH}/">¹¤×÷Çø</a>
-        <a href="/#ideas">ÏîÄ¿</a>
-        <a href="/#about">¹ØÓÚ</a>
+      <div class="nav-links" aria-label="é¡µé¢ç« èŠ‚">
+        <a href="/notes/">ç¬”è®°</a>
+        <a href="/gallery/">ç›¸å†Œ</a>
+        <a href="${PRIVATE_GALLERY_PATH}/">ç§å¯†ç›¸å†Œ</a>
+        <a href="${WORK_PATH}/">å·¥ä½œåŒº</a>
+        <a href="/#ideas">é¡¹ç›®</a>
+        <a href="/#about">å…³äº</a>
       </div>
     </nav>
   </header>`;
@@ -1623,8 +1623,8 @@ function publicHeader(content) {
 
 function publicFooter(content) {
   return `<footer class="footer">
-    <p>? ${new Date().getFullYear()} ${html(content.footerName)}</p>
-    <p>×îºó¸üĞÂ£º${html(content.updatedAt)}</p>
+    <p>Â© ${new Date().getFullYear()} ${html(content.footerName)}</p>
+    <p>æœ€åæ›´æ–°ï¼š${html(content.updatedAt)}</p>
   </footer>`;
 }
 
@@ -1639,16 +1639,16 @@ function renderHome(content) {
   ${publicHeader(content)}
   <main>
     <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-media photo-stack" aria-label="Ïà²áÔ¤ÀÀ">
+      <div class="hero-media photo-stack" aria-label="ç›¸å†Œé¢„è§ˆ">
         ${heroPhotos.length ? heroPhotos.map((item, index) => `<figure class="hero-photo hero-photo-${index + 1}">
-          <img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "Ïà²áÕÕÆ¬")}" loading="${index ? "lazy" : "eager"}">
+          <img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "ç›¸å†Œç…§ç‰‡")}" loading="${index ? "lazy" : "eager"}">
         </figure>`).join("\n        ") : `<div class="hero-empty">
           <span>xx520</span>
-          <strong>Ğ´µã¶«Î÷£¬ÁôµãÕÕÆ¬¡£</strong>
+          <strong>å†™ç‚¹ä¸œè¥¿ï¼Œç•™ç‚¹ç…§ç‰‡ã€‚</strong>
         </div>`}
         <div class="hero-status" aria-hidden="true">
-          <span>Õ¾µãÔÚÏß</span>
-          <strong>${notes.length} Æª±Ê¼Ç ¡¤ ${albums.reduce((total, album) => total + album.count, 0)} ÕÅÕÕÆ¬</strong>
+          <span>ç«™ç‚¹åœ¨çº¿</span>
+          <strong>${notes.length} ç¯‡ç¬”è®° Â· ${albums.reduce((total, album) => total + album.count, 0)} å¼ ç…§ç‰‡</strong>
         </div>
       </div>
       <div class="hero-copy">
@@ -1656,8 +1656,8 @@ function renderHome(content) {
         <h1 id="hero-title">${html(content.heroTitle)}</h1>
         <p class="lead">${html(content.lead)}</p>
         <div class="hero-actions">
-          <a class="primary-link" href="${WORK_PATH}/">½øÈë¹¤×÷Çø</a>
-          <a class="ghost-link" href="/notes/">¿´±Ê¼Ç</a>
+          <a class="primary-link" href="${WORK_PATH}/">è¿›å…¥å·¥ä½œåŒº</a>
+          <a class="ghost-link" href="/notes/">çœ‹ç¬”è®°</a>
         </div>
       </div>
     </section>
@@ -1673,20 +1673,20 @@ function renderHome(content) {
     <section class="section admin-panel" id="workspace" aria-labelledby="workspace-title">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">¿ì½İÈë¿Ú</p>
-          <h2 id="workspace-title">³£ÓÃÈë¿Ú·ÅÔÚÕâÀï£¬ÉÙÈÆÂ·¡£</h2>
+          <p class="section-kicker">å¿«æ·å…¥å£</p>
+          <h2 id="workspace-title">å¸¸ç”¨å…¥å£æ”¾åœ¨è¿™é‡Œï¼Œå°‘ç»•è·¯ã€‚</h2>
         </div>
       </div>
       <div class="admin-grid">
         <a class="admin-card primary" href="${WORK_PATH}/">
-          <span class="admin-icon">¹¤</span>
-          <strong>¹¤×÷Çø</strong>
-          <em>ÊÔ¿éµÇ¼Ç¡¢ÈÕÀú¡¢ÓÊ¼şÌáĞÑ</em>
+          <span class="admin-icon">å·¥</span>
+          <strong>å·¥ä½œåŒº</strong>
+          <em>è¯•å—ç™»è®°ã€æ—¥å†ã€é‚®ä»¶æé†’</em>
         </a>
         <a class="admin-card" href="${PRIVATE_GALLERY_PATH}/">
-          <span class="admin-icon">Ïà</span>
-          <strong>Ë½ÃÜÏà²á</strong>
-          <em>²é¿´Ë½ÃÜÕÕÆ¬ºÍÏÂÔØÔ­Í¼</em>
+          <span class="admin-icon">ç›¸</span>
+          <strong>ç§å¯†ç›¸å†Œ</strong>
+          <em>æŸ¥çœ‹ç§å¯†ç…§ç‰‡å’Œä¸‹è½½åŸå›¾</em>
         </a>
       </div>
     </section>
@@ -1694,10 +1694,10 @@ function renderHome(content) {
     <section class="section" id="notes" aria-labelledby="notes-title">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">½üÆÚ±Ê¼Ç</p>
-          <h2 id="notes-title">µã½øÃ¿Æª±Ê¼Ç£¬¿ÉÒÔÍêÕûÔÄ¶ÁºÍÏÂÔØÎÄ±¾¡£</h2>
+          <p class="section-kicker">è¿‘æœŸç¬”è®°</p>
+          <h2 id="notes-title">ç‚¹è¿›æ¯ç¯‡ç¬”è®°ï¼Œå¯ä»¥å®Œæ•´é˜…è¯»å’Œä¸‹è½½æ–‡æœ¬ã€‚</h2>
         </div>
-        <a class="text-link" href="/notes/">²é¿´È«²¿±Ê¼Ç</a>
+        <a class="text-link" href="/notes/">æŸ¥çœ‹å…¨éƒ¨ç¬”è®°</a>
       </div>
       <div class="note-list">
         ${notes.slice(0, 3).map((item, index) => noteCard(item, index)).join("\n        ")}
@@ -1707,13 +1707,13 @@ function renderHome(content) {
     <section class="section gallery-section" id="gallery" aria-labelledby="gallery-title">
       <div class="section-heading">
         <div>
-          <p class="section-kicker">Ïà²á</p>
-          <h2 id="gallery-title">ÕÕÆ¬°´Ïà²áÕûÀí£¬µã½øÈ¥²é¿´ºÍÏÂÔØÔ­Í¼¡£</h2>
+          <p class="section-kicker">ç›¸å†Œ</p>
+          <h2 id="gallery-title">ç…§ç‰‡æŒ‰ç›¸å†Œæ•´ç†ï¼Œç‚¹è¿›å»æŸ¥çœ‹å’Œä¸‹è½½åŸå›¾ã€‚</h2>
         </div>
         <div class="section-actions">
-          <a class="text-link" href="/gallery/">´ò¿ªÏà²á</a>
-          <a class="text-link" href="${PRIVATE_GALLERY_PATH}/">Ë½ÃÜÏà²á</a>
-          <a class="text-link" href="${WORK_PATH}/">¹¤×÷Çø</a>
+          <a class="text-link" href="/gallery/">æ‰“å¼€ç›¸å†Œ</a>
+          <a class="text-link" href="${PRIVATE_GALLERY_PATH}/">ç§å¯†ç›¸å†Œ</a>
+          <a class="text-link" href="${WORK_PATH}/">å·¥ä½œåŒº</a>
         </div>
       </div>
       ${albums.length ? `<div class="album-grid">
@@ -1723,8 +1723,8 @@ function renderHome(content) {
 
     <section class="section" id="ideas" aria-labelledby="ideas-title">
       <div class="section-heading">
-        <p class="section-kicker">ÏîÄ¿ºÍÏë·¨</p>
-        <h2 id="ideas-title">Ğ¡¶øÊµÓÃ£¬ÂıÂıµü´ú¡£</h2>
+        <p class="section-kicker">é¡¹ç›®å’Œæƒ³æ³•</p>
+        <h2 id="ideas-title">å°è€Œå®ç”¨ï¼Œæ…¢æ…¢è¿­ä»£ã€‚</h2>
       </div>
       <div class="idea-grid">
         ${ideas.map((item) => `<article class="idea-card">
@@ -1744,10 +1744,10 @@ function renderHome(content) {
 function noteCard(item, index) {
   const href = `/notes/${noteSlug(item, index)}/`;
   return `<article class="note-card${index === 0 ? " featured" : ""}">
-          <p class="date">${html(item.date || "´ı¸üĞÂ")}</p>
+          <p class="date">${html(item.date || "å¾…æ›´æ–°")}</p>
           <h3><a href="${href}">${html(item.title)}</a></h3>
           <p>${html(item.body)}</p>
-          <a class="card-link" href="${href}">ÔÄ¶ÁÈ«ÎÄ</a>
+          <a class="card-link" href="${href}">é˜…è¯»å…¨æ–‡</a>
         </article>`;
 }
 
@@ -1766,10 +1766,10 @@ function albumCard(album, privateMode = false) {
   return `<article class="album-card">
           <a class="album-cover" href="${href}"><img src="${attr(imagePreviewSrc(cover))}" alt="${attr(album.name)}" loading="lazy"></a>
           <div class="album-body">
-            <p class="album-meta">${album.count} ÕÅÕÕÆ¬</p>
+            <p class="album-meta">${album.count} å¼ ç…§ç‰‡</p>
             <h3><a href="${href}">${html(album.name)}</a></h3>
-            <p>${html(summary || "Õâ¸öÏà²á»¹Ã»ÓĞËµÃ÷¡£")}</p>
-            <a class="card-link" href="${href}">´ò¿ªÏà²á</a>
+            <p>${html(summary || "è¿™ä¸ªç›¸å†Œè¿˜æ²¡æœ‰è¯´æ˜ã€‚")}</p>
+            <a class="card-link" href="${href}">æ‰“å¼€ç›¸å†Œ</a>
           </div>
         </article>`;
 }
@@ -1778,9 +1778,9 @@ function galleryCard(item, index, album) {
   const itemIndex = Number.isInteger(item.index) ? item.index : index;
   const href = album ? `/gallery/${album.slug}/${imageSlug(item, itemIndex)}/` : `/gallery/${imageSlug(item, itemIndex)}/`;
   return `<figure class="gallery-card">
-          <a href="${href}"><img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "Ïà²áÍ¼Æ¬")}" loading="lazy"></a>
+          <a href="${href}"><img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "ç›¸å†Œå›¾ç‰‡")}" loading="lazy"></a>
           <figcaption>
-            <strong><a href="${href}">${html(item.title || "Î´ÃüÃûÍ¼Æ¬")}</a></strong>
+            <strong><a href="${href}">${html(item.title || "æœªå‘½åå›¾ç‰‡")}</a></strong>
             <span>${html(item.caption || "")}</span>
           </figcaption>
         </figure>`;
@@ -1789,13 +1789,13 @@ function galleryCard(item, index, album) {
 function photoTile(item, album) {
   const href = `${galleryBasePath(album.private)}/${album.slug}/${imageSlug(item, item.index)}/`;
   return `<figure class="photo-tile">
-          <a class="photo-tile-image" href="${href}" data-lightbox-index="${item.albumIndex || 0}"><img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "Ïà²áÍ¼Æ¬")}" loading="lazy"></a>
+          <a class="photo-tile-image" href="${href}" data-lightbox-index="${item.albumIndex || 0}"><img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "ç›¸å†Œå›¾ç‰‡")}" loading="lazy"></a>
           <figcaption>
-            <strong><a href="${href}">${html(item.title || "Î´ÃüÃûÍ¼Æ¬")}</a></strong>
+            <strong><a href="${href}">${html(item.title || "æœªå‘½åå›¾ç‰‡")}</a></strong>
             ${item.caption ? `<span>${html(item.caption)}</span>` : ""}
             <div class="photo-links">
-              <a href="${href}">ÏêÇé</a>
-              <a href="${attr(item.src)}" download>ÏÂÔØ</a>
+              <a href="${href}">è¯¦æƒ…</a>
+              <a href="${attr(item.src)}" download>ä¸‹è½½</a>
             </div>
           </figcaption>
         </figure>`;
@@ -1804,23 +1804,23 @@ function photoTile(item, album) {
 function renderLightbox(album) {
   const photos = album.items.map((item) => ({
     src: item.src,
-    title: item.title || "Î´ÃüÃûÍ¼Æ¬",
+    title: item.title || "æœªå‘½åå›¾ç‰‡",
     caption: item.caption || ""
   }));
   return `<div class="lightbox" data-lightbox hidden>
-        <button class="lightbox-close" type="button" data-lightbox-close aria-label="ÍË³ö¿´Í¼">ÍË³ö</button>
-        <button class="lightbox-nav prev" type="button" data-lightbox-prev aria-label="ÉÏÒ»ÕÅ">&lsaquo;</button>
+        <button class="lightbox-close" type="button" data-lightbox-close aria-label="é€€å‡ºçœ‹å›¾">é€€å‡º</button>
+        <button class="lightbox-nav prev" type="button" data-lightbox-prev aria-label="ä¸Šä¸€å¼ ">&lsaquo;</button>
         <figure class="lightbox-panel">
           <img data-lightbox-image alt="">
           <figcaption>
             <strong data-lightbox-title></strong>
             <p data-lightbox-caption></p>
             <div class="photo-links">
-              <a data-lightbox-download download>ÏÂÔØÔ­Í¼</a>
+              <a data-lightbox-download download>ä¸‹è½½åŸå›¾</a>
             </div>
           </figcaption>
         </figure>
-        <button class="lightbox-nav next" type="button" data-lightbox-next aria-label="ÏÂÒ»ÕÅ">&rsaquo;</button>
+        <button class="lightbox-nav next" type="button" data-lightbox-next aria-label="ä¸‹ä¸€å¼ ">&rsaquo;</button>
       </div>
       <script>
         (() => {
@@ -1881,20 +1881,20 @@ function renderLightbox(album) {
 
 function emptyGallery() {
   return `<div class="empty-gallery">
-        <p>»¹Ã»ÓĞÉÏ´«Í¼Æ¬¡£µÈÄã·Å½øµÚÒ»ÕÅÕÕÆ¬£¬ÕâÀï¾Í»áÁÁÆğÀ´¡£</p>
+        <p>è¿˜æ²¡æœ‰ä¸Šä¼ å›¾ç‰‡ã€‚ç­‰ä½ æ”¾è¿›ç¬¬ä¸€å¼ ç…§ç‰‡ï¼Œè¿™é‡Œå°±ä¼šäº®èµ·æ¥ã€‚</p>
       </div>`;
 }
 
 function renderNotesIndex(content) {
   const notes = getNotes(content);
-  return `${pageHead(content, `±Ê¼Ç - ${content.siteTitle}`, "ËùÓĞ¹«¿ª±Ê¼Ç¡£")}
+  return `${pageHead(content, `ç¬”è®° - ${content.siteTitle}`, "æ‰€æœ‰å…¬å¼€ç¬”è®°ã€‚")}
 <body>
   ${publicHeader(content)}
   <main>
     <section class="page-hero">
       <p class="eyebrow">Notes</p>
-      <h1>±Ê¼Ç</h1>
-      <p class="lead">ÕâÀïÊÕ×ÅËùÓĞ¿ÉÒÔµã½øÈ¥¿´µÄ¼ÇÂ¼£¬Ã¿Æª¶¼Ìá¹©ÎÄ±¾ÏÂÔØ¡£</p>
+      <h1>ç¬”è®°</h1>
+      <p class="lead">è¿™é‡Œæ”¶ç€æ‰€æœ‰å¯ä»¥ç‚¹è¿›å»çœ‹çš„è®°å½•ï¼Œæ¯ç¯‡éƒ½æä¾›æ–‡æœ¬ä¸‹è½½ã€‚</p>
     </section>
     <section class="section">
       <div class="note-list wide-list">
@@ -1910,18 +1910,18 @@ function renderNotesIndex(content) {
 
 function renderNotePage(content, item, index) {
   const slug = noteSlug(item, index);
-  return `${pageHead(content, `${item.title || "±Ê¼Ç"} - ${content.siteTitle}`, item.body || "")}
+  return `${pageHead(content, `${item.title || "ç¬”è®°"} - ${content.siteTitle}`, item.body || "")}
 <body>
   ${publicHeader(content)}
   <main>
     <article class="detail-page note-detail">
-      <nav class="breadcrumb"><a href="/notes/">±Ê¼Ç</a><span>/</span><span>${html(item.title || "Î´ÃüÃû±Ê¼Ç")}</span></nav>
-      <p class="date">${html(item.date || "´ı¸üĞÂ")}</p>
-      <h1>${html(item.title || "Î´ÃüÃû±Ê¼Ç")}</h1>
+      <nav class="breadcrumb"><a href="/notes/">ç¬”è®°</a><span>/</span><span>${html(item.title || "æœªå‘½åç¬”è®°")}</span></nav>
+      <p class="date">${html(item.date || "å¾…æ›´æ–°")}</p>
+      <h1>${html(item.title || "æœªå‘½åç¬”è®°")}</h1>
       <div class="note-body">${paragraphs(item.body)}</div>
       <div class="detail-actions">
-        <a class="button-link" href="/notes/${slug}/note.txt" download>ÏÂÔØÕâÆª±Ê¼Ç</a>
-        <a class="button-link secondary" href="/notes/">·µ»Ø±Ê¼ÇÁĞ±í</a>
+        <a class="button-link" href="/notes/${slug}/note.txt" download>ä¸‹è½½è¿™ç¯‡ç¬”è®°</a>
+        <a class="button-link secondary" href="/notes/">è¿”å›ç¬”è®°åˆ—è¡¨</a>
       </div>
     </article>
   </main>
@@ -1932,25 +1932,25 @@ function renderNotePage(content, item, index) {
 }
 
 function renderNoteText(content, item) {
-  return `${item.title || "Î´ÃüÃû±Ê¼Ç"}\n${item.date || ""}\n\n${item.body || ""}\n\n-- ${content.siteTitle}\n`;
+  return `${item.title || "æœªå‘½åç¬”è®°"}\n${item.date || ""}\n\n${item.body || ""}\n\n-- ${content.siteTitle}\n`;
 }
 
 function paragraphs(value) {
   const lines = String(value || "").split(/\n{2,}/).map((line) => line.trim()).filter(Boolean);
-  if (!lines.length) return "<p>ÕâÆª±Ê¼Ç»¹Ã»ÓĞÕıÎÄ¡£</p>";
+  if (!lines.length) return "<p>è¿™ç¯‡ç¬”è®°è¿˜æ²¡æœ‰æ­£æ–‡ã€‚</p>";
   return lines.map((line) => `<p>${html(line)}</p>`).join("\n        ");
 }
 
 function renderGalleryIndex(content) {
   const albums = getAlbums(content);
-  return `${pageHead(content, `Ïà²á - ${content.siteTitle}`, "¹«¿ªÏà²á£¬¿ÉÒÔ²é¿´ºÍÏÂÔØÔ­Í¼¡£")}
+  return `${pageHead(content, `ç›¸å†Œ - ${content.siteTitle}`, "å…¬å¼€ç›¸å†Œï¼Œå¯ä»¥æŸ¥çœ‹å’Œä¸‹è½½åŸå›¾ã€‚")}
 <body>
   ${publicHeader(content)}
   <main>
     <section class="page-hero">
       <p class="eyebrow">Gallery</p>
-      <h1>Ïà²á</h1>
-      <p class="lead">ÕÕÆ¬»á°´Ïà²á·Ö×é¡£´ò¿ªÒ»¸öÏà²áºó£¬¿ÉÒÔÖğÕÅ²é¿´£¬Ò²¿ÉÒÔÏÂÔØÔ­Í¼¡£</p>
+      <h1>ç›¸å†Œ</h1>
+      <p class="lead">ç…§ç‰‡ä¼šæŒ‰ç›¸å†Œåˆ†ç»„ã€‚æ‰“å¼€ä¸€ä¸ªç›¸å†Œåï¼Œå¯ä»¥é€å¼ æŸ¥çœ‹ï¼Œä¹Ÿå¯ä»¥ä¸‹è½½åŸå›¾ã€‚</p>
     </section>
     <section class="section gallery-section">
       ${albums.length ? `<div class="album-grid">
@@ -1966,14 +1966,14 @@ function renderGalleryIndex(content) {
 
 function renderPrivateGalleryIndex(content) {
   const albums = getAlbums(content, { private: true });
-  return `${pageHead(content, `Ë½ÃÜÏà²á - ${content.siteTitle}`, "ĞèÒªÃÜÂë·ÃÎÊµÄË½ÃÜÏà²á¡£")}
+  return `${pageHead(content, `ç§å¯†ç›¸å†Œ - ${content.siteTitle}`, "éœ€è¦å¯†ç è®¿é—®çš„ç§å¯†ç›¸å†Œã€‚")}
 <body>
   ${publicHeader(content)}
   <main>
     <section class="page-hero">
       <p class="eyebrow">Private Gallery</p>
-      <h1>Ë½ÃÜÏà²á</h1>
-      <p class="lead">ÕâÀïµÄÏà²áºÍÔ­Í¼¶¼ĞèÒªÃÜÂë·ÃÎÊ¡£</p>
+      <h1>ç§å¯†ç›¸å†Œ</h1>
+      <p class="lead">è¿™é‡Œçš„ç›¸å†Œå’ŒåŸå›¾éƒ½éœ€è¦å¯†ç è®¿é—®ã€‚</p>
     </section>
     <section class="section gallery-section">
       ${albums.length ? `<div class="album-grid">
@@ -1988,16 +1988,16 @@ function renderPrivateGalleryIndex(content) {
 }
 
 function renderPrivateGalleryPlaceholder(content) {
-  return `${pageHead(content, `Ë½ÃÜÏà²á - ${content.siteTitle}`, "ĞèÒªÃÜÂë·ÃÎÊµÄË½ÃÜÏà²á¡£")}
+  return `${pageHead(content, `ç§å¯†ç›¸å†Œ - ${content.siteTitle}`, "éœ€è¦å¯†ç è®¿é—®çš„ç§å¯†ç›¸å†Œã€‚")}
 <body>
   ${publicHeader(content)}
   <main>
     <section class="page-hero">
       <p class="eyebrow">Private Gallery</p>
-      <h1>Ë½ÃÜÏà²á</h1>
-      <p class="lead">ÕâÀïµÄÏà²áºÍÔ­Í¼ĞèÒªÍ¨¹ıÃÜÂëÑéÖ¤ºó²é¿´¡£</p>
+      <h1>ç§å¯†ç›¸å†Œ</h1>
+      <p class="lead">è¿™é‡Œçš„ç›¸å†Œå’ŒåŸå›¾éœ€è¦é€šè¿‡å¯†ç éªŒè¯åæŸ¥çœ‹ã€‚</p>
       <div class="hero-actions">
-        <a class="primary-link" href="${PRIVATE_GALLERY_PATH}/">½øÈëË½ÃÜÏà²á</a>
+        <a class="primary-link" href="${PRIVATE_GALLERY_PATH}/">è¿›å…¥ç§å¯†ç›¸å†Œ</a>
       </div>
     </section>
   </main>
@@ -2008,14 +2008,14 @@ function renderPrivateGalleryPlaceholder(content) {
 }
 
 function renderAlbumPage(content, album, privateMode = false) {
-  return `${pageHead(content, `${album.name} - ${content.siteTitle}`, `${album.name}£¬¹² ${album.count} ÕÅÕÕÆ¬¡£`)}
+  return `${pageHead(content, `${album.name} - ${content.siteTitle}`, `${album.name}ï¼Œå…± ${album.count} å¼ ç…§ç‰‡ã€‚`)}
 <body>
   ${publicHeader(content)}
   <main>
     <section class="page-hero">
       <p class="eyebrow">Album</p>
       <h1>${html(album.name)}</h1>
-      <p class="lead">¹² ${album.count} ÕÅÕÕÆ¬¡£</p>
+      <p class="lead">å…± ${album.count} å¼ ç…§ç‰‡ã€‚</p>
     </section>
     <section class="section gallery-section album-photos">
       <div class="photo-masonry">
@@ -2032,20 +2032,20 @@ function renderAlbumPage(content, album, privateMode = false) {
 
 function renderPhotoPage(content, album, item, privateMode = false) {
   const base = galleryBasePath(privateMode);
-  return `${pageHead(content, `${item.title || "Ïà²áÍ¼Æ¬"} - ${content.siteTitle}`, item.caption || "Ïà²áÍ¼Æ¬ÏêÇé¡£")}
+  return `${pageHead(content, `${item.title || "ç›¸å†Œå›¾ç‰‡"} - ${content.siteTitle}`, item.caption || "ç›¸å†Œå›¾ç‰‡è¯¦æƒ…ã€‚")}
 <body>
   ${publicHeader(content)}
   <main>
     <article class="detail-page photo-detail">
-      <nav class="breadcrumb"><a href="${base}/">${privateMode ? "Ë½ÃÜÏà²á" : "Ïà²á"}</a><span>/</span><a href="${base}/${album.slug}/">${html(album.name)}</a><span>/</span><span>${html(item.title || "Î´ÃüÃûÍ¼Æ¬")}</span></nav>
-      <h1>${html(item.title || "Î´ÃüÃûÍ¼Æ¬")}</h1>
-      <p class="lead">${html(item.caption || "ÕâÕÅÍ¼Æ¬»¹Ã»ÓĞËµÃ÷¡£")}</p>
+      <nav class="breadcrumb"><a href="${base}/">${privateMode ? "ç§å¯†ç›¸å†Œ" : "ç›¸å†Œ"}</a><span>/</span><a href="${base}/${album.slug}/">${html(album.name)}</a><span>/</span><span>${html(item.title || "æœªå‘½åå›¾ç‰‡")}</span></nav>
+      <h1>${html(item.title || "æœªå‘½åå›¾ç‰‡")}</h1>
+      <p class="lead">${html(item.caption || "è¿™å¼ å›¾ç‰‡è¿˜æ²¡æœ‰è¯´æ˜ã€‚")}</p>
       <div class="photo-frame">
-        <img src="${attr(item.src)}" alt="${attr(item.title || "Ïà²áÍ¼Æ¬")}">
+        <img src="${attr(item.src)}" alt="${attr(item.title || "ç›¸å†Œå›¾ç‰‡")}">
       </div>
       <div class="detail-actions">
-        <a class="button-link" href="${attr(item.src)}" download>ÏÂÔØÔ­Í¼</a>
-        <a class="button-link secondary" href="${base}/${album.slug}/">·µ»ØÕâ¸öÏà²á</a>
+        <a class="button-link" href="${attr(item.src)}" download>ä¸‹è½½åŸå›¾</a>
+        <a class="button-link secondary" href="${base}/${album.slug}/">è¿”å›è¿™ä¸ªç›¸å†Œ</a>
       </div>
     </article>
   </main>
@@ -2063,7 +2063,7 @@ function renderAdmin(content, message = "") {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>±à¼­ ${html(content.siteTitle)}</title>
+  <title>ç¼–è¾‘ ${html(content.siteTitle)}</title>
   <style>
     :root { --bg:#f7faf8; --surface:#fff; --ink:#1f2b2c; --muted:#607174; --line:#dbe7e2; --green:#4d8a76; --coral:#d87658; }
     * { box-sizing: border-box; }
@@ -2127,70 +2127,70 @@ function renderAdmin(content, message = "") {
 <body>
   <header>
     <div class="bar">
-      <h1>±à¼­ ${html(content.siteTitle)}</h1>
-      <div><a href="/" target="_blank" rel="noopener">Ê×Ò³</a> ¡¤ <a href="/gallery/" target="_blank" rel="noopener">Ïà²á</a> ¡¤ <a href="${PRIVATE_GALLERY_PATH}/" target="_blank" rel="noopener">Ë½ÃÜÏà²á</a> ¡¤ <a href="${WORK_PATH}/" target="_blank" rel="noopener">¹¤×÷Çø</a> ¡¤ <a href="${BASE_PATH}/logout">ÍË³ö</a></div>
+      <h1>ç¼–è¾‘ ${html(content.siteTitle)}</h1>
+      <div><a href="/" target="_blank" rel="noopener">é¦–é¡µ</a> Â· <a href="/gallery/" target="_blank" rel="noopener">ç›¸å†Œ</a> Â· <a href="${PRIVATE_GALLERY_PATH}/" target="_blank" rel="noopener">ç§å¯†ç›¸å†Œ</a> Â· <a href="${WORK_PATH}/" target="_blank" rel="noopener">å·¥ä½œåŒº</a> Â· <a href="${BASE_PATH}/logout">é€€å‡º</a></div>
     </div>
   </header>
   <main>
     ${message ? `<p class="message">${html(message)}</p>` : ""}
     <form method="post" action="${BASE_PATH}/save">
-      <h2>Ê×Ò³ÄÚÈİ</h2>
+      <h2>é¦–é¡µå†…å®¹</h2>
       <div class="grid">
-        ${field("siteTitle", "ä¯ÀÀÆ÷±êÌâ", content.siteTitle)}
-        ${field("brandName", "Õ¾µãÃû³Æ", content.brandName)}
+        ${field("siteTitle", "æµè§ˆå™¨æ ‡é¢˜", content.siteTitle)}
+        ${field("brandName", "ç«™ç‚¹åç§°", content.brandName)}
       </div>
-      ${field("eyebrow", "Ğ¡×ÖÒıµ¼", content.eyebrow)}
-      ${area("heroTitle", "Ö÷±êÌâ", content.heroTitle)}
-      ${area("lead", "¼ò½é", content.lead)}
+      ${field("eyebrow", "å°å­—å¼•å¯¼", content.eyebrow)}
+      ${area("heroTitle", "ä¸»æ ‡é¢˜", content.heroTitle)}
+      ${area("lead", "ç®€ä»‹", content.lead)}
       <div class="grid">
-        ${field("aboutKicker", "¹ØÓÚĞ¡±êÌâ", content.aboutKicker)}
-        ${field("footerName", "Ò³½ÅÃû³Æ", content.footerName)}
+        ${field("aboutKicker", "å…³äºå°æ ‡é¢˜", content.aboutKicker)}
+        ${field("footerName", "é¡µè„šåç§°", content.footerName)}
       </div>
-      ${field("aboutTitle", "¹ØÓÚ±êÌâ", content.aboutTitle)}
-      ${area("aboutBody", "¹ØÓÚÕıÎÄ", content.aboutBody)}
+      ${field("aboutTitle", "å…³äºæ ‡é¢˜", content.aboutTitle)}
+      ${area("aboutBody", "å…³äºæ­£æ–‡", content.aboutBody)}
 
-      <h2>½üÆÚ±Ê¼Ç</h2>
+      <h2>è¿‘æœŸç¬”è®°</h2>
       <div id="notes">${content.notes.map((item) => noteFields(item)).join("")}</div>
-      <button class="secondary" type="button" onclick="addNote()">Ìí¼Ó±Ê¼Ç</button>
+      <button class="secondary" type="button" onclick="addNote()">æ·»åŠ ç¬”è®°</button>
 
-      <h2>ÏîÄ¿ºÍÏë·¨</h2>
+      <h2>é¡¹ç›®å’Œæƒ³æ³•</h2>
       <div id="ideas">${content.ideas.map((item) => ideaFields(item)).join("")}</div>
-      <button class="secondary" type="button" onclick="addIdea()">Ìí¼ÓÏîÄ¿</button>
+      <button class="secondary" type="button" onclick="addIdea()">æ·»åŠ é¡¹ç›®</button>
 
-      <div class="actions"><button type="submit">±£´æ²¢·¢²¼</button></div>
+      <div class="actions"><button type="submit">ä¿å­˜å¹¶å‘å¸ƒ</button></div>
     </form>
 
     <form id="upload-form" method="post" action="${BASE_PATH}/upload" enctype="multipart/form-data">
-      <h2>ÉÏ´«Í¼Æ¬µ½Ïà²á</h2>
+      <h2>ä¸Šä¼ å›¾ç‰‡åˆ°ç›¸å†Œ</h2>
       <div class="grid">
-        ${field("albumName", "Ïà²áÃû³Æ", DEFAULT_ALBUM)}
-        ${field("imageTitle", "Í¼Æ¬±êÌâ", "")}
+        ${field("albumName", "ç›¸å†Œåç§°", DEFAULT_ALBUM)}
+        ${field("imageTitle", "å›¾ç‰‡æ ‡é¢˜", "")}
       </div>
       <div class="grid">
-        ${field("imageCaption", "Í¼Æ¬ËµÃ÷", "")}
+        ${field("imageCaption", "å›¾ç‰‡è¯´æ˜", "")}
       </div>
-      <label for="image">Ñ¡ÔñÍ¼Æ¬£¬¿ÉÒÔÒ»´ÎÑ¡Ôñ¶àÕÅ</label>
+      <label for="image">é€‰æ‹©å›¾ç‰‡ï¼Œå¯ä»¥ä¸€æ¬¡é€‰æ‹©å¤šå¼ </label>
       <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
-      <label class="check-row"><input id="privateAlbum" name="privateAlbum" type="checkbox" value="1"><span>ÉèÎªË½ÃÜÏà²áÍ¼Æ¬</span></label>
-      <p class="hint">Ò»´ÎÑ¡Ôñ¶àÕÅÍ¼Æ¬Ê±£¬ËüÃÇ»á½øÈëÍ¬Ò»¸öÏà²á£»±êÌâÁô¿ÕÊ±»áÊ¹ÓÃÎÄ¼şÃû¡£¹´Ñ¡Ë½ÃÜºó£¬Ò³ÃæºÍÔ­Í¼¶¼ĞèÒªÃÜÂë¡£</p>
+      <label class="check-row"><input id="privateAlbum" name="privateAlbum" type="checkbox" value="1"><span>è®¾ä¸ºç§å¯†ç›¸å†Œå›¾ç‰‡</span></label>
+      <p class="hint">ä¸€æ¬¡é€‰æ‹©å¤šå¼ å›¾ç‰‡æ—¶ï¼Œå®ƒä»¬ä¼šè¿›å…¥åŒä¸€ä¸ªç›¸å†Œï¼›æ ‡é¢˜ç•™ç©ºæ—¶ä¼šä½¿ç”¨æ–‡ä»¶åã€‚å‹¾é€‰ç§å¯†åï¼Œé¡µé¢å’ŒåŸå›¾éƒ½éœ€è¦å¯†ç ã€‚</p>
       <div id="upload-progress" class="progress" aria-live="polite">
         <div class="progress-track"><div id="upload-bar" class="progress-bar"></div></div>
-        <div class="progress-row"><span id="upload-text">×¼±¸ÉÏ´«</span><span id="upload-percent">0%</span></div>
+        <div class="progress-row"><span id="upload-text">å‡†å¤‡ä¸Šä¼ </span><span id="upload-percent">0%</span></div>
         <ol id="upload-list" class="progress-list"></ol>
       </div>
-      <div class="actions"><button id="upload-button" type="submit">ÉÏ´«²¢·¢²¼</button></div>
+      <div class="actions"><button id="upload-button" type="submit">ä¸Šä¼ å¹¶å‘å¸ƒ</button></div>
     </form>
 
     <section class="panel">
-      <h2>¹«¿ªÏà²áÍ¼Æ¬</h2>
+      <h2>å…¬å¼€ç›¸å†Œå›¾ç‰‡</h2>
       ${renderAdminAlbums(albums, false)}
 
-      <h2>Ë½ÃÜÏà²áÍ¼Æ¬</h2>
+      <h2>ç§å¯†ç›¸å†Œå›¾ç‰‡</h2>
       ${renderAdminAlbums(privateAlbums, true)}
     </section>
 
   </main>
-  <template id="note-template">${noteFields({ date: "´ı¸üĞÂ", title: "", body: "" })}</template>
+  <template id="note-template">${noteFields({ date: "å¾…æ›´æ–°", title: "", body: "" })}</template>
   <template id="idea-template">${ideaFields({ tag: "Note", title: "", body: "" })}</template>
   <script>
     function appendTemplate(target, template) {
@@ -2226,17 +2226,17 @@ function renderAdmin(content, message = "") {
         xhr.upload.onprogress = (event) => {
           if (!event.lengthComputable) return;
           const current = event.loaded / event.total;
-          setProgress(((index + current) / total) * 100, "ÕıÔÚÉÏ´« " + file.name + "£¨" + (index + 1) + "/" + total + "£©");
+          setProgress(((index + current) / total) * 100, "æ­£åœ¨ä¸Šä¼  " + file.name + "ï¼ˆ" + (index + 1) + "/" + total + "ï¼‰");
         };
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            progressList.children[index].textContent = "ÒÑÍê³É£º" + file.name;
+            progressList.children[index].textContent = "å·²å®Œæˆï¼š" + file.name;
             resolve();
             return;
           }
-          reject(new Error(xhr.responseText || "ÉÏ´«Ê§°Ü"));
+          reject(new Error(xhr.responseText || "ä¸Šä¼ å¤±è´¥"));
         };
-        xhr.onerror = () => reject(new Error("ÍøÂçÖĞ¶Ï£¬ÉÏ´«Ê§°Ü"));
+        xhr.onerror = () => reject(new Error("ç½‘ç»œä¸­æ–­ï¼Œä¸Šä¼ å¤±è´¥"));
         xhr.send(data);
       });
     }
@@ -2250,12 +2250,12 @@ function renderAdmin(content, message = "") {
       progressList.innerHTML = "";
       files.forEach((file) => {
         const item = document.createElement("li");
-        item.textContent = "µÈ´ıÉÏ´«£º" + file.name;
+        item.textContent = "ç­‰å¾…ä¸Šä¼ ï¼š" + file.name;
         progressList.appendChild(item);
       });
       uploadButton.disabled = true;
-      uploadButton.textContent = "ÉÏ´«ÖĞ...";
-      setProgress(0, "×¼±¸ÉÏ´« " + files.length + " ÕÅÍ¼Æ¬");
+      uploadButton.textContent = "ä¸Šä¼ ä¸­...";
+      setProgress(0, "å‡†å¤‡ä¸Šä¼  " + files.length + " å¼ å›¾ç‰‡");
 
       try {
         const form = new FormData(uploadForm);
@@ -2274,12 +2274,12 @@ function renderAdmin(content, message = "") {
           data.append("image", file, file.name);
           await uploadOne(data, file, i, files.length);
         }
-        setProgress(100, "ÉÏ´«Íê³É£¬ÕıÔÚË¢ĞÂÒ³Ãæ");
-        window.location.href = basePath + "/?msg=" + encodeURIComponent(files.length + " ÕÅÍ¼Æ¬ÒÑÉÏ´«²¢·¢²¼");
+        setProgress(100, "ä¸Šä¼ å®Œæˆï¼Œæ­£åœ¨åˆ·æ–°é¡µé¢");
+        window.location.href = basePath + "/?msg=" + encodeURIComponent(files.length + " å¼ å›¾ç‰‡å·²ä¸Šä¼ å¹¶å‘å¸ƒ");
       } catch (error) {
-        setProgress(0, error.message || "ÉÏ´«Ê§°Ü");
+        setProgress(0, error.message || "ä¸Šä¼ å¤±è´¥");
         uploadButton.disabled = false;
-        uploadButton.textContent = "ÖØĞÂÉÏ´«";
+        uploadButton.textContent = "é‡æ–°ä¸Šä¼ ";
       }
     });
   </script>
@@ -2288,25 +2288,25 @@ function renderAdmin(content, message = "") {
 }
 
 function renderAdminAlbums(albums, privateMode) {
-  if (!albums.length) return `<p>${privateMode ? "»¹Ã»ÓĞË½ÃÜÍ¼Æ¬¡£" : "»¹Ã»ÓĞ¹«¿ªÍ¼Æ¬¡£"}</p>`;
+  if (!albums.length) return `<p>${privateMode ? "è¿˜æ²¡æœ‰ç§å¯†å›¾ç‰‡ã€‚" : "è¿˜æ²¡æœ‰å…¬å¼€å›¾ç‰‡ã€‚"}</p>`;
   const base = galleryBasePath(privateMode);
   return albums.map((album) => `<div class="album-block">
-        <h3>${html(album.name)} <span>${album.count} ÕÅ</span></h3>
+        <h3>${html(album.name)} <span>${album.count} å¼ </span></h3>
         <form class="rename-form" method="post" action="${BASE_PATH}/rename-album">
           <input type="hidden" name="oldAlbum" value="${attr(album.name)}">
           <input type="hidden" name="privateAlbum" value="${privateMode ? "1" : "0"}">
-          <label>Ïà²áÃû³Æ<input name="newAlbum" value="${attr(album.name)}" required></label>
-          <button class="secondary" type="submit">±£´æÃû³Æ</button>
+          <label>ç›¸å†Œåç§°<input name="newAlbum" value="${attr(album.name)}" required></label>
+          <button class="secondary" type="submit">ä¿å­˜åç§°</button>
         </form>
         <div class="gallery">${album.items.map((item) => `<figure>
-        <img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "Ïà²áÍ¼Æ¬")}">
+        <img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "ç›¸å†Œå›¾ç‰‡")}">
         <figcaption>
-          <strong>${html(item.title || "Î´ÃüÃûÍ¼Æ¬")}</strong><br>
+          <strong>${html(item.title || "æœªå‘½åå›¾ç‰‡")}</strong><br>
           ${html(item.caption || "")}<br>
-          <a href="${base}/${album.slug}/${imageSlug(item, item.index)}/" target="_blank" rel="noopener">²é¿´Ò³Ãæ</a> ¡¤ <a href="${attr(item.src)}" download>ÏÂÔØÔ­Í¼</a>
+          <a href="${base}/${album.slug}/${imageSlug(item, item.index)}/" target="_blank" rel="noopener">æŸ¥çœ‹é¡µé¢</a> Â· <a href="${attr(item.src)}" download>ä¸‹è½½åŸå›¾</a>
           <form method="post" action="${BASE_PATH}/delete-image" style="box-shadow:none;border:0;padding:10px 0 0;margin:0;background:transparent">
             <input type="hidden" name="src" value="${attr(item.src)}">
-            <button class="danger" type="submit">É¾³ı</button>
+            <button class="danger" type="submit">åˆ é™¤</button>
           </form>
         </figcaption>
       </figure>`).join("")}</div>
@@ -2336,14 +2336,14 @@ function loginPageStyles() {
 
 function renderLoginPage(options) {
   const usernameField = options.usernameField
-    ? `<label>${html(options.usernameLabel || "ÕËºÅ")}<input name="username" autocomplete="username" value="${attr(options.usernameValue || "")}" required></label>`
+    ? `<label>${html(options.usernameLabel || "è´¦å·")}<input name="username" autocomplete="username" value="${attr(options.usernameValue || "")}" required></label>`
     : "";
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${html(options.title)} - xx520 Ğ¡Õ¾</title>
+  <title>${html(options.title)} - xx520 å°ç«™</title>
   <style>${loginPageStyles()}</style>
 </head>
 <body>
@@ -2356,12 +2356,366 @@ function renderLoginPage(options) {
       <form method="post" action="${attr(options.action)}">
         <input type="hidden" name="next" value="${attr(options.next || "")}">
         ${usernameField}
-        <label>${html(options.passwordLabel || "ÃÜÂë")}<input name="password" type="password" autocomplete="${options.usernameField ? "current-password" : "one-time-code"}" autofocus required></label>
-        <button type="submit">½øÈë</button>
+        <label>${html(options.passwordLabel || "å¯†ç ")}<input name="password" type="password" autocomplete="${options.usernameField ? "current-password" : "one-time-code"}" autofocus required></label>
+        <button type="submit">è¿›å…¥</button>
       </form>
-      <p class="footer"><a href="/">·µ»ØÊ×Ò³</a></p>
+      <p class="footer"><a href="/">è¿”å›é¦–é¡µ</a></p>
     </section>
   </main>
+</body>
+</html>`;
+}
+
+function renderWorkspace(content, message = "") {
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>å·¥ä½œåŒº - ${html(content.siteTitle)}</title>
+  <style>${workspaceStyles()}</style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <h1>å·¥ä½œåŒº</h1>
+      <div><a href="/" target="_blank" rel="noopener">é¦–é¡µ</a> Â· <a href="${BASE_PATH}/" target="_blank" rel="noopener">åå°</a> Â· <a href="/gallery/" target="_blank" rel="noopener">ç›¸å†Œ</a> Â· <a href="${WORK_PATH}/logout">é€€å‡º</a></div>
+    </div>
+  </header>
+  <main>
+    ${message ? `<p class="message">${html(message)}</p>` : ""}
+    ${renderTestBlocksPanel(content, { actionBase: WORK_PATH, showReminders: true, showMailAction: true })}
+  </main>
+</body>
+</html>`;
+}
+
+function workspaceStyles() {
+  return `
+    :root { --bg:#f7faf8; --surface:#fff; --ink:#1f2b2c; --muted:#607174; --line:#dbe7e2; --green:#4d8a76; --warn:#9a4d28; --danger:#a8422d; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--ink); }
+    header { position:sticky; top:0; z-index:2; background:rgba(247,250,248,.94); border-bottom:1px solid var(--line); backdrop-filter:blur(12px); }
+    .bar, main { width:min(1120px, calc(100% - 32px)); margin:0 auto; }
+    .bar { min-height:64px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    h1 { margin:0; font-size:24px; }
+    h2 { margin:0 0 16px; font-size:20px; }
+    h3 { margin:0 0 10px; font-size:17px; }
+    a { color:var(--green); text-decoration:none; font-weight:800; }
+    main { padding:28px 0 64px; }
+    form, section.panel { margin:0 0 18px; padding:22px; background:var(--surface); border:1px solid var(--line); border-radius:8px; box-shadow:0 14px 32px rgba(31,43,44,.06); }
+    label { display:block; margin:12px 0 6px; color:var(--muted); font-size:14px; font-weight:800; }
+    input, textarea { width:100%; border:1px solid var(--line); border-radius:8px; padding:11px 12px; font:inherit; color:var(--ink); background:#fff; }
+    textarea { min-height:92px; resize:vertical; }
+    button { border:0; border-radius:8px; padding:10px 14px; font:inherit; font-weight:800; cursor:pointer; background:var(--green); color:#fff; }
+    button.secondary { background:#edf6f2; color:var(--green); }
+    button.danger { background:#fff0ec; color:var(--danger); }
+    .message { margin:0 0 18px; padding:12px 14px; border-radius:8px; background:#edf6f2; color:#2f6f5b; font-weight:800; }
+    .hint { margin:8px 0 0; color:var(--muted); font-size:13px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .compact-form { box-shadow:none; background:#fbfdfc; }
+    .summary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:0 0 18px; }
+    .summary-card { padding:16px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+    .summary-card strong { display:block; margin-bottom:8px; }
+    .summary-card ul { margin:0; padding-left:18px; color:var(--muted); }
+    .summary-card li { margin:6px 0; }
+    .summary-card.overdue { border-color:#f0c7ba; background:#fff7f3; }
+    .task-list { display:grid; gap:8px; }
+    .task-form { display:flex; align-items:flex-start; gap:8px; margin:0; padding:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
+    .task-form input { width:auto; margin-top:3px; }
+    .task-form span { color:var(--muted); font-size:13px; line-height:1.35; }
+    .task-form.completed span { color:#7a8b8d; text-decoration:line-through; }
+    .calendar-board { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:16px; }
+    .month-card { border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#fff; }
+    .month-card h3 { margin:0; padding:12px 14px; background:#edf6f2; font-size:16px; }
+    .weekdays, .calendar-days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+    .weekdays span { padding:8px 4px; color:var(--muted); text-align:center; font-size:12px; font-weight:800; border-bottom:1px solid var(--line); }
+    .day-cell { min-height:88px; padding:6px; border-right:1px solid var(--line); border-bottom:1px solid var(--line); background:#fff; }
+    .day-cell:nth-child(7n) { border-right:0; }
+    .day-cell.empty { background:#f7faf8; }
+    .day-number { display:inline-flex; min-width:24px; height:24px; align-items:center; justify-content:center; border-radius:999px; font-weight:800; font-size:12px; }
+    .day-cell.today .day-number { background:var(--green); color:#fff; }
+    .due-pill { display:block; margin-top:5px; padding:5px 6px; border-radius:7px; background:#fff7ed; color:var(--warn); font-size:12px; line-height:1.25; }
+    .due-pill.demold { background:#edf6f2; color:#2f6f5b; }
+    .due-pill.completed { background:#eef1f1; color:#7a8b8d; }
+    .due-pill.task-form { display:flex; align-items:flex-start; }
+    .due-pill.task-form span { color:inherit; font-size:12px; }
+    .task-checks { display:flex; flex-wrap:wrap; gap:8px 14px; margin-top:8px; }
+    .block-list { display:grid; gap:10px; margin-top:14px; }
+    .block-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:start; padding:12px; border:1px solid var(--line); border-radius:8px; background:#fff; }
+    .block-row p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+    .record-details { grid-column:1 / -1; margin-top:10px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; overflow:hidden; }
+    .record-details summary { cursor:pointer; padding:12px 14px; font-weight:800; color:var(--green); }
+    .record-details summary span { color:var(--muted); font-weight:700; font-size:13px; }
+    .record-form { margin:0; padding:0 14px 14px; border:0; border-radius:0; background:transparent; box-shadow:none; }
+    .record-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .record-form label { margin-top:10px; }
+    .record-form .actions { margin-top:14px; }
+    .inline-delete { margin:0; padding:0; border:0; background:transparent; box-shadow:none; }
+    @media (max-width:760px) { .bar { align-items:flex-start; flex-direction:column; padding:14px 0; } .grid, .summary-grid, .calendar-board, .block-row, .record-grid { grid-template-columns:1fr; } }
+  `;
+}
+
+function renderTestBlocksPanel(content, options = {}) {
+  const actionBase = options.actionBase || BASE_PATH;
+  const blocks = getTestBlocks(content);
+  return `<section class="panel" id="test-blocks">
+      <h2>æ··å‡åœŸè¯•å—</h2>
+      ${options.showReminders ? renderReminderSummary(content) : ""}
+      <form class="compact-form" method="post" action="${actionBase}/add-block">
+        <div class="grid">
+          <label>è¯•å—åç§°/éƒ¨ä½<input name="blockName" placeholder="ä¾‹ï¼š1#æ¥¼ä¸‰å±‚æ¢æ¿ C30" required></label>
+          <label>åˆ¶ä½œæ—¥æœŸ<input name="madeDate" type="date" value="${today()}" required></label>
+        </div>
+        <div class="grid">
+          <label>è¯•å—æ•°é‡<input name="quantity" type="number" min="1" step="1" value="3" required></label>
+          <label>éœ€è¦é¾„æœŸ<input name="ages" value="7,28" placeholder="ä¾‹ï¼š3,7,28"></label>
+        </div>
+        <div class="grid">
+          <label>å¼ºåº¦ç­‰çº§<input name="strength" placeholder="ä¾‹ï¼šC30"></label>
+          <label>å¤‡æ³¨<input name="note" placeholder="å¯å¡«ç¼–å·ã€æ–½å·¥æ®µç­‰"></label>
+        </div>
+        <div class="grid">
+          <label>é…æ–¹/ç¼–å·<input name="mixName" placeholder="ä¾‹ï¼šC30 æ³µé€é…åˆæ¯”"></label>
+          <label>æ°´èƒ¶æ¯”<input name="waterBinderRatio" placeholder="ä¾‹ï¼š0.42"></label>
+        </div>
+        <label>åè½åº¦<input name="slump" placeholder="ä¾‹ï¼š180mm"></label>
+        <p class="hint">æ‹†æ¨¡æé†’å›ºå®šä¸ºåˆ¶ä½œæ—¥æœŸå 1 å¤©ï¼›é¾„æœŸåˆ°æœŸæŒ‰â€œåˆ¶ä½œæ—¥æœŸ + é¾„æœŸå¤©æ•°â€è®¡ç®—ã€‚å¤šä¸ªé¾„æœŸç”¨é€—å·åˆ†å¼€ï¼Œä¾‹å¦‚ 7,28,56ã€‚</p>
+        <div class="actions"><button type="submit">ç™»è®°è¯•å—</button></div>
+      </form>
+      ${options.showMailAction ? `<form class="compact-form" method="post" action="${actionBase}/send-reminder"><h2>é‚®ä»¶æé†’</h2><p class="hint">æ¯å¤© 08:00 åä¼šè‡ªåŠ¨å‘é€ä»Šæ—¥å’Œé€¾æœŸæé†’ã€‚è¿™é‡Œå¯ä»¥æ‰‹åŠ¨å‘é€ä¸€å°å½“å‰æé†’æ‘˜è¦ã€‚</p><div class="actions"><button class="secondary" type="submit">ç«‹å³å‘é€æé†’é‚®ä»¶</button></div></form>` : ""}
+      ${renderBlockCalendar(content, actionBase)}
+      ${renderBlockList(blocks, actionBase)}
+    </section>`;
+}
+
+function renderReminderSummary(content) {
+  const demold = splitReminderItems(getReminderItems(content, "demold"));
+  const ages = splitReminderItems(getReminderItems(content, "age"));
+  return `<div class="summary-grid">
+        ${renderReminderCard("ä»Šæ—¥æ‹†æ¨¡", demold.today, "demold", WORK_PATH)}
+        ${renderReminderCard("é€¾æœŸæœªå¤„ç†", [...demold.overdue, ...ages.overdue], "overdue", WORK_PATH)}
+        ${renderReminderCard("æœªæ¥ 7 å¤©", [...demold.upcoming, ...ages.upcoming], "upcoming", WORK_PATH)}
+      </div>
+      <div class="summary-grid">
+        ${renderReminderCard("ä»Šæ—¥é¾„æœŸ", ages.today, "age", WORK_PATH)}
+        ${renderReminderCard("é€¾æœŸé¾„æœŸ", ages.overdue, "overdue", WORK_PATH)}
+        ${renderReminderCard("æœªæ¥é¾„æœŸ", ages.upcoming, "upcoming", WORK_PATH)}
+      </div>`;
+}
+
+function renderReminderCard(title, items, kind, actionBase) {
+  return `<section class="summary-card${kind === "overdue" ? " overdue" : ""}">
+        <strong>${html(title)}ï¼ˆ${items.length}ï¼‰</strong>
+        ${items.length ? `<div class="task-list">${items.map((item) => renderTaskCheckbox(item, actionBase)).join("")}</div>` : `<p class="hint">æš‚æ— </p>`}
+      </section>`;
+}
+
+function renderBlockCalendar(content, actionBase = WORK_PATH) {
+  const dueItems = getCalendarItems(content);
+  const dueByDate = new Map();
+  dueItems.forEach((item) => {
+    if (!dueByDate.has(item.date)) dueByDate.set(item.date, []);
+    dueByDate.get(item.date).push(item);
+  });
+  const referenceDate = today();
+  const months = calendarMonths(dueItems);
+  return `<h2>è¯•å—æ—¥å†</h2>
+      <div class="calendar-board">
+        ${months.map((monthKey) => renderCalendarMonth(monthKey, dueByDate, actionBase)).join("\n        ")}
+      </div>`;
+}
+
+function renderCalendarMonth(monthKey, dueByDate, actionBase) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const firstDay = new Date(Date.UTC(year, month - 1, 1));
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const blankDays = (firstDay.getUTCDay() + 6) % 7;
+  const cells = [];
+  for (let i = 0; i < blankDays; i += 1) {
+    cells.push(`<div class="day-cell empty"></div>`);
+  }
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = `${monthKey}-${String(day).padStart(2, "0")}`;
+    const dues = dueByDate.get(date) || [];
+    cells.push(`<div class="day-cell${date === today() ? " today" : ""}">
+          <span class="day-number">${day}</span>
+          ${dues.map((item) => renderTaskCheckbox(item, actionBase, "due-pill")).join("")}
+        </div>`);
+  }
+  return `<article class="month-card">
+          <h3>${formatMonthCn(monthKey)}</h3>
+          <div class="weekdays"><span>ä¸€</span><span>äºŒ</span><span>ä¸‰</span><span>å››</span><span>äº”</span><span>å…­</span><span>æ—¥</span></div>
+          <div class="calendar-days">${cells.join("")}</div>
+        </article>`;
+}
+
+function formatCalendarItem(item, withDate = true) {
+  const prefix = withDate ? `${formatDateCn(item.date)} ` : "";
+  const status = item.completed ? "å·²å®Œæˆ Â· " : "";
+  const suffix = `${item.block.quantity}å—${item.block.strength ? ` Â· ${item.block.strength}` : ""}`;
+  if (item.type === "demold") return `${prefix}${status}${item.block.name} Â· æ‹†æ¨¡ Â· ${suffix}`;
+  return `${prefix}${status}${item.block.name} Â· ${item.age}å¤© Â· ${suffix}`;
+}
+
+function renderTaskCheckbox(item, actionBase = WORK_PATH, extraClass = "") {
+  return `<form class="task-form ${extraClass} ${item.type === "demold" ? "demold" : "age"}${item.completed ? " completed" : ""}" method="post" action="${actionBase}/toggle-task">
+          <input type="hidden" name="id" value="${attr(item.block.id)}">
+          <input type="hidden" name="taskType" value="${attr(item.type)}">
+          ${item.type === "age" ? `<input type="hidden" name="age" value="${attr(item.age)}">` : ""}
+          <input type="checkbox" name="done" value="1" ${item.completed ? "checked" : ""} onchange="this.form.submit()" aria-label="æ ‡è®°å®Œæˆ">
+          <span>${html(formatCalendarItem(item, extraClass !== "due-pill"))}</span>
+        </form>`;
+}
+
+function renderBlockTaskChecklist(block, actionBase = WORK_PATH) {
+  const items = [
+    {
+      type: "demold",
+      block,
+      date: normalizeDateValue(block.demoldDate || addDays(block.madeDate, 1)),
+      completed: taskCompleted(block, "demold")
+    },
+    ...block.ages.map((age) => ({
+      type: "age",
+      block,
+      age,
+      date: addDays(block.madeDate, age),
+      completed: taskCompleted(block, "age", age)
+    }))
+  ];
+  return `<div class="task-checks">${items.map((item) => renderTaskCheckbox(item, actionBase)).join("")}</div>`;
+}
+
+function hasBlockRecord(record) {
+  const data = normalizeBlockRecord(record);
+  const scalarFields = [
+    "mixName", "cement", "water", "sand", "stone", "admixture", "flyAsh", "mineralPowder",
+    "otherMaterials", "waterBinderRatio", "slump", "gradationCoefficient", "recipeNote", "compressionStrength",
+    "flexuralStrength", "testDate", "resultNote"
+  ];
+  if (scalarFields.some((fieldName) => Boolean(data[fieldName]))) return true;
+  if (Object.values(data.recipeValues || {}).some(Boolean)) return true;
+  return Object.values(data.results || {}).some((result) => (
+    result.testDate || result.resultNote || Object.values(result.metrics || {}).some(Boolean)
+  ));
+}
+
+function blockRecordSummary(record) {
+  const data = normalizeBlockRecord(record);
+  const parts = [];
+  if (data.mixName) parts.push(`é…æ–¹ï¼š${data.mixName}`);
+  if (data.waterBinderRatio) parts.push(`æ°´èƒ¶æ¯”ï¼š${data.waterBinderRatio}`);
+  if (data.slump) parts.push(`åè½åº¦ï¼š${data.slump}`);
+  if (data.compressionStrength) parts.push(`æŠ—å‹ï¼š${data.compressionStrength}`);
+  if (data.flexuralStrength) parts.push(`æŠ—æŠ˜ï¼š${data.flexuralStrength}`);
+  return parts.length ? parts.join(" Â· ") : "æœªå¡«å†™é…æ–¹/è¯•éªŒæ•°æ®";
+}
+
+function recordField(name, label, value, options = {}) {
+  const type = options.type || "text";
+  const placeholder = options.placeholder ? ` placeholder="${attr(options.placeholder)}"` : "";
+  return `<label>${html(label)}<input name="${attr(name)}" type="${attr(type)}" value="${attr(value)}"${placeholder}></label>`;
+}
+
+function recordArea(name, label, value) {
+  return `<label>${html(label)}<textarea name="${attr(name)}">${html(value)}</textarea></label>`;
+}
+
+function renderBlockRecord(block, actionBase = WORK_PATH) {
+  const record = normalizeBlockRecord(block.record);
+  return `<details class="record-details" ${hasBlockRecord(record) ? "open" : ""}>
+          <summary>è¯•å—æ¡£æ¡ˆ <span>${html(blockRecordSummary(record))}</span></summary>
+          <form class="record-form" method="post" action="${actionBase}/update-block-record">
+            <input type="hidden" name="id" value="${attr(block.id)}">
+            <div class="record-grid">
+              ${recordField("mixName", "é…æ–¹/ç¼–å·", record.mixName, { placeholder: "ä¾‹ï¼šC30 æ³µé€é…åˆæ¯”" })}
+              ${recordField("cement", "æ°´æ³¥", record.cement, { placeholder: "ä¾‹ï¼š330kg æˆ– P.O42.5" })}
+              ${recordField("water", "æ°´", record.water, { placeholder: "ä¾‹ï¼š165kg" })}
+              ${recordField("sand", "ç ‚", record.sand, { placeholder: "ä¾‹ï¼š760kg" })}
+              ${recordField("stone", "çŸ³å­", record.stone, { placeholder: "ä¾‹ï¼š1080kg" })}
+              ${recordField("admixture", "å¤–åŠ å‰‚", record.admixture, { placeholder: "ä¾‹ï¼š6.2kg" })}
+              ${recordField("flyAsh", "ç²‰ç…¤ç°", record.flyAsh, { placeholder: "å¯ç©º" })}
+              ${recordField("mineralPowder", "çŸ¿ç²‰", record.mineralPowder, { placeholder: "å¯ç©º" })}
+              ${recordField("waterBinderRatio", "æ°´èƒ¶æ¯”", record.waterBinderRatio, { placeholder: "ä¾‹ï¼š0.42" })}
+              ${recordField("slump", "åè½åº¦", record.slump, { placeholder: "ä¾‹ï¼š180mm" })}
+              ${recordField("testDate", "è¯•éªŒæ—¥æœŸ", record.testDate, { type: "date" })}
+              ${recordField("compressionStrength", "æŠ—å‹å¼ºåº¦", record.compressionStrength, { placeholder: "ä¾‹ï¼š36.8MPa" })}
+              ${recordField("flexuralStrength", "æŠ—æŠ˜å¼ºåº¦", record.flexuralStrength, { placeholder: "ä¾‹ï¼š5.2MPa" })}
+            </div>
+            ${recordArea("resultNote", "æ£€æµ‹/ç ´å‹å¤‡æ³¨", record.resultNote)}
+            <div class="actions"><button class="secondary" type="submit">ä¿å­˜æ¡£æ¡ˆ</button></div>
+          </form>
+        </details>`;
+}
+
+function renderBlockList(blocks, actionBase = BASE_PATH) {
+  if (!blocks.length) return `<p class="hint">è¿˜æ²¡æœ‰ç™»è®°è¯•å—ã€‚</p>`;
+  return `<h2>å·²ç™»è®°è¯•å—</h2>
+      <div class="block-list">
+        ${blocks.map((block) => {
+    const dueText = block.ages.map((age) => `${age}å¤© ${formatDateCn(addDays(block.madeDate, age))}`).join("ï¼›");
+    return `<div class="block-row">
+          <div>
+            <strong>${html(block.name)}</strong>
+            <p>åˆ¶ä½œï¼š${formatDateCn(block.madeDate)} Â· æ•°é‡ï¼š${block.quantity}å—${block.strength ? ` Â· ${html(block.strength)}` : ""}</p>
+            <p>æ‹†æ¨¡ï¼š${formatDateCn(block.demoldDate || addDays(block.madeDate, 1))} Â· é¾„æœŸï¼š${html(dueText)}${block.note ? ` Â· ${html(block.note)}` : ""}</p>
+            ${renderBlockTaskChecklist(block, actionBase)}
+          </div>
+          <form class="inline-delete" method="post" action="${actionBase}/delete-block">
+            <input type="hidden" name="id" value="${attr(block.id)}">
+            <button class="danger" type="submit">åˆ é™¤</button>
+          </form>
+          ${renderBlockRecord(block, actionBase)}
+        </div>`;
+  }).join("\n        ")}
+      </div>`;
+}
+
+function renderWorkspaceV2(content, message = "") {
+  const stats = workspaceStatsV2(content);
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>å·¥ä½œåŒº - ${html(content.siteTitle)}</title>
+  <style>${workspaceStylesV2()}</style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div>
+        <p class="eyebrow">Concrete Workspace</p>
+        <h1>å·¥ä½œåŒº</h1>
+      </div>
+      <nav>
+        <a href="/" target="_blank" rel="noopener">é¦–é¡µ</a>
+        <a href="${BASE_PATH}/" target="_blank" rel="noopener">åå°</a>
+        <a href="/gallery/" target="_blank" rel="noopener">ç›¸å†Œ</a>
+        <a class="nav-logout" href="${WORK_PATH}/logout">é€€å‡º</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    ${message ? `<p class="message">${html(message)}</p>` : ""}
+    <section class="workspace-hero">
+      <div>
+        <p class="eyebrow">è¯•å—æé†’å’Œæ¡£æ¡ˆ</p>
+        <h2>æŠŠç™»è®°ã€æ‹†æ¨¡ã€é¾„æœŸå’Œè¯•éªŒæ•°æ®æ”¾åœ¨ä¸€ä¸ªåœ°æ–¹ã€‚</h2>
+        <p>æ¯å¤©æ‰“å¼€å…ˆçœ‹ä»Šæ—¥å’Œé€¾æœŸäº‹é¡¹ï¼Œåšå®Œå°±å‹¾é€‰ï¼›åé¢è¡¥é…åˆæ¯”ã€åè½åº¦ã€æŠ—å‹å’ŒæŠ—æŠ˜æ•°æ®ï¼Œå½¢æˆå®Œæ•´æ¡£æ¡ˆã€‚</p>
+      </div>
+      <div class="hero-stats">
+        <span><strong>${stats.blocks}</strong>è¯•å—</span>
+        <span><strong>${stats.today}</strong>ä»Šæ—¥</span>
+        <span><strong>${stats.overdue}</strong>é€¾æœŸ</span>
+        <span><strong>${stats.done}</strong>å·²å®Œæˆ</span>
+      </div>
+    </section>
+    ${renderTestBlocksPanelV2(content, { actionBase: WORK_PATH, showReminders: true, showMailAction: true })}
+  </main>
+  ${renderWorkspaceScriptV2()}
 </body>
 </html>`;
 }
@@ -2469,8 +2823,8 @@ function workspaceStylesV2() {
     .record-details summary { cursor:pointer; display:flex; justify-content:space-between; gap:12px; padding:15px 16px; font-weight:900; color:var(--green); list-style:none; }
     .record-details summary::-webkit-details-marker { display:none; }
     .record-details summary em { color:var(--muted); font-style:normal; font-weight:700; font-size:13px; text-align:right; }
-    .record-details summary:after { content:"Õ¹¿ª"; min-width:44px; color:var(--blue); font-size:13px; text-align:right; }
-    .record-details[open] summary:after { content:"ÊÕÆğ"; }
+    .record-details summary:after { content:"å±•å¼€"; min-width:44px; color:var(--blue); font-size:13px; text-align:right; }
+    .record-details[open] summary:after { content:"æ”¶èµ·"; }
     .record-form { padding:0 16px 18px; border-top:1px solid var(--line); background:#fbfdfc; }
     .record-section { margin-top:16px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#fff; }
     .record-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
@@ -2482,23 +2836,424 @@ function workspaceStylesV2() {
   `;
 }
 
+function renderTestBlocksPanelV2(content, options = {}) {
+  const actionBase = options.actionBase || WORK_PATH;
+  const blocks = getTestBlocks(content);
+  return `<section class="work-grid" id="test-blocks">
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <p class="eyebrow">New Record</p>
+            <h2>ç™»è®°è¯•å—</h2>
+            <p>å…ˆå½•å…³é”®å­—æ®µï¼Œé…åˆæ¯”å’Œè¯•éªŒç»“æœåé¢å¯ä»¥åœ¨æ¡£æ¡ˆé‡Œè¡¥é½ã€‚</p>
+          </div>
+        </div>
+        <form method="post" action="${actionBase}/add-block">
+          <div class="form-grid">
+            <label class="field wide"><span>è¯•å—åç§°/éƒ¨ä½</span><input name="blockName" placeholder="ä¾‹ï¼š1#æ¥¼ä¸‰å±‚æ¢æ¿ C30" required></label>
+            <label class="field"><span>åˆ¶ä½œæ—¥æœŸ</span><input name="madeDate" type="date" value="${today()}" required></label>
+            <label class="field"><span>è¯•å—æ•°é‡</span><input name="quantity" type="number" min="1" step="1" value="3" required></label>
+            <label class="field"><span>å¼ºåº¦ç­‰çº§</span><input name="strength" placeholder="ä¾‹ï¼šC30"></label>
+            <label class="field wide"><span>éœ€è¦é¾„æœŸ</span><input id="ageInput" name="ages" value="7,28" placeholder="ä¾‹ï¼š3,7,28">
+              <div class="age-toolbar">
+                <button class="chip-button" type="button" data-age="3">3å¤©</button>
+                <button class="chip-button" type="button" data-age="7">7å¤©</button>
+                <button class="chip-button" type="button" data-age="14">14å¤©</button>
+                <button class="chip-button" type="button" data-age="28">28å¤©</button>
+                <button class="chip-button" type="button" data-age="56">56å¤©</button>
+              </div>
+            </label>
+            <label class="field"><span>é…æ–¹/ç¼–å·</span><input name="mixName" placeholder="ä¾‹ï¼šC30 æ³µé€é…åˆæ¯”"></label>
+            <label class="field"><span>æ°´èƒ¶æ¯”</span><input name="waterBinderRatio" placeholder="ä¾‹ï¼š0.42"></label>
+            <label class="field"><span>åè½åº¦</span><input name="slump" placeholder="ä¾‹ï¼š180mm"></label>
+            <label class="field wide"><span>å¤‡æ³¨</span><input name="note" placeholder="å¯å¡«ç¼–å·ã€æ–½å·¥æ®µã€å…»æŠ¤æ¡ä»¶ç­‰"></label>
+          </div>
+          <p class="hint">æ‹†æ¨¡æé†’å›ºå®šä¸ºåˆ¶ä½œæ—¥æœŸå 1 å¤©ï¼›é¾„æœŸåˆ°æœŸæŒ‰â€œåˆ¶ä½œæ—¥æœŸ + é¾„æœŸå¤©æ•°â€è®¡ç®—ã€‚å¤šä¸ªé¾„æœŸç”¨é€—å·åˆ†å¼€ã€‚</p>
+          <div class="actions"><button type="submit">ç™»è®°è¯•å—</button></div>
+        </form>
+      </article>
+      <article class="panel">${renderTodayFocusV2(content, actionBase, options.showMailAction)}</article>
+    </section>
+    ${options.showReminders ? renderReminderSummaryV2(content, actionBase) : ""}
+    <section class="panel">${renderBlockCalendarV2(content, actionBase)}</section>
+    <section class="panel">${renderBlockListV2(blocks, actionBase)}</section>`;
+}
+
+function renderTodayFocusV2(content, actionBase = WORK_PATH, showMailAction = false) {
+  const demold = splitReminderItems(getReminderItems(content, "demold"));
+  const ages = splitReminderItems(getReminderItems(content, "age"));
+  const todayItems = [...demold.today, ...ages.today];
+  const overdueItems = [...demold.overdue, ...ages.overdue];
+  return `<div class="panel-title">
+        <div>
+          <p class="eyebrow">Today</p>
+          <h2>ä»Šæ—¥å¤„ç†</h2>
+          <p>åšå®Œç›´æ¥å‹¾é€‰ï¼Œé‚®ä»¶æé†’ä¹Ÿä¼šé¿å¼€å·²ç»å®Œæˆçš„äº‹é¡¹ã€‚</p>
+        </div>
+      </div>
+      <div class="today-stack">
+        <div class="today-group${overdueItems.length ? " warning" : ""}">
+          <strong><span>é€¾æœŸæœªå¤„ç†</span><span>${overdueItems.length}</span></strong>
+          ${overdueItems.length ? `<div class="task-list">${overdueItems.map((item) => renderTaskCheckboxV2(item, actionBase)).join("")}</div>` : `<p class="hint">æ²¡æœ‰é€¾æœŸä»»åŠ¡ã€‚</p>`}
+        </div>
+        <div class="today-group">
+          <strong><span>ä»Šå¤©åˆ°æœŸ</span><span>${todayItems.length}</span></strong>
+          ${todayItems.length ? `<div class="task-list">${todayItems.map((item) => renderTaskCheckboxV2(item, actionBase)).join("")}</div>` : `<p class="hint">ä»Šå¤©æ²¡æœ‰æ‹†æ¨¡æˆ–é¾„æœŸä»»åŠ¡ã€‚</p>`}
+        </div>
+        ${showMailAction ? `<form class="today-group" method="post" action="${actionBase}/send-reminder"><strong><span>é‚®ä»¶æé†’</span></strong><p class="hint">æ¯å¤© 08:00 åè‡ªåŠ¨å‘é€ä»Šæ—¥å’Œé€¾æœŸæé†’ï¼Œè¿™é‡Œä¹Ÿå¯ä»¥æ‰‹åŠ¨å‘ä¸€å°å½“å‰æ‘˜è¦ã€‚</p><div class="actions"><button class="secondary" type="submit">ç«‹å³å‘é€æé†’é‚®ä»¶</button></div></form>` : ""}
+      </div>`;
+}
+
+function renderReminderSummaryV2(content, actionBase = WORK_PATH) {
+  const demold = splitReminderItems(getReminderItems(content, "demold"));
+  const ages = splitReminderItems(getReminderItems(content, "age"));
+  return `<section class="panel">
+      <div class="panel-title">
+        <div>
+          <p class="eyebrow">Reminders</p>
+          <h2>æé†’çœ‹æ¿</h2>
+          <p>æ‹†æ¨¡ã€é¾„æœŸã€é€¾æœŸå’Œæœªæ¥ 7 å¤©å®‰æ’éƒ½åœ¨è¿™é‡Œã€‚</p>
+        </div>
+      </div>
+      <div class="summary-grid">
+        ${renderReminderCardV2("ä»Šæ—¥æ‹†æ¨¡", demold.today, "demold", actionBase)}
+        ${renderReminderCardV2("ä»Šæ—¥é¾„æœŸ", ages.today, "age", actionBase)}
+        ${renderReminderCardV2("é€¾æœŸæœªå¤„ç†", [...demold.overdue, ...ages.overdue], "overdue", actionBase)}
+      </div>
+      <div class="summary-grid" style="margin-top:14px">
+        ${renderReminderCardV2("æœªæ¥æ‹†æ¨¡", demold.upcoming, "upcoming", actionBase)}
+        ${renderReminderCardV2("æœªæ¥é¾„æœŸ", ages.upcoming, "upcoming", actionBase)}
+        ${renderReminderCardV2("å…¨éƒ¨æœªæ¥ 7 å¤©", [...demold.upcoming, ...ages.upcoming], "upcoming", actionBase)}
+      </div>
+    </section>`;
+}
+
+function renderReminderCardV2(title, items, kind, actionBase) {
+  return `<section class="summary-card ${kind === "overdue" ? "overdue" : ""} ${kind === "upcoming" ? "upcoming" : ""}">
+        <strong><span>${html(title)}</span><b>${items.length}</b></strong>
+        ${items.length ? `<div class="task-list">${items.map((item) => renderTaskCheckboxV2(item, actionBase)).join("")}</div>` : `<p class="hint">æš‚æ— </p>`}
+      </section>`;
+}
+
+function renderBlockCalendarV2(content, actionBase = WORK_PATH) {
+  const dueItems = getCalendarItems(content);
+  const dueByDate = new Map();
+  dueItems.forEach((item) => {
+    if (!dueByDate.has(item.date)) dueByDate.set(item.date, []);
+    dueByDate.get(item.date).push(item);
+  });
+  const months = calendarMonths(dueItems);
+  return `<div class="panel-title">
+        <div>
+          <p class="eyebrow">Calendar</p>
+          <h2>è¯•å—æ—¥å†</h2>
+          <p>åŒä¸€å¤©ä¼šåŒæ—¶æ˜¾ç¤ºæ‹†æ¨¡ã€7å¤©ã€28å¤©ç­‰äº‹é¡¹ã€‚</p>
+        </div>
+      </div>
+      <div class="calendar-board">
+        ${months.map((monthKey) => renderCalendarMonthV2(monthKey, dueByDate, actionBase)).join("\n        ")}
+      </div>`;
+}
+
+function renderCalendarMonthV2(monthKey, dueByDate, actionBase) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const firstDay = new Date(Date.UTC(year, month - 1, 1));
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const blankDays = (firstDay.getUTCDay() + 6) % 7;
+  const cells = [];
+  for (let i = 0; i < blankDays; i += 1) cells.push(`<div class="day-cell empty"></div>`);
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = `${monthKey}-${String(day).padStart(2, "0")}`;
+    const dues = dueByDate.get(date) || [];
+    cells.push(`<div class="day-cell${date === today() ? " today" : ""}">
+          <span class="day-number">${day}</span>
+          ${dues.map((item) => renderTaskCheckboxV2(item, actionBase, "due-pill")).join("")}
+        </div>`);
+  }
+  return `<article class="month-card">
+          <h3>${formatMonthCnV2(monthKey)}</h3>
+          <div class="weekdays"><span>ä¸€</span><span>äºŒ</span><span>ä¸‰</span><span>å››</span><span>äº”</span><span>å…­</span><span>æ—¥</span></div>
+          <div class="calendar-days">${cells.join("")}</div>
+        </article>`;
+}
+
+function formatDateCnV2(dateText) {
+  const date = normalizeDateValue(dateText);
+  const [year, month, day] = date.split("-");
+  return `${year}-${month}-${day}`;
+}
+
+function formatMonthCnV2(monthKey) {
+  const [year, month] = monthKey.split("-");
+  return `${year}å¹´${Number(month)}æœˆ`;
+}
+
+function formatCalendarItemV2(item, withDate = true) {
+  const prefix = withDate ? `${formatDateCnV2(item.date)} ` : "";
+  const status = item.completed ? "å·²å®Œæˆ Â· " : "";
+  const suffix = `${item.block.quantity}å—${item.block.strength ? ` Â· ${item.block.strength}` : ""}`;
+  if (item.type === "demold") return `${prefix}${status}${item.block.name} Â· æ‹†æ¨¡ Â· ${suffix}`;
+  return `${prefix}${status}${item.block.name} Â· ${item.age}å¤© Â· ${suffix}`;
+}
+
+function renderTaskCheckboxV2(item, actionBase = WORK_PATH, extraClass = "") {
+  return `<form class="task-form ${extraClass} ${item.type === "demold" ? "demold" : "age"}${item.completed ? " completed" : ""}" method="post" action="${actionBase}/toggle-task">
+          <input type="hidden" name="id" value="${attr(item.block.id)}">
+          <input type="hidden" name="taskType" value="${attr(item.type)}">
+          ${item.type === "age" ? `<input type="hidden" name="age" value="${attr(item.age)}">` : ""}
+          <input type="checkbox" name="done" value="1" ${item.completed ? "checked" : ""} onchange="this.form.submit()" aria-label="æ ‡è®°å®Œæˆ">
+          <span>${html(formatCalendarItemV2(item, extraClass !== "due-pill"))}</span>
+        </form>`;
+}
+
+function renderBlockTaskChecklistV2(block, actionBase = WORK_PATH) {
+  const items = [
+    {
+      type: "demold",
+      block,
+      date: normalizeDateValue(block.demoldDate || addDays(block.madeDate, 1)),
+      completed: taskCompleted(block, "demold")
+    },
+    ...block.ages.map((age) => ({
+      type: "age",
+      block,
+      age,
+      date: addDays(block.madeDate, age),
+      completed: taskCompleted(block, "age", age)
+    }))
+  ];
+  return `<div class="task-checks">${items.map((item) => renderTaskCheckboxV2(item, actionBase)).join("")}</div>`;
+}
+
+function blockRecordSummaryV2(record) {
+  const data = normalizeBlockRecord(record);
+  const parts = [];
+  if (data.mixName) parts.push(`é…æ–¹ï¼š${data.mixName}`);
+  if (data.waterBinderRatio) parts.push(`æ°´èƒ¶æ¯”ï¼š${data.waterBinderRatio}`);
+  if (data.slump) parts.push(`åè½åº¦ï¼š${data.slump}`);
+  if (data.compressionStrength) parts.push(`æŠ—å‹ï¼š${data.compressionStrength}`);
+  if (data.flexuralStrength) parts.push(`æŠ—æŠ˜ï¼š${data.flexuralStrength}`);
+  return parts.length ? parts.join(" Â· ") : "æœªå¡«å†™é…æ–¹/è¯•éªŒæ•°æ®";
+}
+
+function recordFieldV2(name, label, value, options = {}) {
+  const type = options.type || "text";
+  const placeholder = options.placeholder ? ` placeholder="${attr(options.placeholder)}"` : "";
+  return `<label><span>${html(label)}</span><input name="${attr(name)}" type="${attr(type)}" value="${attr(value)}"${placeholder}></label>`;
+}
+
+function recordAreaV2(name, label, value) {
+  return `<label class="wide"><span>${html(label)}</span><textarea name="${attr(name)}">${html(value)}</textarea></label>`;
+}
+
+function renderBlockRecordV2(block, actionBase = WORK_PATH) {
+  const record = normalizeBlockRecord(block.record);
+  return `<details class="record-details" ${hasBlockRecord(record) ? "open" : ""}>
+          <summary><span>è¯•å—æ¡£æ¡ˆ</span><em>${html(blockRecordSummaryV2(record))}</em></summary>
+          <form class="record-form" method="post" action="${actionBase}/update-block-record">
+            <input type="hidden" name="id" value="${attr(block.id)}">
+            <section class="record-section">
+              <h4>é…åˆæ¯”</h4>
+              <div class="record-grid">
+                ${recordFieldV2("mixName", "é…æ–¹/ç¼–å·", record.mixName, { placeholder: "ä¾‹ï¼šC30 æ³µé€é…åˆæ¯”" })}
+                ${recordFieldV2("cement", "æ°´æ³¥", record.cement, { placeholder: "ä¾‹ï¼š330kg æˆ– P.O42.5" })}
+                ${recordFieldV2("water", "æ°´", record.water, { placeholder: "ä¾‹ï¼š165kg" })}
+                ${recordFieldV2("sand", "ç ‚", record.sand, { placeholder: "ä¾‹ï¼š760kg" })}
+                ${recordFieldV2("stone", "çŸ³å­", record.stone, { placeholder: "ä¾‹ï¼š1080kg" })}
+                ${recordFieldV2("admixture", "å¤–åŠ å‰‚", record.admixture, { placeholder: "ä¾‹ï¼š6.2kg" })}
+                ${recordFieldV2("flyAsh", "ç²‰ç…¤ç°", record.flyAsh, { placeholder: "å¯ç©º" })}
+                ${recordFieldV2("mineralPowder", "çŸ¿ç²‰", record.mineralPowder, { placeholder: "å¯ç©º" })}
+                ${recordFieldV2("waterBinderRatio", "æ°´èƒ¶æ¯”", record.waterBinderRatio, { placeholder: "ä¾‹ï¼š0.42" })}
+              </div>
+            </section>
+            <section class="record-section">
+              <h4>æ–½å·¥ä¸æ£€æµ‹</h4>
+              <div class="record-grid">
+                ${recordFieldV2("slump", "åè½åº¦", record.slump, { placeholder: "ä¾‹ï¼š180mm" })}
+                ${recordFieldV2("testDate", "è¯•éªŒæ—¥æœŸ", record.testDate, { type: "date" })}
+                ${recordFieldV2("compressionStrength", "æŠ—å‹å¼ºåº¦", record.compressionStrength, { placeholder: "ä¾‹ï¼š36.8MPa" })}
+                ${recordFieldV2("flexuralStrength", "æŠ—æŠ˜å¼ºåº¦", record.flexuralStrength, { placeholder: "ä¾‹ï¼š5.2MPa" })}
+                ${recordAreaV2("resultNote", "æ£€æµ‹/ç ´å‹å¤‡æ³¨", record.resultNote)}
+              </div>
+            </section>
+            <div class="actions"><button class="secondary" type="submit">ä¿å­˜æ¡£æ¡ˆ</button></div>
+          </form>
+        </details>`;
+}
+
+function renderBlockListV2(blocks, actionBase = WORK_PATH) {
+  if (!blocks.length) return `<div class="panel-title"><div><p class="eyebrow">Archives</p><h2>å·²ç™»è®°è¯•å—</h2></div></div><p class="hint">è¿˜æ²¡æœ‰ç™»è®°è¯•å—ã€‚</p>`;
+  return `<div class="panel-title">
+        <div>
+          <p class="eyebrow">Archives</p>
+          <h2>å·²ç™»è®°è¯•å—</h2>
+          <p>ç‚¹å¼€â€œè¯•å—æ¡£æ¡ˆâ€è¡¥é…åˆæ¯”ã€æ£€æµ‹æ—¥æœŸã€æŠ—å‹å’ŒæŠ—æŠ˜æ•°æ®ã€‚</p>
+        </div>
+      </div>
+      <div class="block-toolbar">
+        <input id="blockSearch" type="search" placeholder="æœç´¢åç§°ã€éƒ¨ä½ã€å¼ºåº¦ã€å¤‡æ³¨">
+        <span class="hint">å…± ${blocks.length} æ¡</span>
+      </div>
+      <div class="block-list">
+        ${blocks.map((block) => {
+    const dueText = block.ages.map((age) => `${age}å¤© ${formatDateCnV2(addDays(block.madeDate, age))}`).join("ï¼›");
+    const searchText = [block.name, block.strength, block.note, block.record && block.record.mixName].filter(Boolean).join(" ");
+    return `<article class="block-card" data-block-card data-search="${attr(searchText)}">
+          <div class="block-head">
+            <div>
+              <div class="block-title">
+                <strong>${html(block.name)}</strong>
+                <span class="badge category-${attr(normalizeBlockCategory(block.blockCategory))}">${html(blockCategoryLabelV3(block.blockCategory))}</span>
+                ${block.strength ? `<span class="badge">${html(block.strength)}</span>` : ""}
+              </div>
+              <div class="block-meta">
+                <span>åˆ¶ä½œï¼š${formatDateCnV2(block.madeDate)}</span>
+                <span>æ•°é‡ï¼š${block.quantity}å—</span>
+                <span>æ‹†æ¨¡ï¼š${formatDateCnV2(block.demoldDate || addDays(block.madeDate, 1))}</span>
+                <span>é¾„æœŸï¼š${html(dueText || "æœªè®¾ç½®")}</span>
+                ${block.note ? `<span>${html(block.note)}</span>` : ""}
+              </div>
+            </div>
+            <form class="inline-delete" method="post" action="${actionBase}/delete-block">
+              <input type="hidden" name="id" value="${attr(block.id)}">
+              <button class="danger delete-block" type="submit">åˆ é™¤</button>
+            </form>
+          </div>
+          ${renderBlockTaskChecklistV2(block, actionBase)}
+          ${renderBlockRecordV2(block, actionBase)}
+        </article>`;
+  }).join("\n        ")}
+      </div>`;
+}
+
+function renderWorkspaceScriptV2() {
+  return `<script>
+    (() => {
+      const ageInput = document.getElementById("ageInput");
+      document.querySelectorAll("[data-age]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const targetInput = button.dataset.ageTarget ? document.querySelector(button.dataset.ageTarget) : ageInput;
+          if (!targetInput) return;
+          const values = new Set(targetInput.value.split(/[\\s,ï¼Œã€]+/).map((item) => item.trim()).filter(Boolean));
+          values.add(button.dataset.age);
+          targetInput.value = Array.from(values).map(Number).filter(Number.isFinite).sort((a, b) => a - b).join(",");
+        });
+      });
+
+      const search = document.getElementById("blockSearch");
+      const cards = Array.from(document.querySelectorAll("[data-block-card]"));
+      if (search) {
+        search.addEventListener("input", () => {
+          const keyword = search.value.trim().toLowerCase();
+          cards.forEach((card) => {
+            card.classList.toggle("hidden", Boolean(keyword) && !card.dataset.search.toLowerCase().includes(keyword));
+          });
+        });
+      }
+
+      const recordDetails = Array.from(document.querySelectorAll("[data-record-details]"));
+      const openRecordFromHash = () => {
+        if (!location.hash) return;
+        let targetId = "";
+        try {
+          targetId = decodeURIComponent(location.hash.slice(1));
+        } catch {
+          targetId = location.hash.slice(1);
+        }
+        const target = document.getElementById(targetId);
+        if (!target) return;
+        const folder = target.matches(".gangue-folder") ? target : target.closest(".gangue-folder");
+        if (folder) folder.open = true;
+        const details = target.matches("[data-record-details]")
+          ? target
+          : (target.closest("[data-record-details]") || target.querySelector("[data-record-details]"));
+        if (details) details.open = true;
+        window.setTimeout(() => target.scrollIntoView({ block: "start", behavior: "smooth" }), 60);
+      };
+      document.querySelector("[data-open-all-records]")?.addEventListener("click", () => {
+        recordDetails.forEach((details) => { details.open = true; });
+      });
+      document.querySelector("[data-close-all-records]")?.addEventListener("click", () => {
+        recordDetails.forEach((details) => { details.open = false; });
+      });
+      openRecordFromHash();
+      window.addEventListener("hashchange", openRecordFromHash);
+
+      const exportChecks = Array.from(document.querySelectorAll("[data-export-check]"));
+      const normalizeAgeText = (value) => String(value || "")
+        .split(/[\\s,ï¼Œã€]+/)
+        .map((item) => Number.parseInt(item, 10))
+        .filter(Number.isFinite)
+        .sort((a, b) => a - b)
+        .join(",");
+      const resultSignature = (form) => JSON.stringify(Array.from(form.elements)
+        .filter((element) => element.name && /^(sample|manualMean_|resultTestDate_|resultNote_|metrics$|customMetrics$)/.test(element.name))
+        .map((element) => [element.name, (element.type === "checkbox" || element.type === "radio") ? element.checked : element.value]));
+      document.querySelectorAll("form[data-record-form]").forEach((form) => {
+        form.dataset.initialResultSignature = resultSignature(form);
+        form.addEventListener("submit", (event) => {
+          const labels = form.dataset.existingResultLabels || "";
+          if (!labels) return;
+          const originalAges = normalizeAgeText(form.dataset.originalAges || "");
+          const currentAges = normalizeAgeText(form.querySelector("[name='ages']")?.value || "");
+          const agesChanged = originalAges !== currentAges;
+          const resultsChanged = resultSignature(form) !== form.dataset.initialResultSignature;
+          if (!agesChanged && !resultsChanged) return;
+          const message = agesChanged
+            ? "è¿™ä¸ªè¯•å—å·²ç»æœ‰ç»“æœï¼š" + labels + "\\n\\nä½ æ­£åœ¨ä¿®æ”¹é¾„æœŸï¼Œä¿å­˜åä¸åœ¨æ–°é¾„æœŸé‡Œçš„æ—§ç»“æœå¯èƒ½ä¼šè¢«åˆ é™¤ã€‚ç¡®å®šä¿å­˜å—ï¼Ÿ"
+            : "è¿™ä¸ªè¯•å—å·²ç»æœ‰ç»“æœï¼š" + labels + "\\n\\nä¿å­˜ä¼šè¦†ç›–å·²æœ‰æµ‹è¯•ç»“æœã€‚ç¡®å®šä¿å­˜å—ï¼Ÿ";
+          if (!confirm(message)) event.preventDefault();
+        });
+      });
+      document.querySelector("[data-check-all-export]")?.addEventListener("click", () => {
+        exportChecks.forEach((input) => {
+          const card = input.closest("[data-block-card]");
+          if (!card || !card.classList.contains("hidden")) input.checked = true;
+        });
+      });
+      document.querySelector("[data-clear-export]")?.addEventListener("click", () => {
+        exportChecks.forEach((input) => { input.checked = false; });
+      });
+      document.getElementById("exportBlocksForm")?.addEventListener("submit", (event) => {
+        const submitter = event.submitter;
+        const exportAll = submitter && submitter.name === "exportAll";
+        if (!exportAll && !exportChecks.some((input) => input.checked)) {
+          event.preventDefault();
+          alert("å…ˆå‹¾é€‰è¦å¯¼å‡ºçš„è¯•å—ã€‚");
+        }
+      });
+
+      document.querySelectorAll(".delete-block").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          if (!confirm("ç¡®å®šåˆ é™¤è¿™æ¡è¯•å—è®°å½•å—ï¼Ÿ")) event.preventDefault();
+        });
+      });
+      document.querySelectorAll(".delete-gangue").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          if (!confirm("ç¡®å®šåˆ é™¤è¿™æ¡ç…¤çŸ¸çŸ³æ•°æ®å—ï¼Ÿå·²ç»å…³è”åˆ°è¯•å—çš„å†å²åç§°ä¼šä¿ç•™ã€‚")) event.preventDefault();
+        });
+      });
+    })();
+  </script>`;
+}
+
 function renderMetricCardsV22(content) {
   const stats = workspaceMetricsV22(content);
-  return `<section class="metric-grid-v22" aria-label="ºËĞÄÖ¸±ê">
-      <a class="metric-card-v22 neutral" href="#gangue-archive" aria-label="²é¿´Ãºí·Ê¯µµ°¸"><span>Ãºí·Ê¯Åú´Î</span><strong>${stats.gangues}</strong><small>ÒÑ½¨µµ²ÄÁÏÅú´Î</small></a>
-      <a class="metric-card-v22 neutral" href="#block-management" aria-label="²é¿´ÊÔ¿é¹ÜÀí"><span>ÊÔ¿é×éÊı</span><strong>${stats.blockGroups}</strong><small>ÒÔÊÔ¿é×éÎªÍ³¼Æµ¥Î»</small></a>
-      <a class="metric-card-v22 ${stats.dueUnrecorded ? "danger" : "ok"}" href="#today-tasks" aria-label="²é¿´µ½ÆÚÎ´Â¼ÈÎÎñ"><span>µ½ÆÚÎ´Â¼</span><strong>${stats.dueUnrecorded}</strong><small>½ñÌì¼°ÒÔÇ°Ó¦Íê³É</small></a>
-      <a class="metric-card-v22 info" href="#calendar" aria-label="²é¿´Î´À´´ı²âÈÕÀú"><span>Î´À´´ı²â</span><strong>${stats.futurePending}</strong><small>Î´À´ 7 ÌìÎ´Â¼½á¹û</small></a>
-      <a class="metric-card-v22 success" href="#analysis" aria-label="²é¿´ÒÑÂ¼½á¹û·ÖÎö"><span>ÒÑÂ¼½á¹û</span><strong>${stats.resultFilled}/${stats.resultTotal}</strong><small><i style="--p:${stats.resultPercent}%"></i>Íê³ÉÂÊ ${stats.resultPercent}%</small></a>
+  return `<section class="metric-grid-v22" aria-label="æ ¸å¿ƒæŒ‡æ ‡">
+      <a class="metric-card-v22 neutral" href="#gangue-archive" aria-label="æŸ¥çœ‹ç…¤çŸ¸çŸ³æ¡£æ¡ˆ"><span>ç…¤çŸ¸çŸ³æ‰¹æ¬¡</span><strong>${stats.gangues}</strong><small>å·²å»ºæ¡£ææ–™æ‰¹æ¬¡</small></a>
+      <a class="metric-card-v22 neutral" href="#block-management" aria-label="æŸ¥çœ‹è¯•å—ç®¡ç†"><span>è¯•å—ç»„æ•°</span><strong>${stats.blockGroups}</strong><small>ä»¥è¯•å—ç»„ä¸ºç»Ÿè®¡å•ä½</small></a>
+      <a class="metric-card-v22 ${stats.dueUnrecorded ? "danger" : "ok"}" href="#today-tasks" aria-label="æŸ¥çœ‹åˆ°æœŸæœªå½•ä»»åŠ¡"><span>åˆ°æœŸæœªå½•</span><strong>${stats.dueUnrecorded}</strong><small>ä»Šå¤©åŠä»¥å‰åº”å®Œæˆ</small></a>
+      <a class="metric-card-v22 info" href="#calendar" aria-label="æŸ¥çœ‹æœªæ¥å¾…æµ‹æ—¥å†"><span>æœªæ¥å¾…æµ‹</span><strong>${stats.futurePending}</strong><small>æœªæ¥ 7 å¤©æœªå½•ç»“æœ</small></a>
+      <a class="metric-card-v22 success" href="#analysis" aria-label="æŸ¥çœ‹å·²å½•ç»“æœåˆ†æ"><span>å·²å½•ç»“æœ</span><strong>${stats.resultFilled}/${stats.resultTotal}</strong><small><i style="--p:${stats.resultPercent}%"></i>å®Œæˆç‡ ${stats.resultPercent}%</small></a>
     </section>`;
 }
 
 function gangueKeyMetricStatusV22(gangue) {
   const checks = [
-    { label: "Ñ¹ËéÖµ", done: Boolean(gangue.batchCrushingValue) },
-    { label: "ÎüË®ÂÊ", done: Boolean(gangue.coarseWaterAbsorption || gangue.fineWaterAbsorption) },
-    { label: "±í¹ÛÃÜ¶È", done: Boolean(gangue.coarseApparentDensity || gangue.fineApparentDensity) },
-    { label: "Í¼Æ¬", done: normalizeLabImages(gangue.images).length > 0 }
+    { label: "å‹ç¢å€¼", done: Boolean(gangue.batchCrushingValue) },
+    { label: "å¸æ°´ç‡", done: Boolean(gangue.coarseWaterAbsorption || gangue.fineWaterAbsorption) },
+    { label: "è¡¨è§‚å¯†åº¦", done: Boolean(gangue.coarseApparentDensity || gangue.fineApparentDensity) },
+    { label: "å›¾ç‰‡", done: normalizeLabImages(gangue.images).length > 0 }
   ];
   const done = checks.filter((item) => item.done).length;
   return { checks, done, total: checks.length, percent: checks.length ? Math.round((done / checks.length) * 100) : 0 };
@@ -2546,30 +3301,30 @@ function renderVisualInsightsV22(content) {
   const ageRows = ageCoverageRowsV22(content);
   return `<section class="dashboard-card-v22 visual-insights-v22" id="visual-map">
       <div class="section-head-v22">
-        <div><p class="eyebrow">Visual Map</p><h2>ÊµÑé½ø¶ÈÍ¼Æ×</h2><p>°´Ãºí·Ê¯Åú´Î¿´½á¹ûÍê³ÉÂÊ¡¢ÈÎÎñÑ¹Á¦¡¢Í¼Æ¬¹éµµºÍ¹Ø¼üÖ¸±êÍêÕû¶È¡£</p></div>
+        <div><p class="eyebrow">Visual Map</p><h2>å®éªŒè¿›åº¦å›¾è°±</h2><p>æŒ‰ç…¤çŸ¸çŸ³æ‰¹æ¬¡çœ‹ç»“æœå®Œæˆç‡ã€ä»»åŠ¡å‹åŠ›ã€å›¾ç‰‡å½’æ¡£å’Œå…³é”®æŒ‡æ ‡å®Œæ•´åº¦ã€‚</p></div>
       </div>
       <div class="visual-map-grid-v22">
         <div class="progress-matrix-v22">
-          <div class="progress-matrix-head-v22"><span>Ãºí·Ê¯Åú´Î</span><span>½á¹ûÍê³É</span><span>ÈÎÎñ</span><span>Í¼Æ¬</span><span>µµ°¸</span></div>
+          <div class="progress-matrix-head-v22"><span>ç…¤çŸ¸çŸ³æ‰¹æ¬¡</span><span>ç»“æœå®Œæˆ</span><span>ä»»åŠ¡</span><span>å›¾ç‰‡</span><span>æ¡£æ¡ˆ</span></div>
           ${gangueRows.length ? gangueRows.map((row) => {
-    const missing = row.keyStatus.checks.filter((item) => !item.done).map((item) => item.label).join("¡¢") || "ÍêÕû";
+    const missing = row.keyStatus.checks.filter((item) => !item.done).map((item) => item.label).join("ã€") || "å®Œæ•´";
     return `<a class="progress-row-v22" href="#gangue-${attr(row.gangue.id)}" style="--p:${row.resultStats.percent}%">
-            <strong>${html(row.gangue.name)}<small>${row.blocks.length} ×éÊÔ¿é</small></strong>
+            <strong>${html(row.gangue.name)}<small>${row.blocks.length} ç»„è¯•å—</small></strong>
             <span class="matrix-meter-v22"><i></i><b>${row.resultStats.filled}/${row.resultStats.total || 0}</b></span>
-            <span class="${row.due ? "matrix-warn-v22" : ""}">µ½ÆÚ ${row.due} ¡¤ Î´À´ ${row.future}</span>
-            <span>${row.imageCount} ÕÅ</span>
+            <span class="${row.due ? "matrix-warn-v22" : ""}">åˆ°æœŸ ${row.due} Â· æœªæ¥ ${row.future}</span>
+            <span>${row.imageCount} å¼ </span>
             <span title="${attr(missing)}">${row.keyStatus.done}/${row.keyStatus.total}</span>
           </a>`;
-  }).join("") : `<p class="empty-v22">»¹Ã»ÓĞÃºí·Ê¯Åú´Î¡£</p>`}
+  }).join("") : `<p class="empty-v22">è¿˜æ²¡æœ‰ç…¤çŸ¸çŸ³æ‰¹æ¬¡ã€‚</p>`}
         </div>
         <div class="age-coverage-v22">
-          <h3>ÁäÆÚ½á¹û¸²¸ÇÂÊ</h3>
+          <h3>é¾„æœŸç»“æœè¦†ç›–ç‡</h3>
           ${ageRows.length ? ageRows.map((row) => `<div class="coverage-row-v22" style="--p:${row.percent}%">
               <span>${row.age}d</span>
               <i><b></b></i>
               <strong>${row.filled}/${row.total}</strong>
-              <em>${row.due ? `µ½ÆÚ ${row.due}` : row.future ? `Î´À´ ${row.future}` : "Õı³£"}</em>
-            </div>`).join("") : `<p class="hint">»¹Ã»ÓĞÉèÖÃÁäÆÚ¡£</p>`}
+              <em>${row.due ? `åˆ°æœŸ ${row.due}` : row.future ? `æœªæ¥ ${row.future}` : "æ­£å¸¸"}</em>
+            </div>`).join("") : `<p class="hint">è¿˜æ²¡æœ‰è®¾ç½®é¾„æœŸã€‚</p>`}
         </div>
       </div>
     </section>`;
@@ -2579,33 +3334,33 @@ function renderTaskTableV22(content) {
   const items = visibleTaskItemsV22(content);
   if (!items.length) {
     return `<section class="dashboard-card-v22" id="today-tasks">
-      <div class="section-head-v22"><div><p class="eyebrow">Tasks</p><h2>½ñÈÕ´ı´¦Àí</h2></div></div>
-      <p class="empty-v22">½ñÌìÃ»ÓĞÓâÆÚ»òµ½ÆÚµÄ²ğÄ£¡¢Ç¿¶È½á¹û¡£Î´À´´ı²â¿´ÉÏ·½Ö¸±êºÍÈÕÀú¡£</p>
+      <div class="section-head-v22"><div><p class="eyebrow">Tasks</p><h2>ä»Šæ—¥å¾…å¤„ç†</h2></div></div>
+      <p class="empty-v22">ä»Šå¤©æ²¡æœ‰é€¾æœŸæˆ–åˆ°æœŸçš„æ‹†æ¨¡ã€å¼ºåº¦ç»“æœã€‚æœªæ¥å¾…æµ‹çœ‹ä¸Šæ–¹æŒ‡æ ‡å’Œæ—¥å†ã€‚</p>
     </section>`;
   }
   return `<section class="dashboard-card-v22" id="today-tasks">
       <div class="section-head-v22">
-        <div><p class="eyebrow">Tasks</p><h2>½ñÈÕ´ı´¦Àí</h2><p>Ö»ÏÔÊ¾½ñÌì»òÓâÆÚĞèÒªĞĞ¶¯µÄ²ğÄ£¡¢Ç¿¶È½á¹û£»Î´µ½ÆÚÈÎÎñ·Åµ½ÈÕÀúÔ¤¸æÀï¡£</p></div>
+        <div><p class="eyebrow">Tasks</p><h2>ä»Šæ—¥å¾…å¤„ç†</h2><p>åªæ˜¾ç¤ºä»Šå¤©æˆ–é€¾æœŸéœ€è¦è¡ŒåŠ¨çš„æ‹†æ¨¡ã€å¼ºåº¦ç»“æœï¼›æœªåˆ°æœŸä»»åŠ¡æ”¾åˆ°æ—¥å†é¢„å‘Šé‡Œã€‚</p></div>
       </div>
       <div class="task-table-v22">
-        <div class="task-row-v22 head"><span>ÈÕÆÚ</span><span>ÊÔ¿é×é</span><span>Ãºí·Ê¯</span><span>ÏîÄ¿</span><span>×´Ì¬</span><span>²Ù×÷</span></div>
+        <div class="task-row-v22 head"><span>æ—¥æœŸ</span><span>è¯•å—ç»„</span><span>ç…¤çŸ¸çŸ³</span><span>é¡¹ç›®</span><span>çŠ¶æ€</span><span>æ“ä½œ</span></div>
         ${items.map((item) => {
     const record = normalizeBlockRecord(item.block.record, item.block.ages, item.block.metrics, item.block.recipeMaterials);
-    const gangueName = record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "Î´¹éÊô";
+    const gangueName = record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "æœªå½’å±";
     const state = taskStateV22(item);
     return `<div class="task-row-v22 ${state}">
           <span>${html(formatDateCnV3(item.date))}</span>
           <strong>${html(item.block.name)}</strong>
           <span>${html(gangueName)}</span>
-          <span>${html(item.type === "demold" ? "²ğÄ£" : `${item.age}d ${item.metric.label}`)}</span>
+          <span>${html(item.type === "demold" ? "æ‹†æ¨¡" : `${item.age}d ${item.metric.label}`)}</span>
           <em class="status-pill-v22 status-${state}">${html(taskStateLabelV22(item))}</em>
           ${item.type === "demold" ? `<form class="task-action-form-v22" method="post" action="${WORK_PATH}/toggle-task">
             <input type="hidden" name="id" value="${attr(item.block.id)}">
             <input type="hidden" name="taskType" value="demold">
             <input type="hidden" name="done" value="1">
             <input type="hidden" name="returnAnchor" value="today-tasks">
-            <button type="submit">Íê³É</button>
-          </form>` : `<a href="#record-${attr(item.block.id)}" data-open-record="${attr(item.block.id)}" data-record-tab-target="results">¼ÇÂ¼</a>`}
+            <button type="submit">å®Œæˆ</button>
+          </form>` : `<a href="#record-${attr(item.block.id)}" data-open-record="${attr(item.block.id)}" data-record-tab-target="results">è®°å½•</a>`}
         </div>`;
   }).join("")}
       </div>
@@ -2632,16 +3387,16 @@ function trendGroupsV22(content) {
         return {
           age,
           number,
-          mean: number ? meanText : (isDue ? "´ıÂ¼" : `Ó¦²â ${formatDateCnV3(dueDate)}`),
-          label: number ? `${age}d ${meanText}` : `${age}d ${isDue ? "´ıÂ¼" : `Ó¦²â ${formatDateCnV3(dueDate)}`}`
+          mean: number ? meanText : (isDue ? "å¾…å½•" : `åº”æµ‹ ${formatDateCnV3(dueDate)}`),
+          label: number ? `${age}d ${meanText}` : `${age}d ${isDue ? "å¾…å½•" : `åº”æµ‹ ${formatDateCnV3(dueDate)}`}`
         };
       }).filter(Boolean);
       const rawGangueId = blockGangueIdV3(block);
       const gangueId = rawGangueId && validGangueIds.has(rawGangueId) ? rawGangueId : "__unassigned__";
       const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
       const gangueName = gangueId === "__unassigned__"
-        ? (record.gangueAggregateName || "Î´¹éÊôÃºí·Ê¯")
-        : (coalGangueNameById(content, gangueId) || record.gangueAggregateName || "Î´¹éÊôÃºí·Ê¯");
+        ? (record.gangueAggregateName || "æœªå½’å±ç…¤çŸ¸çŸ³")
+        : (coalGangueNameById(content, gangueId) || record.gangueAggregateName || "æœªå½’å±ç…¤çŸ¸çŸ³");
       if (!groupMap.has(gangueId)) groupMap.set(gangueId, { id: gangueId, name: gangueName, rows: [], max: 1 });
       groupMap.get(gangueId).rows.push({
         id: block.id,
@@ -2656,14 +3411,14 @@ function trendGroupsV22(content) {
   }));
   const preferredId = chartGangueIdV22(content);
   const selectedId = (preferredId && groupMap.has(preferredId) ? preferredId : "") || groups.find((group) => group.rows.length)?.id || groups[0]?.id || "";
-  const selectedGroup = groups.find((group) => group.id === selectedId) || groups[0] || { id: "", name: "ÔİÎŞÅú´Î", rows: [], max: 1 };
+  const selectedGroup = groups.find((group) => group.id === selectedId) || groups[0] || { id: "", name: "æš‚æ— æ‰¹æ¬¡", rows: [], max: 1 };
   return { groups, selectedId, selectedGroup };
 }
 
 function renderTrendRowsForGroupV22(group) {
-  if (!group || !group.rows.length) return `<p class="empty-v22" data-chart-empty>Õâ¸öÅú´Î»¹Ã»ÓĞ¿ÉÕ¹Ê¾µÄÊÔ¿éÇ¿¶È¡£</p>`;
+  if (!group || !group.rows.length) return `<p class="empty-v22" data-chart-empty>è¿™ä¸ªæ‰¹æ¬¡è¿˜æ²¡æœ‰å¯å±•ç¤ºçš„è¯•å—å¼ºåº¦ã€‚</p>`;
   return group.rows.map((row) => `<article class="trend-row-v22" data-chart-row>
-          <strong title="${attr(`${row.gangueName}£ü${row.blockName}`)}"><span>${html(row.blockName)}</span><small>${html(row.gangueName)}</small></strong>
+          <strong title="${attr(`${row.gangueName}ï½œ${row.blockName}`)}"><span>${html(row.blockName)}</span><small>${html(row.gangueName)}</small></strong>
           <div class="trend-bars-v22">
             ${row.values.map((item) => {
     const width = item.number ? Math.max(4, Math.min(100, (item.number / group.max) * 100)) : 0;
@@ -2680,63 +3435,63 @@ function renderStrengthTrendPanelV22(content) {
   const groups = trend.groups;
   return `<section class="dashboard-card-v22" id="analysis">
       <div class="section-head-v22">
-        <div><p class="eyebrow">Analysis</p><h2>Ç¿¶ÈÇ÷ÊÆÍ¼</h2><p>Ö»ÏÔÊ¾µ±Ç°Ñ¡ÔñµÄÃºí·Ê¯Åú´Î£»»»Åú´Îºó£¬ÏÂ·½ÊÔ¿é×é»áÍ¬²½ÇĞ»»¡£</p></div>
+        <div><p class="eyebrow">Analysis</p><h2>å¼ºåº¦è¶‹åŠ¿å›¾</h2><p>åªæ˜¾ç¤ºå½“å‰é€‰æ‹©çš„ç…¤çŸ¸çŸ³æ‰¹æ¬¡ï¼›æ¢æ‰¹æ¬¡åï¼Œä¸‹æ–¹è¯•å—ç»„ä¼šåŒæ­¥åˆ‡æ¢ã€‚</p></div>
       </div>
       ${groups.length ? `<div class="trend-chart-v22" data-chart-stage style="--chart-max:${trend.selectedGroup.max}">
         <div class="chart-current-v22" data-chart-current>
-          <span>µ±Ç°Åú´Î</span>
-          <select data-chart-filter aria-label="Ñ¡ÔñÃºí·Ê¯Åú´Î">
+          <span>å½“å‰æ‰¹æ¬¡</span>
+          <select data-chart-filter aria-label="é€‰æ‹©ç…¤çŸ¸çŸ³æ‰¹æ¬¡">
             ${groups.map((item) => `<option value="${attr(item.id)}" ${item.id === trend.selectedId ? "selected" : ""}>${html(item.name)}</option>`).join("")}
           </select>
         </div>
         <div data-chart-rows>${renderTrendRowsForGroupV22(trend.selectedGroup)}</div>
       </div>
-      <script type="application/json" id="trend-chart-data-v22">${scriptJson({ groups })}</script>` : `<p class="empty-v22">»¹Ã»ÓĞ¿É»æÖÆµÄ¿¹Ñ¹Ç¿¶È½á¹û¡£</p>`}
+      <script type="application/json" id="trend-chart-data-v22">${scriptJson({ groups })}</script>` : `<p class="empty-v22">è¿˜æ²¡æœ‰å¯ç»˜åˆ¶çš„æŠ—å‹å¼ºåº¦ç»“æœã€‚</p>`}
     </section>`;
 }
 
 function renderAnomalyPanelV22(content) {
   const items = abnormalItemsV22(content);
   return `<section class="dashboard-card-v22" id="anomalies">
-      <div class="section-head-v22"><div><p class="eyebrow">Checks</p><h2>Òì³£ÌáĞÑ</h2><p>ÑÏÖØ¡¢¾¯¸æºÍĞèÈË¹¤È·ÈÏ·Ö¿ªÏÔÊ¾£¬±ÜÃâ°ÑÕæÊµÒì³£ºÍÂ¼Èë´íÎó»ìÔÚÒ»Æğ¡£</p></div></div>
+      <div class="section-head-v22"><div><p class="eyebrow">Checks</p><h2>å¼‚å¸¸æé†’</h2><p>ä¸¥é‡ã€è­¦å‘Šå’Œéœ€äººå·¥ç¡®è®¤åˆ†å¼€æ˜¾ç¤ºï¼Œé¿å…æŠŠçœŸå®å¼‚å¸¸å’Œå½•å…¥é”™è¯¯æ··åœ¨ä¸€èµ·ã€‚</p></div></div>
       ${items.length ? `<div class="anomaly-form-v22">
-        <p class="anomaly-hint-v22">µãÃ¿ÌõÓÒ²àµÄ¡°É¾³ı¡±°´Å¥¼´¿ÉÒş²ØÕâÌõÌáĞÑ£¬²»»á¸ÄÊµÑéÊı¾İ¡£</p>
+        <p class="anomaly-hint-v22">ç‚¹æ¯æ¡å³ä¾§çš„â€œåˆ é™¤â€æŒ‰é’®å³å¯éšè—è¿™æ¡æé†’ï¼Œä¸ä¼šæ”¹å®éªŒæ•°æ®ã€‚</p>
         <div class="anomaly-list-v22">
           ${items.map((item) => `<article class="anomaly-v22 ${attr(item.level)}" data-swipe-dismiss>
             <span>${html(item.title)}</span>
             <p>${html(item.text)}</p>
             <form method="post" action="${WORK_PATH}/dismiss-anomalies" data-dismiss-form>
               <input type="hidden" name="anomalyIds" value="${attr(item.id)}">
-              <button class="anomaly-delete-button-v22" type="submit">É¾³ı</button>
+              <button class="anomaly-delete-button-v22" type="submit">åˆ é™¤</button>
             </form>
-            <em class="swipe-hint-v22">×ó»¬É¾³ı</em>
+            <em class="swipe-hint-v22">å·¦æ»‘åˆ é™¤</em>
           </article>`).join("")}
         </div>
-      </div>` : `<p class="empty-v22">ÔİÎŞÒì³£ÌáĞÑ¡£</p>`}
+      </div>` : `<p class="empty-v22">æš‚æ— å¼‚å¸¸æé†’ã€‚</p>`}
     </section>`;
 }
 
 function renderGangueOverviewV22(content) {
   const gangues = getCoalGangueDb(content);
   return `<section class="dashboard-card-v22" id="gangue-overview">
-      <div class="section-head-v22"><div><p class="eyebrow">Coal Gangue</p><h2>Ãºí·Ê¯Åú´Î¸ÅÀÀ</h2></div><a href="#gangue-archive">¹ÜÀíµµ°¸</a></div>
+      <div class="section-head-v22"><div><p class="eyebrow">Coal Gangue</p><h2>ç…¤çŸ¸çŸ³æ‰¹æ¬¡æ¦‚è§ˆ</h2></div><a href="#gangue-archive">ç®¡ç†æ¡£æ¡ˆ</a></div>
       ${gangues.length ? `<div class="gangue-overview-grid-v22">
         ${gangues.map((item) => {
     const blocks = blocksForGangueV3(content, item.id);
     const resultStats = resultStatsForBlocksV3(blocks);
-    const rangeText = item.particleRanges.length ? item.particleRanges.join("£¬") : "Î´Ìî";
+    const rangeText = item.particleRanges.length ? item.particleRanges.join("ï¼Œ") : "æœªå¡«";
     return `<article class="gangue-summary-v22">
           <strong>${html(item.name)}</strong>
-          <span>À´Ô´£º${html(item.source || "Î´Ìî")}</span>
-          <span>Á£¾¶£º${html(rangeText)}</span>
-          <span>¹ØÁªÊÔ¿é£º${blocks.length} ×é</span>
-          <span>Ç¿¶È½á¹û£º${resultStats.filled}/${resultStats.total}</span>
-          <span>Ñ¹ËéÖµ£º${html(item.batchCrushingValue || "Î´Ìî")}</span>
-          <span>ÎüË®ÂÊ£º${html(item.coarseWaterAbsorption || item.fineWaterAbsorption || "Î´Ìî")}</span>
-          <div><a href="#gangue-${attr(item.id)}">²é¿´µµ°¸</a><a href="#gangue-${attr(item.id)}">ĞÂ½¨ÊÔ¿é</a></div>
+          <span>æ¥æºï¼š${html(item.source || "æœªå¡«")}</span>
+          <span>ç²’å¾„ï¼š${html(rangeText)}</span>
+          <span>å…³è”è¯•å—ï¼š${blocks.length} ç»„</span>
+          <span>å¼ºåº¦ç»“æœï¼š${resultStats.filled}/${resultStats.total}</span>
+          <span>å‹ç¢å€¼ï¼š${html(item.batchCrushingValue || "æœªå¡«")}</span>
+          <span>å¸æ°´ç‡ï¼š${html(item.coarseWaterAbsorption || item.fineWaterAbsorption || "æœªå¡«")}</span>
+          <div><a href="#gangue-${attr(item.id)}">æŸ¥çœ‹æ¡£æ¡ˆ</a><a href="#gangue-${attr(item.id)}">æ–°å»ºè¯•å—</a></div>
         </article>`;
   }).join("")}
-      </div>` : `<p class="empty-v22">»¹Ã»ÓĞÃºí·Ê¯Åú´Î¡£</p>`}
+      </div>` : `<p class="empty-v22">è¿˜æ²¡æœ‰ç…¤çŸ¸çŸ³æ‰¹æ¬¡ã€‚</p>`}
     </section>`;
 }
 
@@ -2747,8 +3502,8 @@ function blockSearchTextV3(block, content = {}) {
   const gradationTemplate = scheme.templates[normalizeGradationTemplate(record.gradationTemplate)] || scheme.templates.raw;
   const weighingTemplate = WEIGHING_TEMPLATES[normalizeWeighingTemplate(record.weighingTemplate, category)] || {};
   const gangueName = record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "";
-  const acceleratorText = templateUsesAccelerator(normalizeWeighingTemplate(record.weighingTemplate, category)) ? "ÓĞËÙÄı¼Á ËÙÄı¼Á" : "ÎŞËÙÄı¼Á ²»ÓÃËÙÄı¼Á";
-  const ageText = block.ages.flatMap((age) => [`${age}`, `${age}d`, `${age}Ìì`]);
+  const acceleratorText = templateUsesAccelerator(normalizeWeighingTemplate(record.weighingTemplate, category)) ? "æœ‰é€Ÿå‡å‰‚ é€Ÿå‡å‰‚" : "æ— é€Ÿå‡å‰‚ ä¸ç”¨é€Ÿå‡å‰‚";
+  const ageText = block.ages.flatMap((age) => [`${age}`, `${age}d`, `${age}å¤©`]);
   const materialText = record.recipeMaterials.flatMap((material) => {
     const value = record.recipeValues?.[material.id] || "";
     return [material.label, recipeMaterialCategory(material), value];
@@ -2766,7 +3521,7 @@ function blockSearchTextV3(block, content = {}) {
     scheme.ranges.join(" "),
     gradationTemplate.label,
     gradationTemplate.nValue ? `n=${gradationTemplate.nValue}` : "",
-    record.gradationCoefficient ? `¼¶ÅäÏµÊı ${record.gradationCoefficient}` : "",
+    record.gradationCoefficient ? `çº§é…ç³»æ•° ${record.gradationCoefficient}` : "",
     weighingTemplate.label,
     acceleratorText,
     ...ageText,
@@ -2779,15 +3534,15 @@ function blockConfigChipsV22(block, content, record) {
   const scheme = gradationSchemeForCategory(category);
   const template = scheme.templates[normalizeGradationTemplate(record.gradationTemplate)] || scheme.templates.raw;
   const weighingKey = normalizeWeighingTemplate(record.weighingTemplate, category);
-  const gangueName = record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "Î´¹éÊô";
-  const nText = template.nValue ? `n=${template.nValue}` : (record.gradationCoefficient ? `n=${record.gradationCoefficient}` : "Ô­Ê¼¼¶Åä");
-  const accelerator = templateUsesAccelerator(weighingKey) ? "ÓĞËÙÄı¼Á" : "ÎŞËÙÄı¼Á";
+  const gangueName = record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "æœªå½’å±";
+  const nText = template.nValue ? `n=${template.nValue}` : (record.gradationCoefficient ? `n=${record.gradationCoefficient}` : "åŸå§‹çº§é…");
+  const accelerator = templateUsesAccelerator(weighingKey) ? "æœ‰é€Ÿå‡å‰‚" : "æ— é€Ÿå‡å‰‚";
   return [
-    `Åú´Î£º${gangueName}`,
-    `ÓÃÍ¾£º${blockCategoryLabelV3(category)}`,
+    `æ‰¹æ¬¡ï¼š${gangueName}`,
+    `ç”¨é€”ï¼š${blockCategoryLabelV3(category)}`,
     nText,
     accelerator,
-    `Á£¾¶£º${scheme.label || scheme.ranges.join("-")}`
+    `ç²’å¾„ï¼š${scheme.label || scheme.ranges.join("-")}`
   ];
 }
 
@@ -2805,11 +3560,11 @@ function renderBlockStrengthBarsV22(block) {
       number,
       dueDate,
       isDue,
-      label: number ? metricResultDisplay(result) : (isDue ? "´ıÂ¼" : `Ó¦²â ${formatDateCnV3(dueDate)}`)
+      label: number ? metricResultDisplay(result) : (isDue ? "å¾…å½•" : `åº”æµ‹ ${formatDateCnV3(dueDate)}`)
     };
   });
   const max = Math.max(1, ...values.map((item) => item.number || 0));
-  return `<div class="strength-strip-v22" aria-label="ÒÑÑ¡ÁäÆÚ¿¹Ñ¹Ç¿¶È">
+  return `<div class="strength-strip-v22" aria-label="å·²é€‰é¾„æœŸæŠ—å‹å¼ºåº¦">
       ${values.map((item) => {
     const width = item.number ? Math.max(5, Math.min(100, (item.number / max) * 100)) : 8;
     return `<span class="strength-bar-v22 age-${item.age} ${item.number ? "filled" : item.isDue ? "due" : "upcoming"}">
@@ -2825,33 +3580,33 @@ function renderResearchBlockCardV22(block, content, options = {}) {
   const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
   const ratios = calculateRecipeRatios(record);
   const latest = latestMetricResultForBlockV22(block);
-  const gangueName = record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "Î´¹éÊôÃºí·Ê¯";
-  const gradationLabel = gradationSchemeForCategory(block.blockCategory).templates[normalizeGradationTemplate(record.gradationTemplate)]?.label || "Ô­Ê¼¼¶Åä";
-  const weighingLabel = WEIGHING_TEMPLATES[normalizeWeighingTemplate(record.weighingTemplate, block.blockCategory)]?.label || "Î´Ñ¡Ä£°å";
+  const gangueName = record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "æœªå½’å±ç…¤çŸ¸çŸ³";
+  const gradationLabel = gradationSchemeForCategory(block.blockCategory).templates[normalizeGradationTemplate(record.gradationTemplate)]?.label || "åŸå§‹çº§é…";
+  const weighingLabel = WEIGHING_TEMPLATES[normalizeWeighingTemplate(record.weighingTemplate, block.blockCategory)]?.label || "æœªé€‰æ¨¡æ¿";
   const progress = block.ages.map((age) => {
     const result = compressionResultByAgeV22(block, age);
     const dueDate = addDays(block.madeDate, age);
     const isDue = dueDate <= today();
-    return `<span class="${metricResultFilled(result) ? "done" : isDue ? "due" : "upcoming"}">${age}d ${metricResultFilled(result) ? "ÒÑÂ¼" : isDue ? "´ıÂ¼" : `Ó¦²â ${formatDateCnV3(dueDate)}`}</span>`;
+    return `<span class="${metricResultFilled(result) ? "done" : isDue ? "due" : "upcoming"}">${age}d ${metricResultFilled(result) ? "å·²å½•" : isDue ? "å¾…å½•" : `åº”æµ‹ ${formatDateCnV3(dueDate)}`}</span>`;
   }).join("");
   return `<article class="research-block-v22">
       <div>
-        <p>${html(blockCategoryLabelV3(block.blockCategory))}£ü${html(gangueName)}</p>
-        <h3>${html(block.name)}${block.strength ? `£ü${html(block.strength)}` : ""}</h3>
-        <small>³ÉĞÍ£º${html(formatDateCnV3(block.madeDate))} ¡¤ ${html(block.quantity)} ¿é ¡¤ ${html(gradationLabel)} ¡¤ ${html(weighingLabel)}</small>
+        <p>${html(blockCategoryLabelV3(block.blockCategory))}ï½œ${html(gangueName)}</p>
+        <h3>${html(block.name)}${block.strength ? `ï½œ${html(block.strength)}` : ""}</h3>
+        <small>æˆå‹ï¼š${html(formatDateCnV3(block.madeDate))} Â· ${html(block.quantity)} å— Â· ${html(gradationLabel)} Â· ${html(weighingLabel)}</small>
       </div>
       <div class="config-chips-v22">${blockConfigChipsV22(block, content, record).map((chip) => `<span>${html(chip)}</span>`).join("")}</div>
       <div class="block-facts-v22">
-        <span>Ë®½º±È£º${html(record.waterBinderRatio || (ratios.waterBinderRatio ? formatRecipeNumber(ratios.waterBinderRatio) : "Î´Ìî"))}</span>
-        <span>¹Ç»Ò±È£º${html(ratios.aggregateBinderRatio ? formatRecipeNumber(ratios.aggregateBinderRatio) : "Î´Ìî")}</span>
-        <span>×îĞÂÇ¿¶È£º${latest ? `${html(latest.age)}d ${html(metricResultDisplay(latest.result))}` : "Î´Â¼Èë"}</span>
+        <span>æ°´èƒ¶æ¯”ï¼š${html(record.waterBinderRatio || (ratios.waterBinderRatio ? formatRecipeNumber(ratios.waterBinderRatio) : "æœªå¡«"))}</span>
+        <span>éª¨ç°æ¯”ï¼š${html(ratios.aggregateBinderRatio ? formatRecipeNumber(ratios.aggregateBinderRatio) : "æœªå¡«")}</span>
+        <span>æœ€æ–°å¼ºåº¦ï¼š${latest ? `${html(latest.age)}d ${html(metricResultDisplay(latest.result))}` : "æœªå½•å…¥"}</span>
       </div>
       ${renderBlockStrengthBarsV22(block)}
       <div class="age-progress-v22">${progress}</div>
       <div class="card-actions-v22">
-        <a href="#record-${attr(block.id)}" data-open-record="${attr(block.id)}" data-record-tab-target="results">¼ÇÂ¼Ç¿¶È</a>
-        <a href="#record-${attr(block.id)}" data-open-record="${attr(block.id)}" data-record-tab-target="images">ÉÏ´«Í¼Æ¬</a>
-        ${options.detail !== false ? `<a href="#record-${attr(block.id)}" data-open-record="${attr(block.id)}">²é¿´ÏêÇé</a>` : ""}
+        <a href="#record-${attr(block.id)}" data-open-record="${attr(block.id)}" data-record-tab-target="results">è®°å½•å¼ºåº¦</a>
+        <a href="#record-${attr(block.id)}" data-open-record="${attr(block.id)}" data-record-tab-target="images">ä¸Šä¼ å›¾ç‰‡</a>
+        ${options.detail !== false ? `<a href="#record-${attr(block.id)}" data-open-record="${attr(block.id)}">æŸ¥çœ‹è¯¦æƒ…</a>` : ""}
       </div>
     </article>`;
 }
@@ -2862,33 +3617,33 @@ function renderRecentBlocksV22(content) {
     .sort((a, b) => b.madeDate.localeCompare(a.madeDate))
     .slice(0, 6);
   return `<section class="dashboard-card-v22" id="recent-blocks">
-      <div class="section-head-v22"><div><p class="eyebrow">Recent</p><h2>×î½üÊÔ¿é×é</h2></div><a href="#block-management">²é¿´È«²¿</a></div>
-      ${blocks.length ? `<div class="recent-block-grid-v22">${blocks.map((block) => renderResearchBlockCardV22(block, content)).join("")}</div>` : `<p class="empty-v22">»¹Ã»ÓĞÊÔ¿é×é¡£</p>`}
+      <div class="section-head-v22"><div><p class="eyebrow">Recent</p><h2>æœ€è¿‘è¯•å—ç»„</h2></div><a href="#block-management">æŸ¥çœ‹å…¨éƒ¨</a></div>
+      ${blocks.length ? `<div class="recent-block-grid-v22">${blocks.map((block) => renderResearchBlockCardV22(block, content)).join("")}</div>` : `<p class="empty-v22">è¿˜æ²¡æœ‰è¯•å—ç»„ã€‚</p>`}
     </section>`;
 }
 
 function renderCollapsedCalendarV22(content, actionBase) {
   return `<details class="dashboard-card-v22 calendar-collapse-v22" id="calendar">
-      <summary><span><b>ÊµÑéÈÕÀú</b><em>Õ¹¿ª²é¿´ÕûÔÂ²ğÄ£ºÍÁäÆÚÊÂÏî</em></span><strong>Õ¹¿ª</strong></summary>
+      <summary><span><b>å®éªŒæ—¥å†</b><em>å±•å¼€æŸ¥çœ‹æ•´æœˆæ‹†æ¨¡å’Œé¾„æœŸäº‹é¡¹</em></span><strong>å±•å¼€</strong></summary>
       <div class="calendar-inner-v22">${renderBlockCalendarV3(content, actionBase)}</div>
     </details>`;
 }
 
 function renderNewGanguePanelV22(actionBase) {
   return `<details class="dashboard-card-v22 create-panel-v22" id="new-gangue">
-      <summary><span><b>ĞÂ½¨Ãºí·Ê¯Åú´Î</b><em>²»ÊÇÃ¿Ìì¶¼ÓÃ£¬Ä¬ÈÏÊÕÆğ£¬ĞèÒªÊ±ÔÙÕ¹¿ª¡£</em></span><strong>ĞÂÔö</strong></summary>
+      <summary><span><b>æ–°å»ºç…¤çŸ¸çŸ³æ‰¹æ¬¡</b><em>ä¸æ˜¯æ¯å¤©éƒ½ç”¨ï¼Œé»˜è®¤æ”¶èµ·ï¼Œéœ€è¦æ—¶å†å±•å¼€ã€‚</em></span><strong>æ–°å¢</strong></summary>
       <form method="post" action="${actionBase}/add-gangue">
         <div class="form-grid">
-          <label class="field"><span>Ãºí·Ê¯±àºÅ/Ãû³Æ</span><input name="gangueName" placeholder="Àı£ºSZ-01 Ë·ÖİÃºí·Ê¯" required></label>
-          <label class="field"><span>À´Ô´/Åú´Î</span><input name="source" placeholder="Àı£ºË·Öİ XX ¿ó 2026-05"></label>
-          <label class="field wide"><span>Á£¾¶Çø¼ä</span><input name="particleRanges" value="${attr(defaultParticleRanges().join(","))}"></label>
-          <label class="field"><span>´Ö¹ÇÁÏÎüË®ÂÊ</span><input name="coarseWaterAbsorption" placeholder="Àı£º5.2%"></label>
-          <label class="field"><span>Ï¸¹ÇÁÏÎüË®ÂÊ</span><input name="fineWaterAbsorption" placeholder="Àı£º7.8%"></label>
-          <label class="field"><span>´Ö¹ÇÁÏ±í¹ÛÃÜ¶È</span><input name="coarseApparentDensity" placeholder="Àı£º2450kg/m3"></label>
-          <label class="field"><span>Ï¸¹ÇÁÏ±í¹ÛÃÜ¶È</span><input name="fineApparentDensity" placeholder="Àı£º2380kg/m3"></label>
-          <label class="field wide"><span>ÆäËûĞÅÏ¢</span><input name="otherInfo" placeholder="ÑÕÉ«¡¢²ÉÑùÈË¡¢º¬ÄàÁ¿¡¢É¸·Ö×´Ì¬¡¢±¸×¢"></label>
+          <label class="field"><span>ç…¤çŸ¸çŸ³ç¼–å·/åç§°</span><input name="gangueName" placeholder="ä¾‹ï¼šSZ-01 æœ”å·ç…¤çŸ¸çŸ³" required></label>
+          <label class="field"><span>æ¥æº/æ‰¹æ¬¡</span><input name="source" placeholder="ä¾‹ï¼šæœ”å· XX çŸ¿ 2026-05"></label>
+          <label class="field wide"><span>ç²’å¾„åŒºé—´</span><input name="particleRanges" value="${attr(defaultParticleRanges().join(","))}"></label>
+          <label class="field"><span>ç²—éª¨æ–™å¸æ°´ç‡</span><input name="coarseWaterAbsorption" placeholder="ä¾‹ï¼š5.2%"></label>
+          <label class="field"><span>ç»†éª¨æ–™å¸æ°´ç‡</span><input name="fineWaterAbsorption" placeholder="ä¾‹ï¼š7.8%"></label>
+          <label class="field"><span>ç²—éª¨æ–™è¡¨è§‚å¯†åº¦</span><input name="coarseApparentDensity" placeholder="ä¾‹ï¼š2450kg/m3"></label>
+          <label class="field"><span>ç»†éª¨æ–™è¡¨è§‚å¯†åº¦</span><input name="fineApparentDensity" placeholder="ä¾‹ï¼š2380kg/m3"></label>
+          <label class="field wide"><span>å…¶ä»–ä¿¡æ¯</span><input name="otherInfo" placeholder="é¢œè‰²ã€é‡‡æ ·äººã€å«æ³¥é‡ã€ç­›åˆ†çŠ¶æ€ã€å¤‡æ³¨"></label>
         </div>
-        <div class="actions"><button class="secondary" type="submit">½¨Á¢Ãºí·Ê¯µµ°¸</button></div>
+        <div class="actions"><button class="secondary" type="submit">å»ºç«‹ç…¤çŸ¸çŸ³æ¡£æ¡ˆ</button></div>
       </form>
     </details>`;
 }
@@ -2897,28 +3652,28 @@ function renderGangueArchiveV22(content, actionBase) {
   const gangues = getCoalGangueDb(content);
   const orphans = orphanBlocksV3(content);
   return `<section class="dashboard-section-v22" id="gangue-archive">
-      <div class="section-title-v22"><p class="eyebrow">Archive</p><h2>Ãºí·Ê¯µµ°¸</h2><p>°´Ãºí·Ê¯±àºÅ¹éµµ¼¶Åä¡¢Í¼Æ¬¡¢Åç½¬ÊÔ¿éºÍµÀÂ·ÊÔ¿é¡£</p></div>
+      <div class="section-title-v22"><p class="eyebrow">Archive</p><h2>ç…¤çŸ¸çŸ³æ¡£æ¡ˆ</h2><p>æŒ‰ç…¤çŸ¸çŸ³ç¼–å·å½’æ¡£çº§é…ã€å›¾ç‰‡ã€å–·æµ†è¯•å—å’Œé“è·¯è¯•å—ã€‚</p></div>
       ${renderNewGanguePanelV22(actionBase)}
       <div class="gangue-folder-list">
-        ${gangues.length ? gangues.map((item) => renderGangueExperimentFolderV3(item, content, actionBase)).join("") : `<article class="panel"><p class="hint">ÏÈĞÂÔöÒ»¸öÃºí·Ê¯±àºÅ¡£</p></article>`}
+        ${gangues.length ? gangues.map((item) => renderGangueExperimentFolderV3(item, content, actionBase)).join("") : `<article class="panel"><p class="hint">å…ˆæ–°å¢ä¸€ä¸ªç…¤çŸ¸çŸ³ç¼–å·ã€‚</p></article>`}
       </div>
-      ${orphans.length ? `<section class="panel orphan-panel">${renderNestedBlockListV3(orphans, actionBase, content, "Î´¹éÊôÃºí·Ê¯µÄ¾ÉÊÔ¿é")}</section>` : ""}
+      ${orphans.length ? `<section class="panel orphan-panel">${renderNestedBlockListV3(orphans, actionBase, content, "æœªå½’å±ç…¤çŸ¸çŸ³çš„æ—§è¯•å—")}</section>` : ""}
     </section>`;
 }
 
 function renderBlockManagementV22(content, actionBase) {
   const blocks = getTestBlocks(content);
   return `<section class="dashboard-section-v22" id="block-management">
-      <div class="section-title-v22"><p class="eyebrow">Blocks</p><h2>ÊÔ¿é¹ÜÀí</h2><p>ÊÔ¿é×éÊÇ×îĞ¡ÊµÑé¹ÜÀíµ¥Î»£¬Ç¿¶È½á¹ûºÍÍ¼Æ¬¶¼¹éµ½ÕâÀï¡£</p></div>
+      <div class="section-title-v22"><p class="eyebrow">Blocks</p><h2>è¯•å—ç®¡ç†</h2><p>è¯•å—ç»„æ˜¯æœ€å°å®éªŒç®¡ç†å•ä½ï¼Œå¼ºåº¦ç»“æœå’Œå›¾ç‰‡éƒ½å½’åˆ°è¿™é‡Œã€‚</p></div>
       <section class="dashboard-card-v22">
         <div class="block-toolbar">
-          <input id="blockSearch" type="search" placeholder="ËÑË÷Ãû³Æ¡¢Ãºí·Ê¯¡¢nÖµ¡¢Á£¾¶¡¢²ÄÁÏ¡¢ÁäÆÚ">
-          <span class="hint">¹² ${blocks.length} ×é</span>
-          <div class="archive-actions" aria-label="ÊÔ¿éµ¼³ö²Ù×÷">
-            <button class="chip-button" type="button" data-check-all-export>È«Ñ¡µ¼³ö</button>
-            <button class="chip-button" type="button" data-clear-export>Çå¿ÕÑ¡Ôñ</button>
-            <button class="chip-button" type="submit" form="exportBlocksForm">µ¼³öÑ¡ÖĞ Excel</button>
-            <button class="chip-button" type="submit" form="exportBlocksForm" name="exportAll" value="1">µ¼³öÈ«²¿ Excel</button>
+          <input id="blockSearch" type="search" placeholder="æœç´¢åç§°ã€ç…¤çŸ¸çŸ³ã€nå€¼ã€ç²’å¾„ã€ææ–™ã€é¾„æœŸ">
+          <span class="hint">å…± ${blocks.length} ç»„</span>
+          <div class="archive-actions" aria-label="è¯•å—å¯¼å‡ºæ“ä½œ">
+            <button class="chip-button" type="button" data-check-all-export>å…¨é€‰å¯¼å‡º</button>
+            <button class="chip-button" type="button" data-clear-export>æ¸…ç©ºé€‰æ‹©</button>
+            <button class="chip-button" type="submit" form="exportBlocksForm">å¯¼å‡ºé€‰ä¸­ Excel</button>
+            <button class="chip-button" type="submit" form="exportBlocksForm" name="exportAll" value="1">å¯¼å‡ºå…¨éƒ¨ Excel</button>
           </div>
         </div>
         <form id="exportBlocksForm" method="post" action="${actionBase}/export-blocks"></form>
@@ -2926,11 +3681,11 @@ function renderBlockManagementV22(content, actionBase) {
           ${blocks.map((block) => {
     const searchText = blockSearchTextV3(block, content);
     return `<div data-block-card data-search="${attr(searchText)}">
-            <label class="export-check"><input form="exportBlocksForm" type="checkbox" name="blockIds" value="${attr(block.id)}" data-export-check><span>µ¼³ö</span></label>
+            <label class="export-check"><input form="exportBlocksForm" type="checkbox" name="blockIds" value="${attr(block.id)}" data-export-check><span>å¯¼å‡º</span></label>
             ${renderResearchBlockCardV22(block, content)}
           </div>`;
   }).join("")}
-        </div>` : `<p class="empty-v22">»¹Ã»ÓĞÊÔ¿é×é¡£</p>`}
+        </div>` : `<p class="empty-v22">è¿˜æ²¡æœ‰è¯•å—ç»„ã€‚</p>`}
       </section>
     </section>`;
 }
@@ -2941,36 +3696,36 @@ function renderWorkspaceV3(content, message = "") {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ãºí·Ê¯ÊµÑé¹¤×÷Çø - ${html(content.siteTitle)}</title>
+  <title>ç…¤çŸ¸çŸ³å®éªŒå·¥ä½œåŒº - ${html(content.siteTitle)}</title>
   <style>${workspaceStylesV3()}</style>
 </head>
 <body class="dashboard-shell-v22">
   <div class="app-shell-v22">
     <aside class="sidebar-v22">
-      <a class="side-brand-v22" href="${WORK_PATH}/"><span>CG</span><strong>Ãºí·Ê¯ÊµÑé¹¤×÷Çø</strong></a>
-      <nav aria-label="¹¤×÷ÇøÄ£¿é">
-        <a href="#overview" aria-current="page">×ÜÀÀ</a>
-        <a href="#gangue-archive">Ãºí·Ê¯µµ°¸</a>
-        <a href="#block-management">ÊÔ¿é¹ÜÀí</a>
-        <a href="#analysis">Êı¾İ·ÖÎö</a>
-        <a href="#material-library">²ÄÁÏ¿â</a>
+      <a class="side-brand-v22" href="${WORK_PATH}/"><span>CG</span><strong>ç…¤çŸ¸çŸ³å®éªŒå·¥ä½œåŒº</strong></a>
+      <nav aria-label="å·¥ä½œåŒºæ¨¡å—">
+        <a href="#overview" aria-current="page">æ€»è§ˆ</a>
+        <a href="#gangue-archive">ç…¤çŸ¸çŸ³æ¡£æ¡ˆ</a>
+        <a href="#block-management">è¯•å—ç®¡ç†</a>
+        <a href="#analysis">æ•°æ®åˆ†æ</a>
+        <a href="#material-library">ææ–™åº“</a>
       </nav>
       <div class="side-foot-v22">
-        <a href="/" target="_blank" rel="noopener">¹«¿ªÊ×Ò³</a>
-        <a href="${WORK_PATH}/logout">ÍË³ö</a>
+        <a href="/" target="_blank" rel="noopener">å…¬å¼€é¦–é¡µ</a>
+        <a href="${WORK_PATH}/logout">é€€å‡º</a>
       </div>
     </aside>
     <div class="workspace-v22">
       <header class="topbar-v22">
         <div>
           <p class="eyebrow">Research Dashboard</p>
-          <h1>Ãºí·Ê¯»ùµÀÂ·»ìÄıÍÁÊµÑéÊı¾İ¹ÜÀíÓë·ÖÎöÆ½Ì¨</h1>
+          <h1>ç…¤çŸ¸çŸ³åŸºé“è·¯æ··å‡åœŸå®éªŒæ•°æ®ç®¡ç†ä¸åˆ†æå¹³å°</h1>
         </div>
-        <label class="global-search-v22"><span>ËÑË÷</span><div class="search-field-v22"><input id="globalBlockSearch" type="search" placeholder="ËÑË÷ÊÔ¿é / Ãºí·Ê¯ / nÖµ / ËÙÄı¼Á / Ç¿¶ÈµÈ¼¶"><button type="button" data-search-submit aria-label="Ö´ĞĞËÑË÷">²é</button></div></label>
+        <label class="global-search-v22"><span>æœç´¢</span><div class="search-field-v22"><input id="globalBlockSearch" type="search" placeholder="æœç´¢è¯•å— / ç…¤çŸ¸çŸ³ / nå€¼ / é€Ÿå‡å‰‚ / å¼ºåº¦ç­‰çº§"><button type="button" data-search-submit aria-label="æ‰§è¡Œæœç´¢">æŸ¥</button></div></label>
         <div class="top-actions-v22">
-          <a href="#recent-blocks">¼ÇÂ¼Ç¿¶È</a>
-          <a href="#gangue-archive">ĞÂ½¨ÊÔ¿é×é</a>
-          <button type="submit" form="exportBlocksForm" name="exportAll" value="1">µ¼³öÈ«²¿ Excel</button>
+          <a href="#recent-blocks">è®°å½•å¼ºåº¦</a>
+          <a href="#gangue-archive">æ–°å»ºè¯•å—ç»„</a>
+          <button type="submit" form="exportBlocksForm" name="exportAll" value="1">å¯¼å‡ºå…¨éƒ¨ Excel</button>
         </div>
       </header>
       <main class="work-main-v22">
@@ -2992,7 +3747,7 @@ function renderWorkspaceV3(content, message = "") {
         ${renderGangueArchiveV22(content, WORK_PATH)}
         ${renderBlockManagementV22(content, WORK_PATH)}
         <section class="dashboard-section-v22" id="material-library">
-          <div class="section-title-v22"><p class="eyebrow">Materials</p><h2>²ÄÁÏ¿â</h2><p>²ÄÁÏ¿âµ¥¶À¹ÜÀí£¬¿ÉÒş²Ø¡¢É¾³ıºÍĞÂÔö£¬¾ÉÊÔ¿éÀúÊ·Êı¾İ±£Áô¡£</p></div>
+          <div class="section-title-v22"><p class="eyebrow">Materials</p><h2>ææ–™åº“</h2><p>ææ–™åº“å•ç‹¬ç®¡ç†ï¼Œå¯éšè—ã€åˆ é™¤å’Œæ–°å¢ï¼Œæ—§è¯•å—å†å²æ•°æ®ä¿ç•™ã€‚</p></div>
           ${renderRecipeMaterialLibraryManagerV3(content, WORK_PATH)}
         </section>
       </main>
@@ -3424,41 +4179,41 @@ function renderTestBlocksPanelV3(content, options = {}) {
         <div class="panel-title">
           <div>
             <p class="eyebrow">New Record</p>
-            <h2>µÇ¼ÇÊÔ¿é</h2>
-            <p>ÌîºÃÁäÆÚºó£¬µµ°¸»á×Ô¶¯°´ÁäÆÚÉú³É¼ì²â½á¹ûÀ¸¡£</p>
+            <h2>ç™»è®°è¯•å—</h2>
+            <p>å¡«å¥½é¾„æœŸåï¼Œæ¡£æ¡ˆä¼šè‡ªåŠ¨æŒ‰é¾„æœŸç”Ÿæˆæ£€æµ‹ç»“æœæ ã€‚</p>
           </div>
         </div>
         <form method="post" action="${actionBase}/add-block">
           <div class="form-grid">
-            <label class="field wide"><span>ÊÔ¿éÃû³Æ/²¿Î»</span><input name="blockName" placeholder="Àı£º1#Â¥Èı²ãÁº°å C30" required></label>
-            <label class="field"><span>ÖÆ×÷ÈÕÆÚ</span><input name="madeDate" type="date" value="${today()}" required></label>
-            <label class="field"><span>ÊÔ¿éÊıÁ¿</span><input name="quantity" type="number" min="1" step="1" value="3" required></label>
-            <label class="field"><span>Ç¿¶ÈµÈ¼¶</span><input name="strength" placeholder="Àı£ºC30"></label>
-            <label class="field wide"><span>ĞèÒªÁäÆÚ</span><input id="ageInput" name="ages" value="7,28" placeholder="Àı£º3,7,28">
+            <label class="field wide"><span>è¯•å—åç§°/éƒ¨ä½</span><input name="blockName" placeholder="ä¾‹ï¼š1#æ¥¼ä¸‰å±‚æ¢æ¿ C30" required></label>
+            <label class="field"><span>åˆ¶ä½œæ—¥æœŸ</span><input name="madeDate" type="date" value="${today()}" required></label>
+            <label class="field"><span>è¯•å—æ•°é‡</span><input name="quantity" type="number" min="1" step="1" value="3" required></label>
+            <label class="field"><span>å¼ºåº¦ç­‰çº§</span><input name="strength" placeholder="ä¾‹ï¼šC30"></label>
+            <label class="field wide"><span>éœ€è¦é¾„æœŸ</span><input id="ageInput" name="ages" value="7,28" placeholder="ä¾‹ï¼š3,7,28">
               <div class="age-toolbar">
-                <button class="chip-button" type="button" data-age="3">3Ìì</button>
-                <button class="chip-button" type="button" data-age="7">7Ìì</button>
-                <button class="chip-button" type="button" data-age="14">14Ìì</button>
-                <button class="chip-button" type="button" data-age="28">28Ìì</button>
-                <button class="chip-button" type="button" data-age="56">56Ìì</button>
+                <button class="chip-button" type="button" data-age="3">3å¤©</button>
+                <button class="chip-button" type="button" data-age="7">7å¤©</button>
+                <button class="chip-button" type="button" data-age="14">14å¤©</button>
+                <button class="chip-button" type="button" data-age="28">28å¤©</button>
+                <button class="chip-button" type="button" data-age="56">56å¤©</button>
               </div>
             </label>
-            <label class="field"><span>Åä·½/±àºÅ</span><input name="mixName" placeholder="Àı£ºC30 ±ÃËÍÅäºÏ±È"></label>
-            <label class="field"><span>Ë®½º±È</span><input name="waterBinderRatio" placeholder="Àı£º0.42"></label>
-            <label class="field"><span>Ì®Âä¶È</span><input name="slump" placeholder="Àı£º180mm"></label>
-            <label class="field"><span>¼¶ÅäÏµÊı</span><input name="gradationCoefficient" placeholder="Àı£º0.68"></label>
+            <label class="field"><span>é…æ–¹/ç¼–å·</span><input name="mixName" placeholder="ä¾‹ï¼šC30 æ³µé€é…åˆæ¯”"></label>
+            <label class="field"><span>æ°´èƒ¶æ¯”</span><input name="waterBinderRatio" placeholder="ä¾‹ï¼š0.42"></label>
+            <label class="field"><span>åè½åº¦</span><input name="slump" placeholder="ä¾‹ï¼š180mm"></label>
+            <label class="field"><span>çº§é…ç³»æ•°</span><input name="gradationCoefficient" placeholder="ä¾‹ï¼š0.68"></label>
             <div class="field wide">
-              <span>Åä·½²ÄÁÏ</span>
+              <span>é…æ–¹ææ–™</span>
               ${renderRecipeMaterialSelectorV3(defaultRecipeMaterialsForContent(content), "", content.recipeMaterialLibrary, content.disabledRecipeMaterialIds)}
             </div>
             <div class="field wide">
-              <span>¼ì²âÖ¸±ê</span>
+              <span>æ£€æµ‹æŒ‡æ ‡</span>
               ${renderMetricSelectorV3(normalizeResultMetrics(DEFAULT_RESULT_METRIC_IDS), "")}
             </div>
-            <label class="field wide"><span>±¸×¢</span><input name="note" placeholder="¿ÉÌî±àºÅ¡¢Ê©¹¤¶Î¡¢Ñø»¤Ìõ¼şµÈ"></label>
+            <label class="field wide"><span>å¤‡æ³¨</span><input name="note" placeholder="å¯å¡«ç¼–å·ã€æ–½å·¥æ®µã€å…»æŠ¤æ¡ä»¶ç­‰"></label>
           </div>
-          <p class="hint">²ğÄ£ÌáĞÑ¹Ì¶¨ÎªÖÆ×÷ÈÕÆÚºó 1 Ìì£»ÁäÆÚµ½ÆÚ°´¡°ÖÆ×÷ÈÕÆÚ + ÁäÆÚÌìÊı¡±¼ÆËã¡£¶à¸öÁäÆÚÓÃ¶ººÅ·Ö¿ª¡£</p>
-          <div class="actions"><button type="submit">µÇ¼ÇÊÔ¿é</button></div>
+          <p class="hint">æ‹†æ¨¡æé†’å›ºå®šä¸ºåˆ¶ä½œæ—¥æœŸå 1 å¤©ï¼›é¾„æœŸåˆ°æœŸæŒ‰â€œåˆ¶ä½œæ—¥æœŸ + é¾„æœŸå¤©æ•°â€è®¡ç®—ã€‚å¤šä¸ªé¾„æœŸç”¨é€—å·åˆ†å¼€ã€‚</p>
+          <div class="actions"><button type="submit">ç™»è®°è¯•å—</button></div>
         </form>
       </article>
       <article class="panel">${renderTodayFocusV3(content, actionBase, options.showMailAction)}</article>
@@ -3585,18 +4340,18 @@ function taskStateLabelV22(item, referenceDate = today()) {
   const state = taskStateV22(item, referenceDate);
   if (item.type === "demold") {
     return {
-      completed: "ÒÑ²ğÄ£",
-      overdue: "ÓâÆÚ²ğÄ£",
-      today: "½ñÈÕ²ğÄ£",
-      upcoming: "´ı²ğÄ£"
-    }[state] || "²ğÄ£";
+      completed: "å·²æ‹†æ¨¡",
+      overdue: "é€¾æœŸæ‹†æ¨¡",
+      today: "ä»Šæ—¥æ‹†æ¨¡",
+      upcoming: "å¾…æ‹†æ¨¡"
+    }[state] || "æ‹†æ¨¡";
   }
   return {
-    completed: "ÒÑÂ¼Èë",
-    overdue: "ÓâÆÚÎ´Â¼",
-    today: "½ñÈÕµ½ÆÚ",
-    upcoming: "Î´À´´ı²â"
-  }[state] || "´ı²â";
+    completed: "å·²å½•å…¥",
+    overdue: "é€¾æœŸæœªå½•",
+    today: "ä»Šæ—¥åˆ°æœŸ",
+    upcoming: "æœªæ¥å¾…æµ‹"
+  }[state] || "å¾…æµ‹";
 }
 
 function visibleTaskItemsV22(content, referenceDate = today()) {
@@ -3677,8 +4432,8 @@ function abnormalItemsV22(content, referenceDate = today()) {
       addItem({
         id: `due:${item.block.id}:${item.age}:${item.metric.id}`,
         level: "critical",
-        title: "µ½ÆÚÎ´Â¼",
-        text: `${item.block.name} ¡¤ ${item.age}d ${item.metric.label} ĞèÒª¼ÇÂ¼`
+        title: "åˆ°æœŸæœªå½•",
+        text: `${item.block.name} Â· ${item.age}d ${item.metric.label} éœ€è¦è®°å½•`
       });
     }
     const cv = Number.parseFloat(String(item.result.cv || ""));
@@ -3686,8 +4441,8 @@ function abnormalItemsV22(content, referenceDate = today()) {
       addItem({
         id: `cv:${item.block.id}:${item.age}:${item.metric.id}`,
         level: "warning",
-        title: "±äÒìÏµÊıÆ«¸ß",
-        text: `${item.block.name} ¡¤ ${item.age}d ${item.metric.label} CV ${item.result.cv}%`
+        title: "å˜å¼‚ç³»æ•°åé«˜",
+        text: `${item.block.name} Â· ${item.age}d ${item.metric.label} CV ${item.result.cv}%`
       });
     }
   });
@@ -3696,8 +4451,8 @@ function abnormalItemsV22(content, referenceDate = today()) {
       addItem({
         id: `gangue-core:${gangue.id}`,
         level: "warning",
-        title: "Ãºí·Ê¯¹Ø¼üÖ¸±êÈ±Ê§",
-        text: `${gangue.name} »¹È±Ñ¹ËéÖµ»òÎüË®ÂÊ`
+        title: "ç…¤çŸ¸çŸ³å…³é”®æŒ‡æ ‡ç¼ºå¤±",
+        text: `${gangue.name} è¿˜ç¼ºå‹ç¢å€¼æˆ–å¸æ°´ç‡`
       });
     }
   });
@@ -3705,18 +4460,18 @@ function abnormalItemsV22(content, referenceDate = today()) {
     const images = normalizeLabImages(block.images);
     const hasAnyResult = blockResultDueItemsV22([block]).some((item) => item.filled);
     const hasCompression = blockResultDueItemsV22([block]).some((item) => item.filled && item.metric.id === "compressionStrength");
-    const hasSplit = blockResultDueItemsV22([block]).some((item) => item.filled && /split|ÅüÁÑ/.test(item.metric.id + item.metric.label));
+    const hasSplit = blockResultDueItemsV22([block]).some((item) => item.filled && /split|åŠˆè£‚/.test(item.metric.id + item.metric.label));
     if (hasAnyResult && !images.length) {
-      addItem({ id: `block-no-image:${block.id}`, level: "warning", title: "½á¹ûÈ±ÉÙÍ¼Æ¬", text: `${block.name} ÒÑÓĞ½á¹û£¬µ«»¹Ã»ÓĞÉÏ´«ÊÔÑéÍ¼Æ¬` });
+      addItem({ id: `block-no-image:${block.id}`, level: "warning", title: "ç»“æœç¼ºå°‘å›¾ç‰‡", text: `${block.name} å·²æœ‰ç»“æœï¼Œä½†è¿˜æ²¡æœ‰ä¸Šä¼ è¯•éªŒå›¾ç‰‡` });
     }
     if (hasCompression && !images.some((image) => ["pressureReading", "compressionFailure"].includes(image.kind))) {
-      addItem({ id: `block-compression-image:${block.id}`, level: "warning", title: "¿¹Ñ¹Í¼Æ¬Î´¹éµµ", text: `${block.name} ½¨ÒéÉÏ´«Ñ¹Á¦¶ÁÊı»ò¿¹Ñ¹ÆÆ»µÍ¼` });
+      addItem({ id: `block-compression-image:${block.id}`, level: "warning", title: "æŠ—å‹å›¾ç‰‡æœªå½’æ¡£", text: `${block.name} å»ºè®®ä¸Šä¼ å‹åŠ›è¯»æ•°æˆ–æŠ—å‹ç ´åå›¾` });
     }
     if (hasSplit && !images.some((image) => ["split", "splitSection"].includes(image.kind))) {
-      addItem({ id: `block-split-image:${block.id}`, level: "warning", title: "ÅüÁÑÍ¼Æ¬Î´¹éµµ", text: `${block.name} ½¨ÒéÉÏ´«ÅüÁÑ¶ÏÃæÍ¼` });
+      addItem({ id: `block-split-image:${block.id}`, level: "warning", title: "åŠˆè£‚å›¾ç‰‡æœªå½’æ¡£", text: `${block.name} å»ºè®®ä¸Šä¼ åŠˆè£‚æ–­é¢å›¾` });
     }
     if (!hasAnyResult && !images.length) {
-      addItem({ id: `block-empty:${block.id}`, level: "tip", title: "×ÊÁÏ´ı²¹", text: `${block.name} ÔİÎŞÇ¿¶È½á¹ûºÍÍ¼Æ¬` });
+      addItem({ id: `block-empty:${block.id}`, level: "tip", title: "èµ„æ–™å¾…è¡¥", text: `${block.name} æš‚æ— å¼ºåº¦ç»“æœå’Œå›¾ç‰‡` });
     }
     const compressionRows = block.ages
       .map((age) => ({ age, result: compressionResultByAgeV22(block, age) }))
@@ -3730,8 +4485,8 @@ function abnormalItemsV22(content, referenceDate = today()) {
         addItem({
           id: `strength-drop:${block.id}:${previous.age}:${current.age}`,
           level: "confirm",
-          title: "Ç¿¶È»ØÂäĞèÈ·ÈÏ",
-          text: `${block.name} ${current.age}d µÍÓÚ ${previous.age}d µÄ 95%£¬½¨ÒéºË¶ÔÊı¾İ`
+          title: "å¼ºåº¦å›è½éœ€ç¡®è®¤",
+          text: `${block.name} ${current.age}d ä½äº ${previous.age}d çš„ 95%ï¼Œå»ºè®®æ ¸å¯¹æ•°æ®`
         });
       }
     }
@@ -3751,7 +4506,7 @@ function clampPercentV3(value) {
 }
 
 function renderVizRowsV3(rows, options = {}) {
-  if (!rows.length) return `<p class="hint">ÔİÎŞ¿ÉÊÓ»¯Êı¾İ¡£</p>`;
+  if (!rows.length) return `<p class="hint">æš‚æ— å¯è§†åŒ–æ•°æ®ã€‚</p>`;
   const values = rows.map((row) => Number(row.value) || 0);
   const max = Math.max(1, Number(options.max) || 0, ...values);
   return `<div class="viz-list">
@@ -3775,28 +4530,28 @@ function renderTotalVisualizationV3(content) {
   const roadCount = blocks.filter((block) => normalizeBlockCategory(block.blockCategory) === "road").length;
   const blockRows = gangues.map((item) => {
     const count = blocksForGangueV3(content, item.id).length;
-    return { label: item.name, value: count, text: `${count}×é` };
+    return { label: item.name, value: count, text: `${count}ç»„` };
   }).filter((row) => row.value > 0);
   const orphanCount = orphanBlocksV3(content).length;
-  if (orphanCount) blockRows.push({ label: "Î´¹éÊô", value: orphanCount, text: `${orphanCount}×é`, warn: true });
+  if (orphanCount) blockRows.push({ label: "æœªå½’å±", value: orphanCount, text: `${orphanCount}ç»„`, warn: true });
   return `<section class="lab-overview">
       <div class="visual-panel">
-        <h3>×ÜÊµÑé¿ÉÊÓ»¯</h3>
+        <h3>æ€»å®éªŒå¯è§†åŒ–</h3>
         <div class="stat-strip">
-          <span><b>${gangues.length}</b><small>Ãºí·Ê¯±àºÅ</small></span>
-          <span><b>${stats.blocks}</b><small>ÊÔ¿é±àºÅ</small></span>
-          <span><b>${sprayCount}</b><small>Åç½¬ÊÔ¿é</small></span>
-          <span><b>${roadCount}</b><small>µÀÂ·ÊÔ¿é</small></span>
+          <span><b>${gangues.length}</b><small>ç…¤çŸ¸çŸ³ç¼–å·</small></span>
+          <span><b>${stats.blocks}</b><small>è¯•å—ç¼–å·</small></span>
+          <span><b>${sprayCount}</b><small>å–·æµ†è¯•å—</small></span>
+          <span><b>${roadCount}</b><small>é“è·¯è¯•å—</small></span>
         </div>
         ${renderVizRowsV3(blockRows)}
       </div>
       <div class="visual-panel">
-        <h3>ÌáĞÑºÍ½á¹û</h3>
+        <h3>æé†’å’Œç»“æœ</h3>
         ${renderVizRowsV3([
-    { label: "½ñÈÕÌáĞÑ", value: stats.today, text: `${stats.today}`, percent: getCalendarItems(content).length ? (stats.today / Math.max(1, getCalendarItems(content).length)) * 100 : 0 },
-    { label: "²âÊÔ½á¹û", value: resultStats.filled, text: `${resultStats.filled}/${resultStats.total || 0}`, percent: resultStats.percent },
-    { label: "ÈÎÎñÍê³É", value: stats.done, text: `${stats.done}/${getCalendarItems(content).length}`, percent: getCalendarItems(content).length ? (stats.done / getCalendarItems(content).length) * 100 : 0 },
-    { label: "ÓâÆÚÕ¼±È", value: stats.overdue, text: `${stats.overdue}`, percent: stats.blocks ? Math.min(100, (stats.overdue / Math.max(1, getCalendarItems(content).length)) * 100) : 0, warn: stats.overdue > 0 }
+    { label: "ä»Šæ—¥æé†’", value: stats.today, text: `${stats.today}`, percent: getCalendarItems(content).length ? (stats.today / Math.max(1, getCalendarItems(content).length)) * 100 : 0 },
+    { label: "æµ‹è¯•ç»“æœ", value: resultStats.filled, text: `${resultStats.filled}/${resultStats.total || 0}`, percent: resultStats.percent },
+    { label: "ä»»åŠ¡å®Œæˆ", value: stats.done, text: `${stats.done}/${getCalendarItems(content).length}`, percent: getCalendarItems(content).length ? (stats.done / getCalendarItems(content).length) * 100 : 0 },
+    { label: "é€¾æœŸå æ¯”", value: stats.overdue, text: `${stats.overdue}`, percent: stats.blocks ? Math.min(100, (stats.overdue / Math.max(1, getCalendarItems(content).length)) * 100) : 0, warn: stats.overdue > 0 }
   ])}
       </div>
     </section>`;
@@ -3817,18 +4572,18 @@ function renderGangueVisualizationV3(item, blocks) {
   const taskStats = taskStatsForBlocksV3(blocks);
   const resultStats = resultStatsForBlocksV3(blocks);
   return `<div class="visual-panel">
-      <h3>±¾×éí·Ê¯¿ÉÊÓ»¯</h3>
+      <h3>æœ¬ç»„çŸ¸çŸ³å¯è§†åŒ–</h3>
       <div class="stat-strip">
-        <span><b>${blocks.length}</b><small>ÊÔ¿é</small></span>
-        <span><b>${item.gradations.length}</b><small>¼¶Åä</small></span>
-        <span><b>${taskStats.today}</b><small>½ñÈÕ</small></span>
-        <span><b>${taskStats.overdue}</b><small>ÓâÆÚ</small></span>
+        <span><b>${blocks.length}</b><small>è¯•å—</small></span>
+        <span><b>${item.gradations.length}</b><small>çº§é…</small></span>
+        <span><b>${taskStats.today}</b><small>ä»Šæ—¥</small></span>
+        <span><b>${taskStats.overdue}</b><small>é€¾æœŸ</small></span>
       </div>
-      ${crushingRows.length ? `<h4>Ñ¹ËéÖµÆ½¾ùÖµ</h4>${renderVizRowsV3(crushingRows)}` : `<p class="hint">Ñ¹ËéÖµÌîÈı´Îºó£¬ÕâÀï»á×Ô¶¯»­³öÃ¿¸öÁ£¾¶µÄÆ½¾ùÖµ¡£</p>`}
+      ${crushingRows.length ? `<h4>å‹ç¢å€¼å¹³å‡å€¼</h4>${renderVizRowsV3(crushingRows)}` : `<p class="hint">å‹ç¢å€¼å¡«ä¸‰æ¬¡åï¼Œè¿™é‡Œä¼šè‡ªåŠ¨ç”»å‡ºæ¯ä¸ªç²’å¾„çš„å¹³å‡å€¼ã€‚</p>`}
       <div style="margin-top:12px">
         ${renderVizRowsV3([
-    { label: "²âÊÔ½á¹û", value: resultStats.filled, text: `${resultStats.filled}/${resultStats.total || 0}`, percent: resultStats.percent },
-    { label: "ÌáĞÑÍê³É", value: taskStats.done, text: `${taskStats.done}/${taskStats.total || 0}`, percent: taskStats.total ? (taskStats.done / taskStats.total) * 100 : 0 }
+    { label: "æµ‹è¯•ç»“æœ", value: resultStats.filled, text: `${resultStats.filled}/${resultStats.total || 0}`, percent: resultStats.percent },
+    { label: "æé†’å®Œæˆ", value: taskStats.done, text: `${taskStats.done}/${taskStats.total || 0}`, percent: taskStats.total ? (taskStats.done / taskStats.total) * 100 : 0 }
   ])}
       </div>
     </div>`;
@@ -3837,27 +4592,27 @@ function renderGangueVisualizationV3(item, blocks) {
 function renderLabUploadFormV3(targetType, targetId, actionBase, defaultKind = "other") {
   const kinds = labImageKindsForTarget(targetType);
   const selectedKind = kinds.some((item) => item.id === defaultKind) ? defaultKind : (kinds[0]?.id || "other");
-  const typeLabel = targetType === "gangue" ? "Ãºí·Ê¯Åú´ÎÍ¼Æ¬ÀàĞÍ" : "ÊÔ¿é×éÍ¼Æ¬ÀàĞÍ";
+  const typeLabel = targetType === "gangue" ? "ç…¤çŸ¸çŸ³æ‰¹æ¬¡å›¾ç‰‡ç±»å‹" : "è¯•å—ç»„å›¾ç‰‡ç±»å‹";
   return `<form class="lab-upload" method="post" action="${actionBase}/upload-lab-image" enctype="multipart/form-data" data-lab-upload>
       <input type="hidden" name="targetType" value="${attr(targetType)}">
       <input type="hidden" name="targetId" value="${attr(targetId)}">
       <div class="lab-upload-grid">
-        <label class="field"><span>Í¼Æ¬±êÌâ</span><input name="imageTitle" placeholder="²»Ìî¾ÍÓÃÎÄ¼şÃû"></label>
+        <label class="field"><span>å›¾ç‰‡æ ‡é¢˜</span><input name="imageTitle" placeholder="ä¸å¡«å°±ç”¨æ–‡ä»¶å"></label>
         <label class="field"><span>${html(typeLabel)}</span><select name="imageKind">${kinds.map((item) => `<option value="${attr(item.id)}" ${item.id === selectedKind ? "selected" : ""}>${html(item.label)}</option>`).join("")}</select></label>
       </div>
-      <label class="field"><span>Í¼Æ¬ËµÃ÷</span><input name="imageCaption" placeholder="Àı£ºÔ­Ê¼í·Ê¯¡¢³ÉĞÍºó¡¢ÅüÁÑºó¡¢³ÆÖØ¼ÇÂ¼"></label>
+      <label class="field"><span>å›¾ç‰‡è¯´æ˜</span><input name="imageCaption" placeholder="ä¾‹ï¼šåŸå§‹çŸ¸çŸ³ã€æˆå‹åã€åŠˆè£‚åã€ç§°é‡è®°å½•"></label>
       <input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
       <div class="mini-progress" data-upload-progress>
         <div class="mini-progress-track"><span class="mini-progress-bar" data-upload-bar></span></div>
-        <span data-upload-text>×¼±¸ÉÏ´«</span>
+        <span data-upload-text>å‡†å¤‡ä¸Šä¼ </span>
       </div>
-      <div class="actions"><button class="secondary" type="submit">ÉÏ´«Í¼Æ¬</button></div>
+      <div class="actions"><button class="secondary" type="submit">ä¸Šä¼ å›¾ç‰‡</button></div>
     </form>`;
 }
 
 function renderLabImageGalleryV3(images, targetType, targetId, actionBase) {
   const normalized = normalizeLabImages(images);
-  if (!normalized.length) return `<p class="hint">»¹Ã»ÓĞÉÏ´«ÊµÑéÍ¼Æ¬¡£</p>`;
+  if (!normalized.length) return `<p class="hint">è¿˜æ²¡æœ‰ä¸Šä¼ å®éªŒå›¾ç‰‡ã€‚</p>`;
   return `<div class="lab-gallery">
       ${normalized.map((image) => `<figure class="lab-photo">
         <a href="${attr(image.src)}" data-lightbox-image data-download="${attr(image.src)}">
@@ -3865,29 +4620,29 @@ function renderLabImageGalleryV3(images, targetType, targetId, actionBase) {
         </a>
         <figcaption>
           <strong>${html(image.title || labImageKindLabel(image.kind))}</strong>
-          <small>${html(labImageKindLabel(image.kind))}${image.caption ? ` ¡¤ ${html(image.caption)}` : ""}</small>
-          <small><a href="${attr(image.src)}" target="_blank" rel="noopener">²é¿´Ô­Í¼</a> ¡¤ <a href="${attr(image.src)}" download>ÏÂÔØ</a></small>
+          <small>${html(labImageKindLabel(image.kind))}${image.caption ? ` Â· ${html(image.caption)}` : ""}</small>
+          <small><a href="${attr(image.src)}" target="_blank" rel="noopener">æŸ¥çœ‹åŸå›¾</a> Â· <a href="${attr(image.src)}" download>ä¸‹è½½</a></small>
         </figcaption>
         <form method="post" action="${actionBase}/delete-lab-image">
           <input type="hidden" name="targetType" value="${attr(targetType)}">
           <input type="hidden" name="targetId" value="${attr(targetId)}">
           <input type="hidden" name="src" value="${attr(image.src)}">
-          <button class="danger delete-lab-image" type="submit">É¾³ıÍ¼Æ¬</button>
+          <button class="danger delete-lab-image" type="submit">åˆ é™¤å›¾ç‰‡</button>
         </form>
       </figure>`).join("")}
     </div>`;
 }
 
 function renderBlockCategorySelectV3(selected = "spray") {
-  return `<label class="field"><span>ÊÔ¿é´óÀà</span><select name="blockCategory" data-block-category>${blockCategoryOptionsV3(selected)}</select></label>`;
+  return `<label class="field"><span>è¯•å—å¤§ç±»</span><select name="blockCategory" data-block-category>${blockCategoryOptionsV3(selected)}</select></label>`;
 }
 
 function renderWeighingTemplateSelectV3(selected = "", category = "spray") {
-  return `<label class="field"><span>³ÆÁ¿Ä£°å</span><select name="weighingTemplate" data-weighing-template>${weighingTemplateOptionsV3(selected, category)}</select></label>`;
+  return `<label class="field"><span>ç§°é‡æ¨¡æ¿</span><select name="weighingTemplate" data-weighing-template>${weighingTemplateOptionsV3(selected, category)}</select></label>`;
 }
 
 function renderGradationTemplateSelectV3(category = "spray", selected = "raw") {
-  return `<label class="field"><span>¼¶ÅäÄ£°å</span><select name="gradationTemplate" data-gradation-template>${gradationTemplateOptionsV3(category, selected)}</select></label>`;
+  return `<label class="field"><span>çº§é…æ¨¡æ¿</span><select name="gradationTemplate" data-gradation-template>${gradationTemplateOptionsV3(category, selected)}</select></label>`;
 }
 
 function renderBlockGradationWeightsV3(record, category = "spray") {
@@ -3895,11 +4650,11 @@ function renderBlockGradationWeightsV3(record, category = "spray") {
   const weights = normalizeBlockGradationWeights(record.gradationWeights, category, templateKey);
   const scheme = gradationSchemeForCategory(category);
   return `<div class="template-weight-panel" data-gradation-weight-panel>
-      <strong>${html(scheme.label)} ¡¤ Á£¾¶¿ËÊı</strong>
+      <strong>${html(scheme.label)} Â· ç²’å¾„å…‹æ•°</strong>
       <div class="template-weight-grid">
         ${scheme.ranges.map((range) => `<label><span>${html(range)}</span><input name="blockGradationWeight" value="${attr(weights[range])}" placeholder="g"><input type="hidden" name="blockGradationRange" value="${attr(range)}"></label>`).join("")}
       </div>
-      <p class="hint">Ñ¡Ôñ¡°Ô­Ê¼¼¶Åä¡±²»»á¸²¸Ç¿ËÊı£»Ñ¡Ôñ n=0.4/0.5/0.6 »á°´Ä£°åÌîÈë¶ÔÓ¦Á£¾¶ÖØÁ¿¡£</p>
+      <p class="hint">é€‰æ‹©â€œåŸå§‹çº§é…â€ä¸ä¼šè¦†ç›–å…‹æ•°ï¼›é€‰æ‹© n=0.4/0.5/0.6 ä¼šæŒ‰æ¨¡æ¿å¡«å…¥å¯¹åº”ç²’å¾„é‡é‡ã€‚</p>
     </div>`;
 }
 
@@ -3917,42 +4672,42 @@ function renderGangueAddBlockFormV3(item, content, actionBase) {
   const ageId = `ages-${item.id}`;
   return `<details class="folder-section add-block-panel">
       <summary>
-      <h4>ĞÂÔöÕâ¸öÃºí·Ê¯ÏÂµÄÊÔ¿é <small>ÊÔ¿é±àºÅÊÇ×îĞ¡ÊµÑéµ¥Î»</small></h4>
+      <h4>æ–°å¢è¿™ä¸ªç…¤çŸ¸çŸ³ä¸‹çš„è¯•å— <small>è¯•å—ç¼–å·æ˜¯æœ€å°å®éªŒå•ä½</small></h4>
       </summary>
       <form method="post" action="${actionBase}/add-block">
         <input type="hidden" name="gangueAggregateId" value="${attr(item.id)}">
         <div class="form-grid">
-          <label class="field wide"><span>ÊÔ¿é±àºÅ/²¿Î»</span><input name="blockName" placeholder="Àı£º${attr(item.name)}-01" required></label>
+          <label class="field wide"><span>è¯•å—ç¼–å·/éƒ¨ä½</span><input name="blockName" placeholder="ä¾‹ï¼š${attr(item.name)}-01" required></label>
           ${renderBlockCategorySelectV3("road")}
           ${renderWeighingTemplateSelectV3("withoutAccelerator", "road")}
           ${renderGradationTemplateSelectV3("road", "raw")}
-          <label class="field"><span>ÖÆ×÷ÈÕÆÚ</span><input name="madeDate" type="date" value="${today()}" required></label>
-          <label class="field"><span>ÊÔ¿éÊıÁ¿</span><input name="quantity" type="number" min="1" step="1" value="3" required></label>
-          <label class="field"><span>Ç¿¶ÈµÈ¼¶</span><input name="strength" placeholder="Àı£ºC30"></label>
-          <label class="field wide"><span>ĞèÒªÁäÆÚ</span><input id="${attr(ageId)}" name="ages" value="3,7,28" placeholder="Àı£º3,7,28">
+          <label class="field"><span>åˆ¶ä½œæ—¥æœŸ</span><input name="madeDate" type="date" value="${today()}" required></label>
+          <label class="field"><span>è¯•å—æ•°é‡</span><input name="quantity" type="number" min="1" step="1" value="3" required></label>
+          <label class="field"><span>å¼ºåº¦ç­‰çº§</span><input name="strength" placeholder="ä¾‹ï¼šC30"></label>
+          <label class="field wide"><span>éœ€è¦é¾„æœŸ</span><input id="${attr(ageId)}" name="ages" value="3,7,28" placeholder="ä¾‹ï¼š3,7,28">
             <div class="age-toolbar">
-              ${[3, 7, 14, 28, 56].map((age) => `<button class="chip-button" type="button" data-age="${age}" data-age-target="#${attr(ageId)}">${age}Ìì</button>`).join("")}
+              ${[3, 7, 14, 28, 56].map((age) => `<button class="chip-button" type="button" data-age="${age}" data-age-target="#${attr(ageId)}">${age}å¤©</button>`).join("")}
             </div>
           </label>
-          <label class="field"><span>Åä·½/±àºÅ</span><input name="mixName" placeholder="Àı£ºÅä·½A"></label>
-          <label class="field"><span>Ë®½º±È</span><input name="waterBinderRatio" placeholder="Àı£º0.42"></label>
-          <label class="field"><span>Ì®Âä¶È</span><input name="slump" placeholder="Àı£º180mm"></label>
-          <label class="field"><span>¼¶ÅäÏµÊı</span><input name="gradationCoefficient" placeholder="Àı£º0.68"></label>
-          <label class="field"><span>²»º¬Ë®×ÜÁ¿</span><input name="totalWithoutWater" value="${attr(WEIGHING_TEMPLATES.withoutAccelerator.totalWithoutWater)}" placeholder="×Ô¶¯/ÊÖÌî"></label>
+          <label class="field"><span>é…æ–¹/ç¼–å·</span><input name="mixName" placeholder="ä¾‹ï¼šé…æ–¹A"></label>
+          <label class="field"><span>æ°´èƒ¶æ¯”</span><input name="waterBinderRatio" placeholder="ä¾‹ï¼š0.42"></label>
+          <label class="field"><span>åè½åº¦</span><input name="slump" placeholder="ä¾‹ï¼š180mm"></label>
+          <label class="field"><span>çº§é…ç³»æ•°</span><input name="gradationCoefficient" placeholder="ä¾‹ï¼š0.68"></label>
+          <label class="field"><span>ä¸å«æ°´æ€»é‡</span><input name="totalWithoutWater" value="${attr(WEIGHING_TEMPLATES.withoutAccelerator.totalWithoutWater)}" placeholder="è‡ªåŠ¨/æ‰‹å¡«"></label>
           <div class="field wide">
-            <span>Åä·½²ÄÁÏ</span>
+            <span>é…æ–¹ææ–™</span>
             ${renderRecipeMaterialSelectorV3(defaultRecipeMaterialsForContent(content), "", content.recipeMaterialLibrary, content.disabledRecipeMaterialIds)}
           </div>
           <div class="field wide">
-            <span>¼ì²âÖ¸±ê</span>
+            <span>æ£€æµ‹æŒ‡æ ‡</span>
             ${renderMetricSelectorV3(normalizeResultMetrics(DEFAULT_RESULT_METRIC_IDS), "")}
           </div>
           <div class="field wide">
             ${renderBlockGradationWeightsV3({ gradationTemplate: "raw", gradationWeights: {} }, "road")}
           </div>
-          <label class="field wide"><span>±¸×¢</span><input name="note" placeholder="¿ÉÌî³ÉĞÍ·½Ê½¡¢Ñø»¤Ìõ¼ş¡¢±àºÅËµÃ÷"></label>
+          <label class="field wide"><span>å¤‡æ³¨</span><input name="note" placeholder="å¯å¡«æˆå‹æ–¹å¼ã€å…»æŠ¤æ¡ä»¶ã€ç¼–å·è¯´æ˜"></label>
         </div>
-        <div class="actions"><button type="submit">µÇ¼Çµ½ ${html(item.name)}</button></div>
+        <div class="actions"><button type="submit">ç™»è®°åˆ° ${html(item.name)}</button></div>
       </form>
     </details>`;
 }
@@ -3960,25 +4715,25 @@ function renderGangueAddBlockFormV3(item, content, actionBase) {
 function renderGangueReminderV3(blocks, actionBase) {
   const split = splitReminderItems(calendarItemsForBlocksV3(blocks).filter((item) => !item.completed));
   return `<section class="folder-section">
-      <h4>±¾×éÌáĞÑ <small>²ğÄ£ºÍÁäÆÚ¶¼°´Õâ¸öÃºí·Ê¯¹éµµ</small></h4>
+      <h4>æœ¬ç»„æé†’ <small>æ‹†æ¨¡å’Œé¾„æœŸéƒ½æŒ‰è¿™ä¸ªç…¤çŸ¸çŸ³å½’æ¡£</small></h4>
       <div class="summary-grid">
-        ${renderReminderCardV3("½ñÌì", split.today, "age", actionBase)}
-        ${renderReminderCardV3("ÓâÆÚ", split.overdue, "overdue", actionBase)}
-        ${renderReminderCardV3("Î´À´ 7 Ìì", split.upcoming, "upcoming", actionBase)}
+        ${renderReminderCardV3("ä»Šå¤©", split.today, "age", actionBase)}
+        ${renderReminderCardV3("é€¾æœŸ", split.overdue, "overdue", actionBase)}
+        ${renderReminderCardV3("æœªæ¥ 7 å¤©", split.upcoming, "upcoming", actionBase)}
       </div>
     </section>`;
 }
 
-function renderNestedBlockListV3(blocks, actionBase, content, title = "ÊÔ¿éµµ°¸") {
-  if (!blocks.length) return `<section class="folder-section"><h4>${html(title)}</h4><p class="hint">ÕâÀï»¹Ã»ÓĞÊÔ¿é¡£</p></section>`;
+function renderNestedBlockListV3(blocks, actionBase, content, title = "è¯•å—æ¡£æ¡ˆ") {
+  if (!blocks.length) return `<section class="folder-section"><h4>${html(title)}</h4><p class="hint">è¿™é‡Œè¿˜æ²¡æœ‰è¯•å—ã€‚</p></section>`;
   const formId = `export-${crypto.createHash("sha1").update(blocks.map((block) => block.id).join("-")).digest("hex").slice(0, 10)}`;
   const materialLibrary = normalizeRecipeMaterialLibrary(content.recipeMaterialLibrary);
   const disabledRecipeMaterialIds = normalizeDisabledRecipeMaterialIds(content.disabledRecipeMaterialIds);
   const gangueDb = getCoalGangueDb(content);
   return `<section class="folder-section">
-      <h4>${html(title)} <small>${blocks.length} Ìõ</small></h4>
+      <h4>${html(title)} <small>${blocks.length} æ¡</small></h4>
       <div class="archive-actions" style="margin-bottom:10px">
-        <button class="chip-button" type="submit" form="${attr(formId)}">µ¼³ö±¾×é Excel</button>
+        <button class="chip-button" type="submit" form="${attr(formId)}">å¯¼å‡ºæœ¬ç»„ Excel</button>
       </div>
       <form id="${attr(formId)}" method="post" action="${actionBase}/export-blocks">
         ${blocks.map((block) => `<input type="hidden" name="blockIds" value="${attr(block.id)}">`).join("")}
@@ -3986,7 +4741,7 @@ function renderNestedBlockListV3(blocks, actionBase, content, title = "ÊÔ¿éµµ°¸"
       <div class="nested-block-list">
         ${blocks.map((block) => {
     const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
-    const dueText = block.ages.map((age) => `${age}Ìì ${formatDateCnV3(addDays(block.madeDate, age))}`).join("£»");
+    const dueText = block.ages.map((age) => `${age}å¤© ${formatDateCnV3(addDays(block.madeDate, age))}`).join("ï¼›");
     return `<article class="block-card" id="block-${attr(block.id)}" data-block-card data-search="${attr(blockSearchTextV3(block, content))}">
           <div class="block-head">
             <div>
@@ -3995,17 +4750,17 @@ function renderNestedBlockListV3(blocks, actionBase, content, title = "ÊÔ¿éµµ°¸"
                 ${block.strength ? `<span class="badge">${html(block.strength)}</span>` : ""}
               </div>
               <div class="block-meta">
-                <span>ÖÆ×÷£º${formatDateCnV3(block.madeDate)}</span>
-                <span>ÊıÁ¿£º${block.quantity}¿é</span>
-                <span>²ğÄ££º${formatDateCnV3(block.demoldDate || addDays(block.madeDate, 1))}</span>
-                <span>ÁäÆÚ£º${html(dueText || "Î´ÉèÖÃ")}</span>
+                <span>åˆ¶ä½œï¼š${formatDateCnV3(block.madeDate)}</span>
+                <span>æ•°é‡ï¼š${block.quantity}å—</span>
+                <span>æ‹†æ¨¡ï¼š${formatDateCnV3(block.demoldDate || addDays(block.madeDate, 1))}</span>
+                <span>é¾„æœŸï¼š${html(dueText || "æœªè®¾ç½®")}</span>
                 ${block.note ? `<span>${html(block.note)}</span>` : ""}
               </div>
             </div>
             <div class="block-actions">
               <form class="inline-delete" method="post" action="${actionBase}/delete-block">
                 <input type="hidden" name="id" value="${attr(block.id)}">
-                <button class="danger delete-block" type="submit">É¾³ı</button>
+                <button class="danger delete-block" type="submit">åˆ é™¤</button>
               </form>
             </div>
           </div>
@@ -4023,31 +4778,31 @@ function renderGangueExperimentFolderV3(item, content, actionBase = WORK_PATH) {
   return `<details class="gangue-folder" id="gangue-${attr(item.id)}">
       <summary class="gangue-folder-head">
         <div>
-          <p class="eyebrow">Ãºí·Ê¯±àºÅ</p>
+          <p class="eyebrow">ç…¤çŸ¸çŸ³ç¼–å·</p>
           <h3>${html(item.name)}</h3>
-          <p>${html(item.source || "Î´ÌîÀ´Ô´")} ¡¤ ${item.particleRanges.length} ¸öÁ£¾¶ ¡¤ ${item.gradations.length} ×é¼¶Åä</p>
+          <p>${html(item.source || "æœªå¡«æ¥æº")} Â· ${item.particleRanges.length} ä¸ªç²’å¾„ Â· ${item.gradations.length} ç»„çº§é…</p>
         </div>
         <div class="folder-badges">
-          <span>${blocks.length} ×éÊÔ¿é</span>
-          <span>${normalizeLabImages(item.images).length} ÕÅÍ¼Æ¬</span>
-          ${item.batchCrushingValue ? `<span>Ñ¹ËéÖµ ${html(item.batchCrushingValue)}</span>` : ""}
-          <span class="folder-toggle">Õ¹¿ª/ÊÕÆğ</span>
+          <span>${blocks.length} ç»„è¯•å—</span>
+          <span>${normalizeLabImages(item.images).length} å¼ å›¾ç‰‡</span>
+          ${item.batchCrushingValue ? `<span>å‹ç¢å€¼ ${html(item.batchCrushingValue)}</span>` : ""}
+          <span class="folder-toggle">å±•å¼€/æ”¶èµ·</span>
         </div>
       </summary>
       <div class="gangue-folder-body">
         ${renderGangueVisualizationV3(item, blocks)}
         <section class="folder-section">
-          <h4>í·Ê¯Í¼Æ¬ <small>Ô­Ê¼Í¼¡¢³ÆÖØÍ¼¡¢¼¶ÅäÍ¼</small></h4>
+          <h4>çŸ¸çŸ³å›¾ç‰‡ <small>åŸå§‹å›¾ã€ç§°é‡å›¾ã€çº§é…å›¾</small></h4>
           ${renderLabImageGalleryV3(item.images, "gangue", item.id, actionBase)}
           ${renderLabUploadFormV3("gangue", item.id, actionBase, "gangueRaw")}
         </section>
         <section class="folder-section">
-          <h4>Ãºí·Ê¯Êı¾İºÍ¼¶Åä <small>Á£¾¶¡¢Ñ¹ËéÖµ¡¢ÕëÆ¬×´¡¢¼¶Åä¿ËÊı/n Öµ</small></h4>
+          <h4>ç…¤çŸ¸çŸ³æ•°æ®å’Œçº§é… <small>ç²’å¾„ã€å‹ç¢å€¼ã€é’ˆç‰‡çŠ¶ã€çº§é…å…‹æ•°/n å€¼</small></h4>
           ${renderCoalGangueCardV3(item, actionBase)}
         </section>
         ${renderGangueAddBlockFormV3(item, content, actionBase)}
-        ${renderNestedBlockListV3(sprayBlocks, actionBase, content, "Åç½¬ÊÔ¿é")}
-        ${renderNestedBlockListV3(roadBlocks, actionBase, content, "µÀÂ·ÊÔ¿é")}
+        ${renderNestedBlockListV3(sprayBlocks, actionBase, content, "å–·æµ†è¯•å—")}
+        ${renderNestedBlockListV3(roadBlocks, actionBase, content, "é“è·¯è¯•å—")}
       </div>
     </details>`;
 }
@@ -4066,29 +4821,29 @@ function renderExperimentWorkspaceV3(content, actionBase = WORK_PATH) {
           <div class="panel-title">
             <div>
               <p class="eyebrow">New Gangue</p>
-              <h2>ĞÂÔöÃºí·Ê¯±àºÅ</h2>
-              <p>ÏÈ½¨Ãºí·Ê¯±àºÅ£¬ÔÙ°Ñ¼¶Åä¡¢Í¼Æ¬ºÍÊÔ¿é¶¼·Åµ½Õâ¸ö±àºÅÏÂÃæ¡£</p>
+              <h2>æ–°å¢ç…¤çŸ¸çŸ³ç¼–å·</h2>
+              <p>å…ˆå»ºç…¤çŸ¸çŸ³ç¼–å·ï¼Œå†æŠŠçº§é…ã€å›¾ç‰‡å’Œè¯•å—éƒ½æ”¾åˆ°è¿™ä¸ªç¼–å·ä¸‹é¢ã€‚</p>
             </div>
           </div>
           <form method="post" action="${actionBase}/add-gangue">
             <div class="form-grid">
-              <label class="field"><span>Ãºí·Ê¯±àºÅ/Ãû³Æ</span><input name="gangueName" placeholder="Àı£ºG-2026-05-01 Ë·ÖİË®Ï´Ãºí·Ê¯" required></label>
-              <label class="field"><span>À´Ô´/Åú´Î</span><input name="source" placeholder="Àı£ºË·Öİ XX ¿ó 2026-05"></label>
-              <label class="field wide"><span>Á£¾¶Çø¼ä</span><input name="particleRanges" value="${attr(defaultParticleRanges().join(","))}"></label>
-              <label class="field"><span>´Ö¹ÇÁÏÎüË®ÂÊ</span><input name="coarseWaterAbsorption" placeholder="Àı£º5.2%"></label>
-              <label class="field"><span>Ï¸¹ÇÁÏÎüË®ÂÊ</span><input name="fineWaterAbsorption" placeholder="Àı£º7.8%"></label>
-              <label class="field"><span>´Ö¹ÇÁÏ±í¹ÛÃÜ¶È</span><input name="coarseApparentDensity" placeholder="Àı£º2450kg/m3"></label>
-              <label class="field"><span>Ï¸¹ÇÁÏ±í¹ÛÃÜ¶È</span><input name="fineApparentDensity" placeholder="Àı£º2380kg/m3"></label>
-              <label class="field wide"><span>ÆäËûĞÅÏ¢</span><input name="otherInfo" placeholder="ÑÕÉ«¡¢º¬ÄàÁ¿¡¢ÉÕÊ§Á¿¡¢±¸×¢µÈ"></label>
+              <label class="field"><span>ç…¤çŸ¸çŸ³ç¼–å·/åç§°</span><input name="gangueName" placeholder="ä¾‹ï¼šG-2026-05-01 æœ”å·æ°´æ´—ç…¤çŸ¸çŸ³" required></label>
+              <label class="field"><span>æ¥æº/æ‰¹æ¬¡</span><input name="source" placeholder="ä¾‹ï¼šæœ”å· XX çŸ¿ 2026-05"></label>
+              <label class="field wide"><span>ç²’å¾„åŒºé—´</span><input name="particleRanges" value="${attr(defaultParticleRanges().join(","))}"></label>
+              <label class="field"><span>ç²—éª¨æ–™å¸æ°´ç‡</span><input name="coarseWaterAbsorption" placeholder="ä¾‹ï¼š5.2%"></label>
+              <label class="field"><span>ç»†éª¨æ–™å¸æ°´ç‡</span><input name="fineWaterAbsorption" placeholder="ä¾‹ï¼š7.8%"></label>
+              <label class="field"><span>ç²—éª¨æ–™è¡¨è§‚å¯†åº¦</span><input name="coarseApparentDensity" placeholder="ä¾‹ï¼š2450kg/m3"></label>
+              <label class="field"><span>ç»†éª¨æ–™è¡¨è§‚å¯†åº¦</span><input name="fineApparentDensity" placeholder="ä¾‹ï¼š2380kg/m3"></label>
+              <label class="field wide"><span>å…¶ä»–ä¿¡æ¯</span><input name="otherInfo" placeholder="é¢œè‰²ã€å«æ³¥é‡ã€çƒ§å¤±é‡ã€å¤‡æ³¨ç­‰"></label>
             </div>
-            <div class="actions"><button class="secondary" type="submit">½¨Á¢Ãºí·Ê¯µµ°¸</button></div>
+            <div class="actions"><button class="secondary" type="submit">å»ºç«‹ç…¤çŸ¸çŸ³æ¡£æ¡ˆ</button></div>
           </form>
         </article>
       </section>
       <section class="gangue-folder-list">
-        ${gangues.length ? gangues.map((item) => renderGangueExperimentFolderV3(item, content, actionBase)).join("") : `<article class="panel"><p class="hint">ÏÈĞÂÔöÒ»¸öÃºí·Ê¯±àºÅ£¬ºóÃæµÄ¼¶Åä¡¢Í¼Æ¬¡¢ÊÔ¿éºÍ½á¹û¶¼»á¹Òµ½ËüÏÂÃæ¡£</p></article>`}
+        ${gangues.length ? gangues.map((item) => renderGangueExperimentFolderV3(item, content, actionBase)).join("") : `<article class="panel"><p class="hint">å…ˆæ–°å¢ä¸€ä¸ªç…¤çŸ¸çŸ³ç¼–å·ï¼Œåé¢çš„çº§é…ã€å›¾ç‰‡ã€è¯•å—å’Œç»“æœéƒ½ä¼šæŒ‚åˆ°å®ƒä¸‹é¢ã€‚</p></article>`}
       </section>
-      ${orphans.length ? `<section class="panel orphan-panel">${renderNestedBlockListV3(orphans, actionBase, content, "Î´¹éÊôÃºí·Ê¯µÄ¾ÉÊÔ¿é")}</section>` : ""}
+      ${orphans.length ? `<section class="panel orphan-panel">${renderNestedBlockListV3(orphans, actionBase, content, "æœªå½’å±ç…¤çŸ¸çŸ³çš„æ—§è¯•å—")}</section>` : ""}
       ${renderRecipeMaterialLibraryManagerV3(content, actionBase)}
     </section>`;
 }
@@ -4099,26 +4854,26 @@ function renderCoalGangueDatabasePanelV3(content, actionBase = WORK_PATH) {
       <div class="panel-title">
         <div>
           <p class="eyebrow">Coal Gangue</p>
-          <h2>Ãºí·Ê¯¹ÇÁÏÊı¾İ¿â</h2>
-          <p>´æÃ¿ÖÖÃºí·Ê¯µÄÑ¹ËéÖµÈı´ÎÊÔÑé¡¢ÕëÆ¬×´¡¢ÎüË®ÂÊ¡¢±í¹ÛÃÜ¶ÈºÍ¼¶Åä¶Ñ»ıÃÜ¶È£»ÊÔ¿éµµ°¸Àï¿ÉÒÔÖ±½ÓÑ¡Ôñ¡£</p>
+          <h2>ç…¤çŸ¸çŸ³éª¨æ–™æ•°æ®åº“</h2>
+          <p>å­˜æ¯ç§ç…¤çŸ¸çŸ³çš„å‹ç¢å€¼ä¸‰æ¬¡è¯•éªŒã€é’ˆç‰‡çŠ¶ã€å¸æ°´ç‡ã€è¡¨è§‚å¯†åº¦å’Œçº§é…å †ç§¯å¯†åº¦ï¼›è¯•å—æ¡£æ¡ˆé‡Œå¯ä»¥ç›´æ¥é€‰æ‹©ã€‚</p>
         </div>
       </div>
       <form method="post" action="${actionBase}/add-gangue">
         <div class="form-grid">
-          <label class="field"><span>Ãºí·Ê¯Ãû³Æ</span><input name="gangueName" placeholder="Àı£ºË·ÖİË®Ï´Ãºí·Ê¯" required></label>
-          <label class="field"><span>À´Ô´/Åú´Î</span><input name="source" placeholder="Àı£ºË·Öİ XX ¿ó 2026-05"></label>
-          <label class="field wide"><span>Á£¾¶Çø¼ä</span><input name="particleRanges" value="0.3-0.6,0.6-1.18,1.18-2.36,2.36-4.75" placeholder="Àı£º0.3-0.6,0.6-1.18,1.18-2.36,2.36-4.75"></label>
-          <label class="field"><span>´Ö¹ÇÁÏÎüË®ÂÊ</span><input name="coarseWaterAbsorption" placeholder="Àı£º5.2%"></label>
-          <label class="field"><span>Ï¸¹ÇÁÏÎüË®ÂÊ</span><input name="fineWaterAbsorption" placeholder="Àı£º7.8%"></label>
-          <label class="field"><span>´Ö¹ÇÁÏ±í¹ÛÃÜ¶È</span><input name="coarseApparentDensity" placeholder="Àı£º2450kg/m3"></label>
-          <label class="field"><span>Ï¸¹ÇÁÏ±í¹ÛÃÜ¶È</span><input name="fineApparentDensity" placeholder="Àı£º2380kg/m3"></label>
-          <label class="field wide"><span>ÆäËûĞÅÏ¢</span><input name="otherInfo" placeholder="ÑÕÉ«¡¢ÉÕÊ§Á¿¡¢º¬ÄàÁ¿¡¢±¸×¢µÈ"></label>
+          <label class="field"><span>ç…¤çŸ¸çŸ³åç§°</span><input name="gangueName" placeholder="ä¾‹ï¼šæœ”å·æ°´æ´—ç…¤çŸ¸çŸ³" required></label>
+          <label class="field"><span>æ¥æº/æ‰¹æ¬¡</span><input name="source" placeholder="ä¾‹ï¼šæœ”å· XX çŸ¿ 2026-05"></label>
+          <label class="field wide"><span>ç²’å¾„åŒºé—´</span><input name="particleRanges" value="0.3-0.6,0.6-1.18,1.18-2.36,2.36-4.75" placeholder="ä¾‹ï¼š0.3-0.6,0.6-1.18,1.18-2.36,2.36-4.75"></label>
+          <label class="field"><span>ç²—éª¨æ–™å¸æ°´ç‡</span><input name="coarseWaterAbsorption" placeholder="ä¾‹ï¼š5.2%"></label>
+          <label class="field"><span>ç»†éª¨æ–™å¸æ°´ç‡</span><input name="fineWaterAbsorption" placeholder="ä¾‹ï¼š7.8%"></label>
+          <label class="field"><span>ç²—éª¨æ–™è¡¨è§‚å¯†åº¦</span><input name="coarseApparentDensity" placeholder="ä¾‹ï¼š2450kg/m3"></label>
+          <label class="field"><span>ç»†éª¨æ–™è¡¨è§‚å¯†åº¦</span><input name="fineApparentDensity" placeholder="ä¾‹ï¼š2380kg/m3"></label>
+          <label class="field wide"><span>å…¶ä»–ä¿¡æ¯</span><input name="otherInfo" placeholder="é¢œè‰²ã€çƒ§å¤±é‡ã€å«æ³¥é‡ã€å¤‡æ³¨ç­‰"></label>
         </div>
-        <p class="hint">ĞÂÔöºó´ò¿ª¸ÃÃºí·Ê¯¿¨Æ¬£¬¾ÍÄÜ°´Ã¿¸öÁ£¾¶Çø¼äÌîĞ´Èı´ÎÑ¹ËéÖµºÍÕëÆ¬×´º¬Á¿£¬Ò²ÄÜÌí¼Ó¶à¸ö¼¶ÅäµÄËÉÉ¢/Ñ¹½ô¶Ñ»ıÃÜ¶È¡£</p>
-        <div class="actions"><button class="secondary" type="submit">ĞÂÔöÃºí·Ê¯</button></div>
+        <p class="hint">æ–°å¢åæ‰“å¼€è¯¥ç…¤çŸ¸çŸ³å¡ç‰‡ï¼Œå°±èƒ½æŒ‰æ¯ä¸ªç²’å¾„åŒºé—´å¡«å†™ä¸‰æ¬¡å‹ç¢å€¼å’Œé’ˆç‰‡çŠ¶å«é‡ï¼Œä¹Ÿèƒ½æ·»åŠ å¤šä¸ªçº§é…çš„æ¾æ•£/å‹ç´§å †ç§¯å¯†åº¦ã€‚</p>
+        <div class="actions"><button class="secondary" type="submit">æ–°å¢ç…¤çŸ¸çŸ³</button></div>
       </form>
       <div class="gangue-list">
-        ${gangueDb.length ? gangueDb.map((item) => renderCoalGangueCardV3(item, actionBase)).join("") : `<p class="hint">»¹Ã»ÓĞÃºí·Ê¯Êı¾İ¡£</p>`}
+        ${gangueDb.length ? gangueDb.map((item) => renderCoalGangueCardV3(item, actionBase)).join("") : `<p class="hint">è¿˜æ²¡æœ‰ç…¤çŸ¸çŸ³æ•°æ®ã€‚</p>`}
       </div>
     </section>`;
 }
@@ -4130,24 +4885,24 @@ function renderCoalGangueCardV3(item, actionBase = WORK_PATH) {
   return `<details class="gangue-card" id="gangue-edit-${attr(item.id)}">
       <summary>
         <strong>${html(item.name)}</strong>
-        <span>${html(item.source || "Î´ÌîÀ´Ô´")} ¡¤ ${ranges.length} ¸öÁ£¾¶Çø¼ä ¡¤ ${item.gradations.length} ¸ö¼¶Åä${crushingSummary.text ? ` ¡¤ ±¾ÅúÑ¹ËéÖµ ${html(crushingSummary.text)}` : ""}</span>
+        <span>${html(item.source || "æœªå¡«æ¥æº")} Â· ${ranges.length} ä¸ªç²’å¾„åŒºé—´ Â· ${item.gradations.length} ä¸ªçº§é…${crushingSummary.text ? ` Â· æœ¬æ‰¹å‹ç¢å€¼ ${html(crushingSummary.text)}` : ""}</span>
       </summary>
       <form class="gangue-form" method="post" action="${actionBase}/update-gangue">
         <input type="hidden" name="id" value="${attr(item.id)}">
         <div class="form-grid">
-          <label class="field"><span>Ãºí·Ê¯Ãû³Æ</span><input name="gangueName" value="${attr(item.name)}" required></label>
-          <label class="field"><span>À´Ô´/Åú´Î</span><input name="source" value="${attr(item.source)}"></label>
-          <label class="field wide"><span>Á£¾¶Çø¼ä</span><input name="particleRanges" value="${attr(ranges.join(","))}" placeholder="Àı£º0.3-0.6,0.6-1.18,1.18-2.36,2.36-4.75"></label>
-          <label class="field"><span>´Ö¹ÇÁÏÎüË®ÂÊ</span><input name="coarseWaterAbsorption" value="${attr(item.coarseWaterAbsorption)}"></label>
-          <label class="field"><span>Ï¸¹ÇÁÏÎüË®ÂÊ</span><input name="fineWaterAbsorption" value="${attr(item.fineWaterAbsorption)}"></label>
-          <label class="field"><span>´Ö¹ÇÁÏ±í¹ÛÃÜ¶È</span><input name="coarseApparentDensity" value="${attr(item.coarseApparentDensity)}"></label>
-          <label class="field"><span>Ï¸¹ÇÁÏ±í¹ÛÃÜ¶È</span><input name="fineApparentDensity" value="${attr(item.fineApparentDensity)}"></label>
-          <label class="field wide"><span>ÆäËûĞÅÏ¢</span><input name="otherInfo" value="${attr(item.otherInfo)}"></label>
+          <label class="field"><span>ç…¤çŸ¸çŸ³åç§°</span><input name="gangueName" value="${attr(item.name)}" required></label>
+          <label class="field"><span>æ¥æº/æ‰¹æ¬¡</span><input name="source" value="${attr(item.source)}"></label>
+          <label class="field wide"><span>ç²’å¾„åŒºé—´</span><input name="particleRanges" value="${attr(ranges.join(","))}" placeholder="ä¾‹ï¼š0.3-0.6,0.6-1.18,1.18-2.36,2.36-4.75"></label>
+          <label class="field"><span>ç²—éª¨æ–™å¸æ°´ç‡</span><input name="coarseWaterAbsorption" value="${attr(item.coarseWaterAbsorption)}"></label>
+          <label class="field"><span>ç»†éª¨æ–™å¸æ°´ç‡</span><input name="fineWaterAbsorption" value="${attr(item.fineWaterAbsorption)}"></label>
+          <label class="field"><span>ç²—éª¨æ–™è¡¨è§‚å¯†åº¦</span><input name="coarseApparentDensity" value="${attr(item.coarseApparentDensity)}"></label>
+          <label class="field"><span>ç»†éª¨æ–™è¡¨è§‚å¯†åº¦</span><input name="fineApparentDensity" value="${attr(item.fineApparentDensity)}"></label>
+          <label class="field wide"><span>å…¶ä»–ä¿¡æ¯</span><input name="otherInfo" value="${attr(item.otherInfo)}"></label>
         </div>
-        <h4>Ñ¹ËéÖµ <small>Ã¿¸öÁ£¾¶Ìî 3 ´Î£¬×Ô¶¯È¡Æ½¾ù£»×î´óÆ½¾ùÖµ×÷Îª±¾Åú¹ÇÁÏÑ¹ËéÖµ</small></h4>
-        <div class="gangue-crushing-summary">±¾Åú¹ÇÁÏÑ¹ËéÖµ£º${crushingSummary.text ? `${html(crushingSummary.range)} Á£¾¶ ¡¤ ${html(crushingSummary.text)}` : "Î´¼ÆËã"}</div>
+        <h4>å‹ç¢å€¼ <small>æ¯ä¸ªç²’å¾„å¡« 3 æ¬¡ï¼Œè‡ªåŠ¨å–å¹³å‡ï¼›æœ€å¤§å¹³å‡å€¼ä½œä¸ºæœ¬æ‰¹éª¨æ–™å‹ç¢å€¼</small></h4>
+        <div class="gangue-crushing-summary">æœ¬æ‰¹éª¨æ–™å‹ç¢å€¼ï¼š${crushingSummary.text ? `${html(crushingSummary.range)} ç²’å¾„ Â· ${html(crushingSummary.text)}` : "æœªè®¡ç®—"}</div>
         <table class="gangue-range-table">
-          <thead><tr><th>Á£¾¶Çø¼ä</th><th>µÚ1´Î</th><th>µÚ2´Î</th><th>µÚ3´Î</th><th>Æ½¾ùÖµ</th></tr></thead>
+          <thead><tr><th>ç²’å¾„åŒºé—´</th><th>ç¬¬1æ¬¡</th><th>ç¬¬2æ¬¡</th><th>ç¬¬3æ¬¡</th><th>å¹³å‡å€¼</th></tr></thead>
           <tbody>
             ${ranges.map((range) => {
     const tests = item.crushingTests[range] || ["", "", ""];
@@ -4155,43 +4910,43 @@ function renderCoalGangueCardV3(item, actionBase = WORK_PATH) {
     const isMax = crushingSummary.range === range && averageText;
     return `<tr>
               <td><input name="rangeLabel" value="${attr(range)}" readonly></td>
-              <td><input name="crushingValue1" value="${attr(tests[0])}" placeholder="Àı£º18.5%"></td>
-              <td><input name="crushingValue2" value="${attr(tests[1])}" placeholder="Àı£º18.2%"></td>
-              <td><input name="crushingValue3" value="${attr(tests[2])}" placeholder="Àı£º18.7%"></td>
-              <td><span class="crushing-average${isMax ? " max-crushing" : ""}">${html(averageText || "Î´¼ÆËã")}</span></td>
+              <td><input name="crushingValue1" value="${attr(tests[0])}" placeholder="ä¾‹ï¼š18.5%"></td>
+              <td><input name="crushingValue2" value="${attr(tests[1])}" placeholder="ä¾‹ï¼š18.2%"></td>
+              <td><input name="crushingValue3" value="${attr(tests[2])}" placeholder="ä¾‹ï¼š18.7%"></td>
+              <td><span class="crushing-average${isMax ? " max-crushing" : ""}">${html(averageText || "æœªè®¡ç®—")}</span></td>
             </tr>`;
   }).join("")}
           </tbody>
         </table>
-        <h4>ÕëÆ¬×´º¬Á¿ <small>ÓëÑ¹ËéÖµ·Ö¿ª¼ÇÂ¼</small></h4>
+        <h4>é’ˆç‰‡çŠ¶å«é‡ <small>ä¸å‹ç¢å€¼åˆ†å¼€è®°å½•</small></h4>
         <table class="gangue-range-table">
-          <thead><tr><th>Á£¾¶Çø¼ä</th><th>ÕëÆ¬×´º¬Á¿</th></tr></thead>
+          <thead><tr><th>ç²’å¾„åŒºé—´</th><th>é’ˆç‰‡çŠ¶å«é‡</th></tr></thead>
           <tbody>
             ${ranges.map((range) => `<tr>
               <td><input name="flakinessRangeLabel" value="${attr(range)}" readonly></td>
-              <td><input name="flakinessValue" value="${attr(item.flakinessValues[range])}" placeholder="Àı£º7.2%"></td>
+              <td><input name="flakinessValue" value="${attr(item.flakinessValues[range])}" placeholder="ä¾‹ï¼š7.2%"></td>
             </tr>`).join("")}
           </tbody>
         </table>
-        <h4>¼¶Åä¶Ñ»ıÃÜ¶È <small>Ã¿×é¼¶Åä°´Á£¾¶Ìî¿ËÊıºÍ n Öµ</small></h4>
+        <h4>çº§é…å †ç§¯å¯†åº¦ <small>æ¯ç»„çº§é…æŒ‰ç²’å¾„å¡«å…‹æ•°å’Œ n å€¼</small></h4>
         <div class="gradation-list">
           ${gradations.map((row, index) => {
     const weights = row.particleWeights || {};
     return `<section class="gradation-card">
-              <h5><span>¼¶Åä ${index + 1}</span><small>${ranges.length} ¸öÁ£¾¶</small></h5>
+              <h5><span>çº§é… ${index + 1}</span><small>${ranges.length} ä¸ªç²’å¾„</small></h5>
               <div class="form-grid">
-                <label class="field"><span>¼¶ÅäÃû³Æ</span><input name="gradationName" value="${attr(row.name)}" placeholder="Àı£ºÁ¬Ğø¼¶ÅäA"></label>
-                <label class="field"><span>n Öµ</span><input name="gradationNValue" value="${attr(row.nValue)}" placeholder="Àı£º0.45"></label>
-                <label class="field"><span>ËÉÉ¢¶Ñ»ıÃÜ¶È</span><input name="looseBulkDensity" value="${attr(row.looseBulkDensity)}" placeholder="Àı£º920kg/m3"></label>
-                <label class="field"><span>Ñ¹½ô¶Ñ»ıÃÜ¶È</span><input name="compactedBulkDensity" value="${attr(row.compactedBulkDensity)}" placeholder="Àı£º1040kg/m3"></label>
-                <label class="field wide"><span>±¸×¢</span><input name="gradationNote" value="${attr(row.note)}"></label>
+                <label class="field"><span>çº§é…åç§°</span><input name="gradationName" value="${attr(row.name)}" placeholder="ä¾‹ï¼šè¿ç»­çº§é…A"></label>
+                <label class="field"><span>n å€¼</span><input name="gradationNValue" value="${attr(row.nValue)}" placeholder="ä¾‹ï¼š0.45"></label>
+                <label class="field"><span>æ¾æ•£å †ç§¯å¯†åº¦</span><input name="looseBulkDensity" value="${attr(row.looseBulkDensity)}" placeholder="ä¾‹ï¼š920kg/m3"></label>
+                <label class="field"><span>å‹ç´§å †ç§¯å¯†åº¦</span><input name="compactedBulkDensity" value="${attr(row.compactedBulkDensity)}" placeholder="ä¾‹ï¼š1040kg/m3"></label>
+                <label class="field wide"><span>å¤‡æ³¨</span><input name="gradationNote" value="${attr(row.note)}"></label>
               </div>
               <table class="gradation-weight-table">
-                <thead><tr><th>Á£¾¶Çø¼ä</th><th>¿ËÊı g</th></tr></thead>
+                <thead><tr><th>ç²’å¾„åŒºé—´</th><th>å…‹æ•° g</th></tr></thead>
                 <tbody>
                   ${ranges.map((range) => `<tr>
                     <td><input name="gradationRange_${index}" value="${attr(range)}" readonly></td>
-                    <td><input name="gradationWeight_${index}" value="${attr(weights[range] || "")}" placeholder="Àı£º250"></td>
+                    <td><input name="gradationWeight_${index}" value="${attr(weights[range] || "")}" placeholder="ä¾‹ï¼š250"></td>
                   </tr>`).join("")}
                 </tbody>
               </table>
@@ -4199,12 +4954,12 @@ function renderCoalGangueCardV3(item, actionBase = WORK_PATH) {
   }).join("")}
         </div>
         <div class="actions">
-          <button class="secondary" type="submit">±£´æÃºí·Ê¯Êı¾İ</button>
+          <button class="secondary" type="submit">ä¿å­˜ç…¤çŸ¸çŸ³æ•°æ®</button>
         </div>
       </form>
       <form class="gangue-form" method="post" action="${actionBase}/delete-gangue">
         <input type="hidden" name="id" value="${attr(item.id)}">
-        <div class="actions"><button class="danger delete-gangue" type="submit">É¾³ıÕâÌõÃºí·Ê¯</button></div>
+        <div class="actions"><button class="danger delete-gangue" type="submit">åˆ é™¤è¿™æ¡ç…¤çŸ¸çŸ³</button></div>
       </form>
     </details>`;
 }
@@ -4217,20 +4972,20 @@ function renderTodayFocusV3(content, actionBase = WORK_PATH, showMailAction = fa
   return `<div class="panel-title">
         <div>
           <p class="eyebrow">Today</p>
-          <h2>½ñÈÕ´¦Àí</h2>
-          <p>×öÍêÖ±½Ó¹´Ñ¡£¬ÓÊ¼şÌáĞÑÒ²»á±Ü¿ªÒÑ¾­Íê³ÉµÄÊÂÏî¡£</p>
+          <h2>ä»Šæ—¥å¤„ç†</h2>
+          <p>åšå®Œç›´æ¥å‹¾é€‰ï¼Œé‚®ä»¶æé†’ä¹Ÿä¼šé¿å¼€å·²ç»å®Œæˆçš„äº‹é¡¹ã€‚</p>
         </div>
       </div>
       <div class="today-stack">
         <div class="today-group${overdueItems.length ? " warning" : ""}">
-          <strong><span>ÓâÆÚÎ´´¦Àí</span><span>${overdueItems.length}</span></strong>
-          ${overdueItems.length ? `<div class="task-list">${overdueItems.map((item) => renderTaskCheckboxV3(item, actionBase)).join("")}</div>` : `<p class="hint">Ã»ÓĞÓâÆÚÈÎÎñ¡£</p>`}
+          <strong><span>é€¾æœŸæœªå¤„ç†</span><span>${overdueItems.length}</span></strong>
+          ${overdueItems.length ? `<div class="task-list">${overdueItems.map((item) => renderTaskCheckboxV3(item, actionBase)).join("")}</div>` : `<p class="hint">æ²¡æœ‰é€¾æœŸä»»åŠ¡ã€‚</p>`}
         </div>
         <div class="today-group">
-          <strong><span>½ñÌìµ½ÆÚ</span><span>${todayItems.length}</span></strong>
-          ${todayItems.length ? `<div class="task-list">${todayItems.map((item) => renderTaskCheckboxV3(item, actionBase)).join("")}</div>` : `<p class="hint">½ñÌìÃ»ÓĞ²ğÄ£»òÁäÆÚÈÎÎñ¡£</p>`}
+          <strong><span>ä»Šå¤©åˆ°æœŸ</span><span>${todayItems.length}</span></strong>
+          ${todayItems.length ? `<div class="task-list">${todayItems.map((item) => renderTaskCheckboxV3(item, actionBase)).join("")}</div>` : `<p class="hint">ä»Šå¤©æ²¡æœ‰æ‹†æ¨¡æˆ–é¾„æœŸä»»åŠ¡ã€‚</p>`}
         </div>
-        ${showMailAction ? `<form class="today-group" method="post" action="${actionBase}/send-reminder"><strong><span>ÓÊ¼şÌáĞÑ</span></strong><p class="hint">Ã¿Ìì 08:00 ºó×Ô¶¯·¢ËÍ½ñÈÕºÍÓâÆÚÌáĞÑ£¬ÕâÀïÒ²¿ÉÒÔÊÖ¶¯·¢Ò»·âµ±Ç°ÕªÒª¡£</p><div class="actions"><button class="secondary" type="submit">Á¢¼´·¢ËÍÌáĞÑÓÊ¼ş</button></div></form>` : ""}
+        ${showMailAction ? `<form class="today-group" method="post" action="${actionBase}/send-reminder"><strong><span>é‚®ä»¶æé†’</span></strong><p class="hint">æ¯å¤© 08:00 åè‡ªåŠ¨å‘é€ä»Šæ—¥å’Œé€¾æœŸæé†’ï¼Œè¿™é‡Œä¹Ÿå¯ä»¥æ‰‹åŠ¨å‘ä¸€å°å½“å‰æ‘˜è¦ã€‚</p><div class="actions"><button class="secondary" type="submit">ç«‹å³å‘é€æé†’é‚®ä»¶</button></div></form>` : ""}
       </div>`;
 }
 
@@ -4241,19 +4996,19 @@ function renderReminderSummaryV3(content, actionBase = WORK_PATH) {
       <div class="panel-title">
         <div>
           <p class="eyebrow">Reminders</p>
-          <h2>ÌáĞÑ¿´°å</h2>
-          <p>²ğÄ£¡¢ÁäÆÚ¡¢ÓâÆÚºÍÎ´À´ 7 Ìì°²ÅÅ¶¼ÔÚÕâÀï¡£</p>
+          <h2>æé†’çœ‹æ¿</h2>
+          <p>æ‹†æ¨¡ã€é¾„æœŸã€é€¾æœŸå’Œæœªæ¥ 7 å¤©å®‰æ’éƒ½åœ¨è¿™é‡Œã€‚</p>
         </div>
       </div>
       <div class="summary-grid">
-        ${renderReminderCardV3("½ñÈÕ²ğÄ£", demold.today, "demold", actionBase)}
-        ${renderReminderCardV3("½ñÈÕÁäÆÚ", ages.today, "age", actionBase)}
-        ${renderReminderCardV3("ÓâÆÚÎ´´¦Àí", [...demold.overdue, ...ages.overdue], "overdue", actionBase)}
+        ${renderReminderCardV3("ä»Šæ—¥æ‹†æ¨¡", demold.today, "demold", actionBase)}
+        ${renderReminderCardV3("ä»Šæ—¥é¾„æœŸ", ages.today, "age", actionBase)}
+        ${renderReminderCardV3("é€¾æœŸæœªå¤„ç†", [...demold.overdue, ...ages.overdue], "overdue", actionBase)}
       </div>
       <div class="summary-grid" style="margin-top:14px">
-        ${renderReminderCardV3("Î´À´²ğÄ£", demold.upcoming, "upcoming", actionBase)}
-        ${renderReminderCardV3("Î´À´ÁäÆÚ", ages.upcoming, "upcoming", actionBase)}
-        ${renderReminderCardV3("È«²¿Î´À´ 7 Ìì", [...demold.upcoming, ...ages.upcoming], "upcoming", actionBase)}
+        ${renderReminderCardV3("æœªæ¥æ‹†æ¨¡", demold.upcoming, "upcoming", actionBase)}
+        ${renderReminderCardV3("æœªæ¥é¾„æœŸ", ages.upcoming, "upcoming", actionBase)}
+        ${renderReminderCardV3("å…¨éƒ¨æœªæ¥ 7 å¤©", [...demold.upcoming, ...ages.upcoming], "upcoming", actionBase)}
       </div>
     </section>`;
 }
@@ -4261,7 +5016,7 @@ function renderReminderSummaryV3(content, actionBase = WORK_PATH) {
 function renderReminderCardV3(title, items, kind, actionBase) {
   return `<section class="summary-card ${kind === "overdue" ? "overdue" : ""} ${kind === "upcoming" ? "upcoming" : ""}">
         <strong><span>${html(title)}</span><b>${items.length}</b></strong>
-        ${items.length ? `<div class="task-list">${items.map((item) => renderTaskCheckboxV3(item, actionBase)).join("")}</div>` : `<p class="hint">ÔİÎŞ</p>`}
+        ${items.length ? `<div class="task-list">${items.map((item) => renderTaskCheckboxV3(item, actionBase)).join("")}</div>` : `<p class="hint">æš‚æ— </p>`}
       </section>`;
 }
 
@@ -4305,11 +5060,11 @@ function calendarStatsV3(dueItems, referenceDate = today()) {
 function renderCalendarStatsV3(dueItems, referenceDate = today()) {
   const stats = calendarStatsV3(dueItems, referenceDate);
   return `<div class="calendar-kpis">
-        <span class="danger"><b>${stats.overdue}</b><small>ÓâÆÚÎ´Íê³É</small></span>
-        <span class="today"><b>${stats.today}</b><small>½ñÌìÒª´¦Àí</small></span>
-        <span class="future"><b>${stats.next7}</b><small>Î´À´ 7 Ìì</small></span>
-        <span class="future"><b>${stats.next14}</b><small>Î´À´ 14 Ìì</small></span>
-        <span class="done"><b>${stats.completed}</b><small>ÒÑÍê³ÉÈÎÎñ</small></span>
+        <span class="danger"><b>${stats.overdue}</b><small>é€¾æœŸæœªå®Œæˆ</small></span>
+        <span class="today"><b>${stats.today}</b><small>ä»Šå¤©è¦å¤„ç†</small></span>
+        <span class="future"><b>${stats.next7}</b><small>æœªæ¥ 7 å¤©</small></span>
+        <span class="future"><b>${stats.next14}</b><small>æœªæ¥ 14 å¤©</small></span>
+        <span class="done"><b>${stats.completed}</b><small>å·²å®Œæˆä»»åŠ¡</small></span>
       </div>`;
 }
 
@@ -4329,14 +5084,14 @@ function renderCalendarAgendaV3(dueItems, actionBase = WORK_PATH, referenceDate 
   return `<section class="calendar-agenda">
         <div class="calendar-agenda-head">
           <div>
-            <h3>½ÓÏÂÀ´Òª×ö</h3>
-            <p>²ğÄ£ºÍÁäÆÚÌáĞÑ¿ÉÖ±½Ó¹´Ñ¡£»Ç¿¶È½á¹ûµã»÷ºó½øÈë¶ÔÓ¦ÊÔ¿éÂ¼Èë¡£</p>
+            <h3>æ¥ä¸‹æ¥è¦åš</h3>
+            <p>æ‹†æ¨¡å’Œé¾„æœŸæé†’å¯ç›´æ¥å‹¾é€‰ï¼›å¼ºåº¦ç»“æœç‚¹å‡»åè¿›å…¥å¯¹åº”è¯•å—å½•å…¥ã€‚</p>
           </div>
           <div class="calendar-legend">
-            <span class="demold">²ğÄ£</span><span class="age">ÁäÆÚÌáĞÑ</span><span class="result">Ç¿¶È½á¹û</span><span class="overdue">ÓâÆÚ</span>
+            <span class="demold">æ‹†æ¨¡</span><span class="age">é¾„æœŸæé†’</span><span class="result">å¼ºåº¦ç»“æœ</span><span class="overdue">é€¾æœŸ</span>
           </div>
         </div>
-        ${items.length ? `<div class="calendar-agenda-list">${items.map((item) => renderCalendarAgendaItemV22(item, actionBase, referenceDate)).join("")}</div>` : `<p class="hint">Î´À´ 14 ÌìÃ»ÓĞ´ı´¦ÀíÊÂÏî¡£</p>`}
+        ${items.length ? `<div class="calendar-agenda-list">${items.map((item) => renderCalendarAgendaItemV22(item, actionBase, referenceDate)).join("")}</div>` : `<p class="hint">æœªæ¥ 14 å¤©æ²¡æœ‰å¾…å¤„ç†äº‹é¡¹ã€‚</p>`}
       </section>`;
 }
 
@@ -4358,8 +5113,8 @@ function renderBlockCalendarV3(content, actionBase = WORK_PATH) {
   return `<div class="panel-title">
         <div>
           <p class="eyebrow">Calendar</p>
-          <h2>ÊÔ¿éÈÕÀú</h2>
-          <p>Í¬Ò»Ìì»áÍ¬Ê±ÏÔÊ¾²ğÄ£¡¢7Ìì¡¢28ÌìµÈÊÂÏî¡£</p>
+          <h2>è¯•å—æ—¥å†</h2>
+          <p>åŒä¸€å¤©ä¼šåŒæ—¶æ˜¾ç¤ºæ‹†æ¨¡ã€7å¤©ã€28å¤©ç­‰äº‹é¡¹ã€‚</p>
         </div>
       </div>
       <div class="calendar-dashboard">
@@ -4394,7 +5149,7 @@ function renderCalendarMonthV3(monthKey, dueByDate, actionBase, referenceDate = 
   }
   return `<article class="month-card">
           <h3>${formatMonthCnV3(monthKey)}</h3>
-          <div class="weekdays"><span>Ò»</span><span>¶ş</span><span>Èı</span><span>ËÄ</span><span>Îå</span><span>Áù</span><span>ÈÕ</span></div>
+          <div class="weekdays"><span>ä¸€</span><span>äºŒ</span><span>ä¸‰</span><span>å››</span><span>äº”</span><span>å…­</span><span>æ—¥</span></div>
           <div class="calendar-days">${cells.join("")}</div>
         </article>`;
 }
@@ -4407,26 +5162,26 @@ function formatDateCnV3(dateText) {
 
 function formatMonthCnV3(monthKey) {
   const [year, month] = monthKey.split("-");
-  return `${year}Äê${Number(month)}ÔÂ`;
+  return `${year}å¹´${Number(month)}æœˆ`;
 }
 
 function formatCalendarItemV3(item, withDate = true) {
   const prefix = withDate ? `${formatDateCnV3(item.date)} ` : "";
-  const status = calendarItemCompletedV22(item) ? "ÒÑÍê³É ¡¤ " : "";
-  const suffix = `${item.block.quantity}¿é${item.block.strength ? ` ¡¤ ${item.block.strength}` : ""}`;
-  if (item.type === "demold") return `${prefix}${status}${item.block.name} ¡¤ ²ğÄ£ ¡¤ ${suffix}`;
+  const status = calendarItemCompletedV22(item) ? "å·²å®Œæˆ Â· " : "";
+  const suffix = `${item.block.quantity}å—${item.block.strength ? ` Â· ${item.block.strength}` : ""}`;
+  if (item.type === "demold") return `${prefix}${status}${item.block.name} Â· æ‹†æ¨¡ Â· ${suffix}`;
   if (item.type === "result") {
-    const resultText = item.filled ? ` ¡¤ ${metricResultDisplay(item.result)}` : "";
-    return `${prefix}${status}${item.block.name} ¡¤ ${item.age}d ${item.metric.label}${resultText}`;
+    const resultText = item.filled ? ` Â· ${metricResultDisplay(item.result)}` : "";
+    return `${prefix}${status}${item.block.name} Â· ${item.age}d ${item.metric.label}${resultText}`;
   }
-  return `${prefix}${status}${item.block.name} ¡¤ ${item.age}Ìì ¡¤ ${suffix}`;
+  return `${prefix}${status}${item.block.name} Â· ${item.age}å¤© Â· ${suffix}`;
 }
 
 function formatCalendarPillV3(item) {
-  const status = calendarItemCompletedV22(item) ? "ÒÑÍê³É " : "";
-  if (item.type === "demold") return `${status}²ğÄ£ ${item.block.name}`;
+  const status = calendarItemCompletedV22(item) ? "å·²å®Œæˆ " : "";
+  if (item.type === "demold") return `${status}æ‹†æ¨¡ ${item.block.name}`;
   if (item.type === "result") return `${status}${item.age}d ${item.metric.label} ${item.block.name}`;
-  return `${status}${item.age}Ìì ${item.block.name}`;
+  return `${status}${item.age}å¤© ${item.block.name}`;
 }
 
 function renderCalendarActionV22(item, actionBase = WORK_PATH, extraClass = "") {
@@ -4446,9 +5201,9 @@ function renderTaskCheckboxV3(item, actionBase = WORK_PATH, extraClass = "") {
           <input type="hidden" name="taskType" value="${attr(item.type)}">
           ${item.type === "age" ? `<input type="hidden" name="age" value="${attr(item.age)}">` : ""}
           <input type="hidden" name="returnAnchor" value="${attr(returnAnchor)}">
-          <input type="checkbox" name="done" value="1" ${item.completed ? "checked" : ""} onchange="this.form.submit()" aria-label="±ê¼ÇÍê³É">
+          <input type="checkbox" name="done" value="1" ${item.completed ? "checked" : ""} onchange="this.form.submit()" aria-label="æ ‡è®°å®Œæˆ">
           <span>${html(compact ? formatCalendarPillV3(item) : formatCalendarItemV3(item, true))}</span>
-          ${compact ? "" : `<button class="reminder-delete-v22" type="submit" formaction="${actionBase}/delete-reminder" title="É¾³ıÕâÌõÌáĞÑ">É¾³ı</button>`}
+          ${compact ? "" : `<button class="reminder-delete-v22" type="submit" formaction="${actionBase}/delete-reminder" title="åˆ é™¤è¿™æ¡æé†’">åˆ é™¤</button>`}
         </form>`;
 }
 
@@ -4477,8 +5232,8 @@ function parseRecipeWeight(value) {
   if (!match) return 0;
   const amount = Number.parseFloat(match[0]);
   if (!Number.isFinite(amount) || amount <= 0) return 0;
-  if (/kg|Ç§¿Ë|¹«½ï/i.test(text)) return amount * 1000;
-  if (/mg|ºÁ¿Ë/i.test(text)) return amount / 1000;
+  if (/kg|åƒå…‹|å…¬æ–¤/i.test(text)) return amount * 1000;
+  if (/mg|æ¯«å…‹/i.test(text)) return amount / 1000;
   return amount;
 }
 
@@ -4531,27 +5286,27 @@ function calculateRecipeRatios(record) {
 function renderRecipeRatioPanelV3(record) {
   const ratios = calculateRecipeRatios(record);
   if (!ratios.binderTotal && !ratios.aggregateTotal && !ratios.waterTotal && !ratios.admixtureTotal) {
-    return `<div class="ratio-panel empty"><strong>×Ô¶¯±ÈÀı</strong><p class="hint">²ÄÁÏÓÃÁ¿Ìî g ÖØºó£¬±£´æµµ°¸»á×Ô¶¯Éú³É½ºÄı²ÄÁÏÕ¼±È¡¢¹Ç»Ò±È¡¢Ë®»Ò±ÈºÍË®½º±È¡£</p></div>`;
+    return `<div class="ratio-panel empty"><strong>è‡ªåŠ¨æ¯”ä¾‹</strong><p class="hint">ææ–™ç”¨é‡å¡« g é‡åï¼Œä¿å­˜æ¡£æ¡ˆä¼šè‡ªåŠ¨ç”Ÿæˆèƒ¶å‡ææ–™å æ¯”ã€éª¨ç°æ¯”ã€æ°´ç°æ¯”å’Œæ°´èƒ¶æ¯”ã€‚</p></div>`;
   }
   const ratioItems = [
-    ["½ºÄı×ÜÁ¿", ratios.binderTotal ? formatRecipeWeight(ratios.binderTotal) : "Î´Ìî"],
-    ["Íâ¼Ó¼Á×ÜÁ¿", ratios.admixtureTotal ? formatRecipeWeight(ratios.admixtureTotal) : "Î´Ìî"],
-    ["¹ÇÁÏ×ÜÁ¿", ratios.aggregateTotal ? formatRecipeWeight(ratios.aggregateTotal) : "Î´Ìî"],
-    ["Ë®×ÜÁ¿", ratios.waterTotal ? formatRecipeWeight(ratios.waterTotal) : "Î´Ìî"],
-    ["¹Ç»Ò±È", ratios.aggregateBinderRatio ? formatRecipeNumber(ratios.aggregateBinderRatio) : "È±½ºÄı»ò¹ÇÁÏ"],
-    ["Ë®»Ò±È", ratios.waterCementRatio ? formatRecipeNumber(ratios.waterCementRatio) : "È±Ë®Äà»òË®"],
-    ["Ë®½º±È", ratios.waterBinderRatio ? formatRecipeNumber(ratios.waterBinderRatio) : "È±½ºÄı»òË®"],
-    ["Íâ¼Ó¼Á/½ºÄı", ratios.admixtureBinderPercent ? `${formatRecipeNumber(ratios.admixtureBinderPercent * 100, 2)}%` : "Î´Ìî"]
+    ["èƒ¶å‡æ€»é‡", ratios.binderTotal ? formatRecipeWeight(ratios.binderTotal) : "æœªå¡«"],
+    ["å¤–åŠ å‰‚æ€»é‡", ratios.admixtureTotal ? formatRecipeWeight(ratios.admixtureTotal) : "æœªå¡«"],
+    ["éª¨æ–™æ€»é‡", ratios.aggregateTotal ? formatRecipeWeight(ratios.aggregateTotal) : "æœªå¡«"],
+    ["æ°´æ€»é‡", ratios.waterTotal ? formatRecipeWeight(ratios.waterTotal) : "æœªå¡«"],
+    ["éª¨ç°æ¯”", ratios.aggregateBinderRatio ? formatRecipeNumber(ratios.aggregateBinderRatio) : "ç¼ºèƒ¶å‡æˆ–éª¨æ–™"],
+    ["æ°´ç°æ¯”", ratios.waterCementRatio ? formatRecipeNumber(ratios.waterCementRatio) : "ç¼ºæ°´æ³¥æˆ–æ°´"],
+    ["æ°´èƒ¶æ¯”", ratios.waterBinderRatio ? formatRecipeNumber(ratios.waterBinderRatio) : "ç¼ºèƒ¶å‡æˆ–æ°´"],
+    ["å¤–åŠ å‰‚/èƒ¶å‡", ratios.admixtureBinderPercent ? `${formatRecipeNumber(ratios.admixtureBinderPercent * 100, 2)}%` : "æœªå¡«"]
   ];
   const binderText = ratios.binderParts.length
-    ? ratios.binderParts.map((item) => `${item.label} ${formatRecipeNumber(item.percent * 100, 2)}%`).join("£¬")
-    : "½ºÄı²ÄÁÏ»¹Ã»ÓĞ¿É¼ÆËãµÄ g ÖØ¡£";
+    ? ratios.binderParts.map((item) => `${item.label} ${formatRecipeNumber(item.percent * 100, 2)}%`).join("ï¼Œ")
+    : "èƒ¶å‡ææ–™è¿˜æ²¡æœ‰å¯è®¡ç®—çš„ g é‡ã€‚";
   return `<div class="ratio-panel">
-      <strong>×Ô¶¯±ÈÀı</strong>
+      <strong>è‡ªåŠ¨æ¯”ä¾‹</strong>
       <div class="ratio-grid">
         ${ratioItems.map(([label, value]) => `<span><b>${html(label)}</b><em>${html(value)}</em></span>`).join("")}
       </div>
-      <p class="ratio-line">½ºÄı²ÄÁÏÕ¼±È£º${html(binderText)}</p>
+      <p class="ratio-line">èƒ¶å‡ææ–™å æ¯”ï¼š${html(binderText)}</p>
     </div>`;
 }
 
@@ -4561,21 +5316,21 @@ function blockRecordSummaryV3(record, ages = []) {
   const recipeMaterials = normalizeRecipeMaterials(data.recipeMaterials);
   const ratios = calculateRecipeRatios(data);
   const recipeParts = [];
-  if (data.mixName) recipeParts.push(`Åä·½£º${data.mixName}`);
-  if (data.waterBinderRatio) recipeParts.push(`Ë®½º±È£º${data.waterBinderRatio}`);
-  else if (ratios.waterBinderRatio) recipeParts.push(`Ë®½º±È£º${formatRecipeNumber(ratios.waterBinderRatio)}`);
-  if (ratios.aggregateBinderRatio) recipeParts.push(`¹Ç»Ò±È£º${formatRecipeNumber(ratios.aggregateBinderRatio)}`);
-  if (data.slump) recipeParts.push(`Ì®Âä¶È£º${data.slump}`);
-  if (data.gradationCoefficient) recipeParts.push(`¼¶ÅäÏµÊı£º${data.gradationCoefficient}`);
+  if (data.mixName) recipeParts.push(`é…æ–¹ï¼š${data.mixName}`);
+  if (data.waterBinderRatio) recipeParts.push(`æ°´èƒ¶æ¯”ï¼š${data.waterBinderRatio}`);
+  else if (ratios.waterBinderRatio) recipeParts.push(`æ°´èƒ¶æ¯”ï¼š${formatRecipeNumber(ratios.waterBinderRatio)}`);
+  if (ratios.aggregateBinderRatio) recipeParts.push(`éª¨ç°æ¯”ï¼š${formatRecipeNumber(ratios.aggregateBinderRatio)}`);
+  if (data.slump) recipeParts.push(`åè½åº¦ï¼š${data.slump}`);
+  if (data.gradationCoefficient) recipeParts.push(`çº§é…ç³»æ•°ï¼š${data.gradationCoefficient}`);
   const filledMaterials = recipeMaterials.filter((material) => data.recipeValues[material.id]).length;
-  if (recipeMaterials.length) recipeParts.push(`²ÄÁÏ£º${filledMaterials}/${recipeMaterials.length} ÒÑÌî`);
+  if (recipeMaterials.length) recipeParts.push(`ææ–™ï¼š${filledMaterials}/${recipeMaterials.length} å·²å¡«`);
   const filledResults = Object.values(data.results || {}).reduce((total, item) => (
     total + Object.values(item.metricResults || {}).filter(metricResultFilled).length
   ), 0);
   const totalResults = Math.max(1, metrics.length * (ages.length || Object.keys(data.results || {}).length || 1));
-  if (metrics.length) recipeParts.push(`Ö¸±ê£º${metrics.map((metric) => metric.label).join("¡¢")}`);
-  if (filledResults) recipeParts.push(`½á¹û£º${filledResults}/${totalResults} ÒÑÌî`);
-  return recipeParts.length ? recipeParts.join(" ¡¤ ") : "Î´ÌîĞ´Åä·½/ÊÔÑéÊı¾İ";
+  if (metrics.length) recipeParts.push(`æŒ‡æ ‡ï¼š${metrics.map((metric) => metric.label).join("ã€")}`);
+  if (filledResults) recipeParts.push(`ç»“æœï¼š${filledResults}/${totalResults} å·²å¡«`);
+  return recipeParts.length ? recipeParts.join(" Â· ") : "æœªå¡«å†™é…æ–¹/è¯•éªŒæ•°æ®";
 }
 
 function renderMetricSelectorV3(metrics, customValue = "") {
@@ -4583,7 +5338,7 @@ function renderMetricSelectorV3(metrics, customValue = "") {
   const customMetrics = customValue || normalizeResultMetrics(metrics)
     .filter((metric) => metric.custom)
     .map((metric) => metric.label)
-    .join("£¬");
+    .join("ï¼Œ");
   const primary = BUILTIN_RESULT_METRICS.filter((metric) => DEFAULT_RESULT_METRIC_IDS.includes(metric.id));
   const extras = BUILTIN_RESULT_METRICS.filter((metric) => !DEFAULT_RESULT_METRIC_IDS.includes(metric.id));
   const extrasOpen = extras.some((metric) => selected.has(metric.id)) || Boolean(customMetrics);
@@ -4591,11 +5346,11 @@ function renderMetricSelectorV3(metrics, customValue = "") {
       ${primary.map((metric) => `<label class="metric-choice"><input type="checkbox" name="metrics" value="${attr(metric.id)}" ${selected.has(metric.id) ? "checked" : ""}><span>${html(metric.label)}</span></label>`).join("")}
     </div>
     <details class="more-metrics" ${extrasOpen ? "open" : ""}>
-      <summary>¸ü¶àÖ¸±ê</summary>
+      <summary>æ›´å¤šæŒ‡æ ‡</summary>
       <div class="metric-options">
         ${extras.map((metric) => `<label class="metric-choice"><input type="checkbox" name="metrics" value="${attr(metric.id)}" ${selected.has(metric.id) ? "checked" : ""}><span>${html(metric.label)}</span></label>`).join("")}
       </div>
-      <label class="custom-metrics"><span>×Ô¶¨ÒåÖ¸±ê</span><input name="customMetrics" value="${attr(customMetrics)}" placeholder="Àı£ºÖáĞÄ¿¹Ñ¹¡¢Ì¼»¯Éî¶È¡¢»Øµ¯Öµ"></label>
+      <label class="custom-metrics"><span>è‡ªå®šä¹‰æŒ‡æ ‡</span><input name="customMetrics" value="${attr(customMetrics)}" placeholder="ä¾‹ï¼šè½´å¿ƒæŠ—å‹ã€ç¢³åŒ–æ·±åº¦ã€å›å¼¹å€¼"></label>
     </details>`;
 }
 
@@ -4610,24 +5365,24 @@ function renderRecipeMaterialLibraryManagerV3(content, actionBase = WORK_PATH) {
       <div class="panel-title">
         <div>
           <p class="eyebrow">Material Library</p>
-          <h2>²ÄÁÏ¿â¹ÜÀí</h2>
-          <p>±£ÁôµÄ²ÄÁÏ»á³öÏÖÔÚĞÂÊÔ¿éÀï£»µãÉ¾³ıÖ»ÒÆ³öºóĞø²ÄÁÏ¿â£¬¾ÉÊÔ¿éÀïµÄÀúÊ·ÓÃÁ¿²»»á¶ª¡£</p>
+          <h2>ææ–™åº“ç®¡ç†</h2>
+          <p>ä¿ç•™çš„ææ–™ä¼šå‡ºç°åœ¨æ–°è¯•å—é‡Œï¼›ç‚¹åˆ é™¤åªç§»å‡ºåç»­ææ–™åº“ï¼Œæ—§è¯•å—é‡Œçš„å†å²ç”¨é‡ä¸ä¼šä¸¢ã€‚</p>
         </div>
       </div>
       <form method="post" action="${actionBase}/update-material-library">
         <div class="library-list">
           ${materials.map((material) => `<div class="material-library-item${enabled.has(material.id) ? "" : " disabled"}">
-            <label><input type="checkbox" name="enabledRecipeMaterials" value="${attr(material.id)}" ${enabled.has(material.id) ? "checked" : ""}><span>${html(material.label)}${enabled.has(material.id) ? "" : "£¨ÒÑÒş²Ø£©"}</span></label>
+            <label><input type="checkbox" name="enabledRecipeMaterials" value="${attr(material.id)}" ${enabled.has(material.id) ? "checked" : ""}><span>${html(material.label)}${enabled.has(material.id) ? "" : "ï¼ˆå·²éšè—ï¼‰"}</span></label>
             <select name="materialCategory_${attr(material.id)}">${recipeMaterialCategoryOptions(recipeMaterialCategory(material))}</select>
-            <button class="danger material-delete" type="submit" name="deleteRecipeMaterials" value="${attr(material.id)}">É¾³ı</button>
+            <button class="danger material-delete" type="submit" name="deleteRecipeMaterials" value="${attr(material.id)}">åˆ é™¤</button>
           </div>`).join("")}
         </div>
         <div class="custom-material-row">
-          <label class="custom-metrics"><span>ĞÂÔö²ÄÁÏ</span><input name="newRecipeMaterials" placeholder="Àı£º»úÖÆÉ°¡¢ºÓÉ°¡¢¼õË®¼ÁA¡¢ÅòÕÍ¼Á"></label>
-          <label class="custom-metrics"><span>·ÖÀà</span><select name="newRecipeMaterialCategory">${recipeMaterialCategoryOptions("binder")}</select></label>
+          <label class="custom-metrics"><span>æ–°å¢ææ–™</span><input name="newRecipeMaterials" placeholder="ä¾‹ï¼šæœºåˆ¶ç ‚ã€æ²³ç ‚ã€å‡æ°´å‰‚Aã€è†¨èƒ€å‰‚"></label>
+          <label class="custom-metrics"><span>åˆ†ç±»</span><select name="newRecipeMaterialCategory">${recipeMaterialCategoryOptions("binder")}</select></label>
         </div>
-        <p class="hint">È¡Ïû¹´Ñ¡ÊÇÁÙÊ±Òş²Ø£»µã¡°É¾³ı¡±»áÁ¢¼´´ÓºóĞø²ÄÁÏ¿âÒÆ³ı¡£ÄÚÖÃ²ÄÁÏÉ¾³ıºó»á±ä³ÉÒş²Ø×´Ì¬£¬ÈÔ¿ÉÖØĞÂ¹´Ñ¡»Ö¸´¡£</p>
-        <div class="actions"><button class="secondary" type="submit">±£´æ²ÄÁÏ¿â</button></div>
+        <p class="hint">å–æ¶ˆå‹¾é€‰æ˜¯ä¸´æ—¶éšè—ï¼›ç‚¹â€œåˆ é™¤â€ä¼šç«‹å³ä»åç»­ææ–™åº“ç§»é™¤ã€‚å†…ç½®ææ–™åˆ é™¤åä¼šå˜æˆéšè—çŠ¶æ€ï¼Œä»å¯é‡æ–°å‹¾é€‰æ¢å¤ã€‚</p>
+        <div class="actions"><button class="secondary" type="submit">ä¿å­˜ææ–™åº“</button></div>
       </form>
     </section>`;
 }
@@ -4649,7 +5404,7 @@ function renderRecipeMaterialCheckboxGroupsV3(materials, selected, inputName) {
     const items = groups.get(category.id) || [];
     if (!items.length) return "";
     return `<section class="material-group">
-          <div class="material-group-title"><span>${html(category.label)}</span><small>${items.length}Ïî</small></div>
+          <div class="material-group-title"><span>${html(category.label)}</span><small>${items.length}é¡¹</small></div>
           <div class="metric-options material-options">
             ${items.map((material) => `<label class="metric-choice"><input type="checkbox" name="${attr(inputName)}" value="${attr(material.id)}" ${selected.has(material.id) ? "checked" : ""}><span>${html(material.label)}</span></label>`).join("")}
           </div>
@@ -4665,8 +5420,8 @@ function renderRecipeMaterialSelectorV3(materials, customValue = "", library = [
   const customMaterials = customValue || "";
   return `${renderRecipeMaterialCheckboxGroupsV3(options, selected, "recipeMaterials")}
     <div class="custom-material-row">
-      <label class="custom-metrics"><span>ĞÂÔö²ÄÁÏ</span><input name="customRecipeMaterials" value="${attr(customMaterials)}" placeholder="Àı£º»úÖÆÉ°¡¢ºÓÉ°¡¢¼õË®¼ÁA¡¢ÅòÕÍ¼Á"></label>
-      <label class="custom-metrics"><span>·ÖÀà</span><select name="customRecipeMaterialCategory">${recipeMaterialCategoryOptions("binder")}</select></label>
+      <label class="custom-metrics"><span>æ–°å¢ææ–™</span><input name="customRecipeMaterials" value="${attr(customMaterials)}" placeholder="ä¾‹ï¼šæœºåˆ¶ç ‚ã€æ²³ç ‚ã€å‡æ°´å‰‚Aã€è†¨èƒ€å‰‚"></label>
+      <label class="custom-metrics"><span>åˆ†ç±»</span><select name="customRecipeMaterialCategory">${recipeMaterialCategoryOptions("binder")}</select></label>
     </div>`;
 }
 
@@ -4681,7 +5436,7 @@ function renderRecipeMaterialFieldsV3(record) {
     return `<section class="recipe-field-group">
           <h5>${html(category.label)}</h5>
           <div class="record-grid">
-            ${items.map((material) => recordFieldV3(`recipe_${material.id}`, `${material.label}£¨g£©`, recipeValues[material.id], { placeholder: material.placeholder || "ÌîĞ´gÖØ»òĞÍºÅ" })).join("")}
+            ${items.map((material) => recordFieldV3(`recipe_${material.id}`, `${material.label}ï¼ˆgï¼‰`, recipeValues[material.id], { placeholder: material.placeholder || "å¡«å†™gé‡æˆ–å‹å·" })).join("")}
           </div>
         </section>`;
   }).join("")}
@@ -4692,17 +5447,17 @@ function renderRecipeMaterialFieldsV3(record) {
 function renderGangueAggregateSelectorV3(gangueDb, record) {
   const selectedId = String(record.gangueAggregateId || "").trim();
   const selected = gangueDb.find((item) => item.id === selectedId);
-  return `<label class="wide"><span>Ãºí·Ê¯¹ÇÁÏ</span>
+  return `<label class="wide"><span>ç…¤çŸ¸çŸ³éª¨æ–™</span>
       <select name="gangueAggregateId">
-        <option value="">²»Ñ¡ÔñÊı¾İ¿â¹ÇÁÏ</option>
-        ${gangueDb.map((item) => `<option value="${attr(item.id)}" ${item.id === selectedId ? "selected" : ""}>${html(item.name)}${item.source ? ` ¡¤ ${html(item.source)}` : ""}</option>`).join("")}
+        <option value="">ä¸é€‰æ‹©æ•°æ®åº“éª¨æ–™</option>
+        ${gangueDb.map((item) => `<option value="${attr(item.id)}" ${item.id === selectedId ? "selected" : ""}>${html(item.name)}${item.source ? ` Â· ${html(item.source)}` : ""}</option>`).join("")}
       </select>
     </label>
     <div class="gangue-preview">
-      <strong>${selected ? `ÒÑÑ¡£º${html(selected.name)}` : "Ãºí·Ê¯Êı¾İ¿â"}</strong>
-      ${selected ? `${html(selected.source || "Î´ÌîÀ´Ô´")} ¡¤ Á£¾¶Çø¼ä£º${html(selected.particleRanges.join("£¬"))}
-        <small>´Ö/Ï¸ÎüË®ÂÊ£º${html(selected.coarseWaterAbsorption || "Î´Ìî")} / ${html(selected.fineWaterAbsorption || "Î´Ìî")}£»´Ö/Ï¸±í¹ÛÃÜ¶È£º${html(selected.coarseApparentDensity || "Î´Ìî")} / ${html(selected.fineApparentDensity || "Î´Ìî")}</small>`
-    : `ÏÈÔÚ¡°Ãºí·Ê¯¹ÇÁÏÊı¾İ¿â¡±ÀïÂ¼ÈëÊı¾İ£¬Ö®ºóÕâÀï¾ÍÄÜ´Ó¿âÀïÑ¡Ôñ¡£`}
+      <strong>${selected ? `å·²é€‰ï¼š${html(selected.name)}` : "ç…¤çŸ¸çŸ³æ•°æ®åº“"}</strong>
+      ${selected ? `${html(selected.source || "æœªå¡«æ¥æº")} Â· ç²’å¾„åŒºé—´ï¼š${html(selected.particleRanges.join("ï¼Œ"))}
+        <small>ç²—/ç»†å¸æ°´ç‡ï¼š${html(selected.coarseWaterAbsorption || "æœªå¡«")} / ${html(selected.fineWaterAbsorption || "æœªå¡«")}ï¼›ç²—/ç»†è¡¨è§‚å¯†åº¦ï¼š${html(selected.coarseApparentDensity || "æœªå¡«")} / ${html(selected.fineApparentDensity || "æœªå¡«")}</small>`
+    : `å…ˆåœ¨â€œç…¤çŸ¸çŸ³éª¨æ–™æ•°æ®åº“â€é‡Œå½•å…¥æ•°æ®ï¼Œä¹‹åè¿™é‡Œå°±èƒ½ä»åº“é‡Œé€‰æ‹©ã€‚`}
     </div>`;
 }
 
@@ -4726,12 +5481,12 @@ function renderAgeResultsV3(block, record) {
     const dueDate = addDays(block.madeDate, age);
     return `<section class="result-row">
           <div class="result-row-title">
-            <strong>${age} ÌìÊÔÑé½á¹û</strong>
-            <span>µ½ÆÚ£º${formatDateCnV3(dueDate)}</span>
+            <strong>${age} å¤©è¯•éªŒç»“æœ</strong>
+            <span>åˆ°æœŸï¼š${formatDateCnV3(dueDate)}</span>
           </div>
           <div class="record-grid result-grid">
-            ${recordFieldV3(`resultTestDate_${key}`, "ÊÔÑéÈÕÆÚ", item.testDate, { type: "date" })}
-            ${recordAreaV3(`resultNote_${key}`, "ÁäÆÚ±¸×¢", item.resultNote)}
+            ${recordFieldV3(`resultTestDate_${key}`, "è¯•éªŒæ—¥æœŸ", item.testDate, { type: "date" })}
+            ${recordAreaV3(`resultNote_${key}`, "é¾„æœŸå¤‡æ³¨", item.resultNote)}
           </div>
           ${metrics.map((metric) => {
     const result = normalizeMetricResultEntry((item.metricResults || {})[metric.id], (item.metrics || {})[metric.id], {
@@ -4746,33 +5501,33 @@ function renderAgeResultsV3(block, record) {
       failureMode: "",
       remark: ""
     });
-    const meanDisplay = formatMpaValue(result.mean || result.manualMean) || "Î´Â¼";
-    const stdDisplay = result.std ? formatMpaValue(result.std) : "¿Õ";
+    const meanDisplay = formatMpaValue(result.mean || result.manualMean) || "æœªå½•";
+    const stdDisplay = result.std ? formatMpaValue(result.std) : "ç©º";
     const manualMeanValue = result.sampleValues.length ? "" : formatMpaNumberInput(result.manualMean || result.mean);
     return `<div class="metric-result-card-v22" data-result-card data-result-label="${attr(`${age}d ${metric.label}`)}">
               <div class="metric-result-head-v22">
                 <strong>${html(metric.label)}</strong>
-                <span class="source-pill-v22">¾ùÖµ£º${html(meanDisplay)}</span>
-                <span class="source-pill-v22">±ê×¼²î£º${html(stdDisplay)}</span>
-                <span class="source-pill-v22">CV£º${html(result.cv ? `${result.cv}%` : "¿Õ")}</span>
+                <span class="source-pill-v22">å‡å€¼ï¼š${html(meanDisplay)}</span>
+                <span class="source-pill-v22">æ ‡å‡†å·®ï¼š${html(stdDisplay)}</span>
+                <span class="source-pill-v22">CVï¼š${html(result.cv ? `${result.cv}%` : "ç©º")}</span>
                 <span class="source-pill-v22">${html(result.meanSource)}</span>
               </div>
               <input type="hidden" name="manualMean_${key}_${attr(metric.id)}" value="${attr(manualMeanValue)}">
       <div class="specimen-table-v22">
-                <div class="specimen-row-v22 head"><span>ÊÔ¼ş</span><span>Ñ¹Á¦ kN</span><span>ÊÜÑ¹Ãæ»ı mm2</span><span>Ç¿¶È MPa</span><span>ÆÆ»µĞÎÌ¬</span><span>±¸×¢</span></div>
+                <div class="specimen-row-v22 head"><span>è¯•ä»¶</span><span>å‹åŠ› kN</span><span>å—å‹é¢ç§¯ mmÂ²</span><span>å¼ºåº¦ MPa</span><span>ç ´åå½¢æ€</span><span>å¤‡æ³¨</span></div>
                 ${specimenRows.map((sample, index) => `<div class="specimen-row-v22" data-specimen-row>
                   <span>${index + 1}</span>
-                  <input name="samplePressure_${key}_${attr(metric.id)}_${index}" value="${attr(sample.pressureKn)}" inputmode="decimal" data-pressure-kn placeholder="Àı£º450">
-                  <input name="sampleArea_${key}_${attr(metric.id)}_${index}" value="${attr(sample.areaMm2)}" inputmode="decimal" data-area-mm2 placeholder="Àı£º22500">
-                  <input name="sampleStrength_${key}_${attr(metric.id)}_${index}" value="${attr(formatMpaNumberInput(sample.strengthMpa))}" inputmode="decimal" data-strength-mpa placeholder="¿ÉÊÖÌî MPa">
-                  <input name="sampleFailureMode_${key}_${attr(metric.id)}_${index}" value="${attr(sample.failureMode)}" placeholder="Àı£ºÕı³£ÆÆ»µ">
-                  <input name="sampleRemark_${key}_${attr(metric.id)}_${index}" value="${attr(sample.remark)}" placeholder="¶ÁÊıËµÃ÷">
+                  <input name="samplePressure_${key}_${attr(metric.id)}_${index}" value="${attr(sample.pressureKn)}" inputmode="decimal" data-pressure-kn placeholder="ä¾‹ï¼š450">
+                  <input name="sampleArea_${key}_${attr(metric.id)}_${index}" value="${attr(sample.areaMm2)}" inputmode="decimal" data-area-mm2 placeholder="ä¾‹ï¼š22500">
+                  <input name="sampleStrength_${key}_${attr(metric.id)}_${index}" value="${attr(formatMpaNumberInput(sample.strengthMpa))}" inputmode="decimal" data-strength-mpa placeholder="å¯æ‰‹å¡« MPa">
+                  <input name="sampleFailureMode_${key}_${attr(metric.id)}_${index}" value="${attr(sample.failureMode)}" placeholder="ä¾‹ï¼šæ­£å¸¸ç ´å">
+                  <input name="sampleRemark_${key}_${attr(metric.id)}_${index}" value="${attr(sample.remark)}" placeholder="è¯»æ•°è¯´æ˜">
                 </div>`).join("")}
                 <div class="specimen-summary-v22" data-specimen-summary>
-                  <span>¾ùÖµ <b data-mean>${html(meanDisplay)}</b></span>
-                  <span>±ê×¼²î <b data-std>${html(stdDisplay)}</b></span>
-                  <span>CV <b data-cv>${html(result.cv ? `${result.cv}%` : "¿Õ")}</b></span>
-                  <em data-cv-warning hidden>CV ³¬¹ı 15%£¬½¨ÒéºË¶ÔÊÔ¼şÀëÉ¢ĞÔ</em>
+                  <span>å‡å€¼ <b data-mean>${html(meanDisplay)}</b></span>
+                  <span>æ ‡å‡†å·® <b data-std>${html(stdDisplay)}</b></span>
+                  <span>CV <b data-cv>${html(result.cv ? `${result.cv}%` : "ç©º")}</b></span>
+                  <em data-cv-warning hidden>CV è¶…è¿‡ 15%ï¼Œå»ºè®®æ ¸å¯¹è¯•ä»¶ç¦»æ•£æ€§</em>
                 </div>
               </div>
             </div>`;
@@ -4797,82 +5552,82 @@ function renderBlockRecordV3(block, actionBase = WORK_PATH, materialLibrary = []
       .map((metric) => `${age}d ${metric.label}`);
   });
   return `<details class="record-details record-drawer" id="record-${attr(block.id)}" data-record-details data-record-id="${attr(block.id)}">
-          <summary><span class="record-summary-main"><strong>ÊÔ¿éµµ°¸</strong><em>${html(blockRecordSummaryV3(record, block.ages))}</em></span><span class="record-toggle" aria-hidden="true"><span class="closed-label">±à¼­µµ°¸</span><span class="open-label">ÊÕÆğ</span></span></summary>
+          <summary><span class="record-summary-main"><strong>è¯•å—æ¡£æ¡ˆ</strong><em>${html(blockRecordSummaryV3(record, block.ages))}</em></span><span class="record-toggle" aria-hidden="true"><span class="closed-label">ç¼–è¾‘æ¡£æ¡ˆ</span><span class="open-label">æ”¶èµ·</span></span></summary>
           <div class="record-drawer-body">
-            <div class="drawer-top-v22"><strong>${html(block.name)}£ü${html(blockCategoryLabelV3(blockCategory))}</strong><button type="button" data-close-record>¹Ø±Õ</button></div>
+            <div class="drawer-top-v22"><strong>${html(block.name)}ï½œ${html(blockCategoryLabelV3(blockCategory))}</strong><button type="button" data-close-record>å…³é—­</button></div>
             <div class="record-tabbar" role="tablist">
-              <button type="button" class="active" data-record-tab="base">»ù´¡ĞÅÏ¢</button>
-              <button type="button" data-record-tab="recipe">Åä·½</button>
-              <button type="button" data-record-tab="results">²âÊÔ½á¹û</button>
-              <button type="button" data-record-tab="images">Í¼Æ¬</button>
-              <button type="button" data-record-tab="tasks">ÌáĞÑ</button>
+              <button type="button" class="active" data-record-tab="base">åŸºç¡€ä¿¡æ¯</button>
+              <button type="button" data-record-tab="recipe">é…æ–¹</button>
+              <button type="button" data-record-tab="results">æµ‹è¯•ç»“æœ</button>
+              <button type="button" data-record-tab="images">å›¾ç‰‡</button>
+              <button type="button" data-record-tab="tasks">æé†’</button>
             </div>
-            <form class="record-form" method="post" action="${actionBase}/update-block-record" data-record-form data-existing-result-labels="${attr(existingResultLabels.join("¡¢"))}" data-original-ages="${attr(block.ages.join(","))}">
+            <form class="record-form" method="post" action="${actionBase}/update-block-record" data-record-form data-existing-result-labels="${attr(existingResultLabels.join("ã€"))}" data-original-ages="${attr(block.ages.join(","))}">
               <input type="hidden" name="id" value="${attr(block.id)}">
               <input type="hidden" name="templateApplied" value="0" data-template-applied>
               <section class="record-panel active" data-record-panel="base">
                 <section class="record-section">
-                  <h4>»ù´¡ĞÅÏ¢ <small>ÊÔ¿é×éÊÇ×îĞ¡ÊµÑéµ¥Î»</small></h4>
+                  <h4>åŸºç¡€ä¿¡æ¯ <small>è¯•å—ç»„æ˜¯æœ€å°å®éªŒå•ä½</small></h4>
                   <div class="record-grid">
-                    <label><span>ÊÔ¿é×é±àºÅ/Ãû³Æ</span><input name="blockName" value="${attr(block.name)}" required></label>
-                    <label><span>³ÉĞÍÈÕÆÚ</span><input name="madeDate" type="date" value="${attr(block.madeDate)}" required></label>
-                    <label><span>ÊıÁ¿</span><input name="quantity" type="number" min="1" step="1" value="${attr(block.quantity)}"></label>
-                    <label><span>Ç¿¶ÈµÈ¼¶</span><input name="strength" value="${attr(block.strength)}" placeholder="Àı£ºC30"></label>
-                    <label><span>²ğÄ£ÈÕÆÚ</span><input name="demoldDate" type="date" value="${attr(block.demoldDate || addDays(block.madeDate, 1))}"></label>
-                    <label><span>ÁäÆÚ</span><input name="ages" value="${attr(block.ages.join(","))}" placeholder="Àı£º3,7,28"></label>
-                    <label class="wide"><span>±¸×¢</span><input name="note" value="${attr(block.note)}" placeholder="³ÉĞÍ·½Ê½¡¢Ñø»¤Ìõ¼ş¡¢±àºÅËµÃ÷"></label>
+                    <label><span>è¯•å—ç»„ç¼–å·/åç§°</span><input name="blockName" value="${attr(block.name)}" required></label>
+                    <label><span>æˆå‹æ—¥æœŸ</span><input name="madeDate" type="date" value="${attr(block.madeDate)}" required></label>
+                    <label><span>æ•°é‡</span><input name="quantity" type="number" min="1" step="1" value="${attr(block.quantity)}"></label>
+                    <label><span>å¼ºåº¦ç­‰çº§</span><input name="strength" value="${attr(block.strength)}" placeholder="ä¾‹ï¼šC30"></label>
+                    <label><span>æ‹†æ¨¡æ—¥æœŸ</span><input name="demoldDate" type="date" value="${attr(block.demoldDate || addDays(block.madeDate, 1))}"></label>
+                    <label><span>é¾„æœŸ</span><input name="ages" value="${attr(block.ages.join(","))}" placeholder="ä¾‹ï¼š3,7,28"></label>
+                    <label class="wide"><span>å¤‡æ³¨</span><input name="note" value="${attr(block.note)}" placeholder="æˆå‹æ–¹å¼ã€å…»æŠ¤æ¡ä»¶ã€ç¼–å·è¯´æ˜"></label>
                   </div>
                 </section>
               </section>
               <section class="record-panel" data-record-panel="recipe" hidden>
                 <section class="record-section">
-                  <h4>·ÖÀàºÍÄ£°å <small>Ë®Ä¬ÈÏ 825g£¬¿ÉÇĞ»»ÓĞ/ÎŞËÙÄı¼Á</small></h4>
+                  <h4>åˆ†ç±»å’Œæ¨¡æ¿ <small>æ°´é»˜è®¤ 825gï¼Œå¯åˆ‡æ¢æœ‰/æ— é€Ÿå‡å‰‚</small></h4>
                   <div class="record-grid">
                     ${renderBlockCategorySelectV3(blockCategory)}
                     ${renderWeighingTemplateSelectV3(weighingTemplate, blockCategory)}
                     ${renderGradationTemplateSelectV3(blockCategory, gradationTemplate)}
-                    ${recordFieldV3("totalWithoutWater", "²»º¬Ë®×ÜÁ¿", record.totalWithoutWater || WEIGHING_TEMPLATES[weighingTemplate].totalWithoutWater, { placeholder: "×Ô¶¯/ÊÖÌî" })}
-                    ${recordFieldV3("mixName", "Åä·½/±àºÅ", record.mixName, { placeholder: "Àı£ºÅä·½A" })}
-                    ${recordFieldV3("gradationCoefficient", "¼¶ÅäÏµÊı", record.gradationCoefficient, { placeholder: "Àı£º0.5 / raw" })}
+                    ${recordFieldV3("totalWithoutWater", "ä¸å«æ°´æ€»é‡", record.totalWithoutWater || WEIGHING_TEMPLATES[weighingTemplate].totalWithoutWater, { placeholder: "è‡ªåŠ¨/æ‰‹å¡«" })}
+                    ${recordFieldV3("mixName", "é…æ–¹/ç¼–å·", record.mixName, { placeholder: "ä¾‹ï¼šé…æ–¹A" })}
+                    ${recordFieldV3("gradationCoefficient", "çº§é…ç³»æ•°", record.gradationCoefficient, { placeholder: "ä¾‹ï¼š0.5 / raw" })}
                     ${renderGangueAggregateSelectorV3(gangueDb, record)}
-                    ${recordAreaV3("recipeNote", "Åä·½²¹³äËµÃ÷", record.recipeNote || WEIGHING_TEMPLATES[weighingTemplate].note || "", "wide recipe-note")}
+                    ${recordAreaV3("recipeNote", "é…æ–¹è¡¥å……è¯´æ˜", record.recipeNote || WEIGHING_TEMPLATES[weighingTemplate].note || "", "wide recipe-note")}
                   </div>
                 </section>
                 <section class="record-section">
-                  <h4>Åä·½²ÄÁÏ <small>¿É´Ó×Ü²ÄÁÏ¿âÔöÉ¾£¬¾É¼ÇÂ¼Êı¾İ»á±£Áô</small></h4>
+                  <h4>é…æ–¹ææ–™ <small>å¯ä»æ€»ææ–™åº“å¢åˆ ï¼Œæ—§è®°å½•æ•°æ®ä¼šä¿ç•™</small></h4>
                   ${renderRecipeMaterialSelectorV3(recipeMaterials, "", materialLibrary, disabledRecipeMaterialIds)}
                 </section>
                 <section class="record-section">
-                  <h4>²ÄÁÏÓÃÁ¿/ĞÍºÅ <small>Ì×ÓÃÄ£°åºó¿É¼ÌĞøÊÖ¶¯¸Ä</small></h4>
+                  <h4>ææ–™ç”¨é‡/å‹å· <small>å¥—ç”¨æ¨¡æ¿åå¯ç»§ç»­æ‰‹åŠ¨æ”¹</small></h4>
                   ${renderRecipeMaterialFieldsV3({ ...record, weighingTemplate })}
                 </section>
                 <section class="record-section">
-                  <h4>¼¶ÅäÖØÁ¿ <small>Ô­Ê¼¼¶Åä²»¸²¸Ç£¬n ÖµÄ£°å×Ô¶¯Ìî</small></h4>
+                  <h4>çº§é…é‡é‡ <small>åŸå§‹çº§é…ä¸è¦†ç›–ï¼Œn å€¼æ¨¡æ¿è‡ªåŠ¨å¡«</small></h4>
                   ${renderBlockGradationWeightsV3(record, blockCategory)}
                 </section>
               </section>
               <section class="record-panel" data-record-panel="results" hidden>
                 <section class="record-section">
-                  <h4>¼ì²âÖ¸±ê <small>Ä¬ÈÏ¿¹Ñ¹Ç¿¶È£¬¸ü¶àÖ¸±êÊÖ¶¯Õ¹¿ª</small></h4>
+                  <h4>æ£€æµ‹æŒ‡æ ‡ <small>é»˜è®¤æŠ—å‹å¼ºåº¦ï¼Œæ›´å¤šæŒ‡æ ‡æ‰‹åŠ¨å±•å¼€</small></h4>
                   ${renderMetricSelectorV3(metrics)}
                 </section>
                 <section class="record-section">
-                  <h4>°´ÁäÆÚÉú³ÉµÄÊÔÑé½á¹û</h4>
+                  <h4>æŒ‰é¾„æœŸç”Ÿæˆçš„è¯•éªŒç»“æœ</h4>
                   ${renderAgeResultsV3(block, record)}
                 </section>
               </section>
-              <div class="actions"><button class="secondary" type="submit">±£´æµµ°¸</button></div>
+              <div class="actions"><button class="secondary" type="submit">ä¿å­˜æ¡£æ¡ˆ</button></div>
             </form>
             <section class="record-panel" data-record-panel="images" hidden>
               <section class="record-section">
-                <h4>ÊÔ¿éÍ¼Æ¬ <small>³ÉĞÍ¡¢Ñø»¤¡¢ÆÆĞÍ¡¢ÅüÁÑºó¶¼¿ÉÒÔ´«</small></h4>
+                <h4>è¯•å—å›¾ç‰‡ <small>æˆå‹ã€å…»æŠ¤ã€ç ´å‹ã€åŠˆè£‚åéƒ½å¯ä»¥ä¼ </small></h4>
                 ${renderLabImageGalleryV3(block.images, "block", block.id, actionBase)}
                 ${renderLabUploadFormV3("block", block.id, actionBase, "forming")}
               </section>
             </section>
             <section class="record-panel" data-record-panel="tasks" hidden>
               <section class="record-section">
-                <h4>ÌáĞÑÈÎÎñ <small>Íê³ÉºóÖ±½Ó¹´Ñ¡</small></h4>
+                <h4>æé†’ä»»åŠ¡ <small>å®Œæˆåç›´æ¥å‹¾é€‰</small></h4>
                 ${renderBlockTaskChecklistV3(block, actionBase)}
               </section>
             </section>
@@ -4881,33 +5636,33 @@ function renderBlockRecordV3(block, actionBase = WORK_PATH, materialLibrary = []
 }
 
 function renderBlockListV3(blocks, actionBase = WORK_PATH, content = {}) {
-  if (!blocks.length) return `<div class="panel-title"><div><p class="eyebrow">Archives</p><h2>ÒÑµÇ¼ÇÊÔ¿é</h2></div></div><p class="hint">»¹Ã»ÓĞµÇ¼ÇÊÔ¿é¡£</p>`;
+  if (!blocks.length) return `<div class="panel-title"><div><p class="eyebrow">Archives</p><h2>å·²ç™»è®°è¯•å—</h2></div></div><p class="hint">è¿˜æ²¡æœ‰ç™»è®°è¯•å—ã€‚</p>`;
   const materialLibrary = normalizeRecipeMaterialLibrary(content.recipeMaterialLibrary);
   const disabledRecipeMaterialIds = normalizeDisabledRecipeMaterialIds(content.disabledRecipeMaterialIds);
   const gangueDb = getCoalGangueDb(content);
   return `<div class="panel-title">
         <div>
           <p class="eyebrow">Archives</p>
-          <h2>ÒÑµÇ¼ÇÊÔ¿é</h2>
-          <p>Ã¿Ìõ¼ÇÂ¼¶¼ÓĞ¶ÀÁ¢ÅäºÏ±È£»´ò¿ªµµ°¸ºó£¬ÏµÍ³»á°´ÁäÆÚÁĞ³ö¶ÔÓ¦²âÊÔ½á¹û¡£</p>
+          <h2>å·²ç™»è®°è¯•å—</h2>
+          <p>æ¯æ¡è®°å½•éƒ½æœ‰ç‹¬ç«‹é…åˆæ¯”ï¼›æ‰“å¼€æ¡£æ¡ˆåï¼Œç³»ç»Ÿä¼šæŒ‰é¾„æœŸåˆ—å‡ºå¯¹åº”æµ‹è¯•ç»“æœã€‚</p>
         </div>
       </div>
       <div class="block-toolbar">
-        <input id="blockSearch" type="search" placeholder="ËÑË÷Ãû³Æ¡¢Ãºí·Ê¯¡¢nÖµ¡¢Á£¾¶¡¢²ÄÁÏ¡¢ÁäÆÚ">
-        <span class="hint">¹² ${blocks.length} Ìõ</span>
-        <div class="archive-actions" aria-label="ÊÔ¿éµµ°¸ÅúÁ¿²Ù×÷">
-          <button class="chip-button" type="button" data-check-all-export>È«Ñ¡µ¼³ö</button>
-          <button class="chip-button" type="button" data-clear-export>Çå¿ÕÑ¡Ôñ</button>
-          <button class="chip-button" type="submit" form="exportBlocksForm">µ¼³öÑ¡ÖĞ Excel</button>
-          <button class="chip-button" type="button" data-open-all-records>È«²¿Õ¹¿ª</button>
-          <button class="chip-button" type="button" data-close-all-records>È«²¿ÊÕÆğ</button>
+        <input id="blockSearch" type="search" placeholder="æœç´¢åç§°ã€ç…¤çŸ¸çŸ³ã€nå€¼ã€ç²’å¾„ã€ææ–™ã€é¾„æœŸ">
+        <span class="hint">å…± ${blocks.length} æ¡</span>
+        <div class="archive-actions" aria-label="è¯•å—æ¡£æ¡ˆæ‰¹é‡æ“ä½œ">
+          <button class="chip-button" type="button" data-check-all-export>å…¨é€‰å¯¼å‡º</button>
+          <button class="chip-button" type="button" data-clear-export>æ¸…ç©ºé€‰æ‹©</button>
+          <button class="chip-button" type="submit" form="exportBlocksForm">å¯¼å‡ºé€‰ä¸­ Excel</button>
+          <button class="chip-button" type="button" data-open-all-records>å…¨éƒ¨å±•å¼€</button>
+          <button class="chip-button" type="button" data-close-all-records>å…¨éƒ¨æ”¶èµ·</button>
         </div>
       </div>
       <form id="exportBlocksForm" method="post" action="${actionBase}/export-blocks"></form>
       <div class="block-list">
         ${blocks.map((block) => {
     const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
-    const dueText = block.ages.map((age) => `${age}Ìì ${formatDateCnV3(addDays(block.madeDate, age))}`).join("£»");
+    const dueText = block.ages.map((age) => `${age}å¤© ${formatDateCnV3(addDays(block.madeDate, age))}`).join("ï¼›");
     const searchText = blockSearchTextV3(block, content);
     return `<article class="block-card" id="block-${attr(block.id)}" data-block-card data-search="${attr(searchText)}">
           <div class="block-head">
@@ -4917,18 +5672,18 @@ function renderBlockListV3(blocks, actionBase = WORK_PATH, content = {}) {
                 ${block.strength ? `<span class="badge">${html(block.strength)}</span>` : ""}
               </div>
               <div class="block-meta">
-                <span>ÖÆ×÷£º${formatDateCnV3(block.madeDate)}</span>
-                <span>ÊıÁ¿£º${block.quantity}¿é</span>
-                <span>²ğÄ££º${formatDateCnV3(block.demoldDate || addDays(block.madeDate, 1))}</span>
-                <span>ÁäÆÚ£º${html(dueText || "Î´ÉèÖÃ")}</span>
+                <span>åˆ¶ä½œï¼š${formatDateCnV3(block.madeDate)}</span>
+                <span>æ•°é‡ï¼š${block.quantity}å—</span>
+                <span>æ‹†æ¨¡ï¼š${formatDateCnV3(block.demoldDate || addDays(block.madeDate, 1))}</span>
+                <span>é¾„æœŸï¼š${html(dueText || "æœªè®¾ç½®")}</span>
                 ${block.note ? `<span>${html(block.note)}</span>` : ""}
               </div>
             </div>
             <div class="block-actions">
-              <label class="export-check"><input form="exportBlocksForm" type="checkbox" name="blockIds" value="${attr(block.id)}" data-export-check><span>µ¼³ö</span></label>
+              <label class="export-check"><input form="exportBlocksForm" type="checkbox" name="blockIds" value="${attr(block.id)}" data-export-check><span>å¯¼å‡º</span></label>
               <form class="inline-delete" method="post" action="${actionBase}/delete-block">
                 <input type="hidden" name="id" value="${attr(block.id)}">
-                <button class="danger delete-block" type="submit">É¾³ı</button>
+                <button class="danger delete-block" type="submit">åˆ é™¤</button>
               </form>
             </div>
           </div>
@@ -4954,7 +5709,7 @@ function renderWorkspaceScriptV3() {
       }[char]));
       document.querySelectorAll(".message").forEach((message) => {
         message.setAttribute("role", "status");
-        message.title = "µã»÷¹Ø±Õ";
+        message.title = "ç‚¹å‡»å…³é—­";
         message.addEventListener("click", () => message.remove());
         window.setTimeout(() => message.remove(), 4000);
       });
@@ -4997,7 +5752,7 @@ function renderWorkspaceScriptV3() {
         const template = scheme?.templates?.[templateKey] || scheme?.templates?.raw;
         const grid = panel.querySelector(".template-weight-grid");
         if (!scheme || !grid) return;
-        panel.querySelector("strong").textContent = scheme.label + " ¡¤ Á£¾¶¿ËÊı";
+        panel.querySelector("strong").textContent = scheme.label + " Â· ç²’å¾„å…‹æ•°";
         grid.innerHTML = scheme.ranges.map((range, index) => {
           const weight = Array.isArray(template?.weights) ? (template.weights[index] ?? "") : "";
           return "<label><span>" + escapeAttr(range) + "</span><input name=\\"blockGradationWeight\\" value=\\"" + escapeAttr(weight) + "\\" placeholder=\\"g\\"><input type=\\"hidden\\" name=\\"blockGradationRange\\" value=\\"" + escapeAttr(range) + "\\"></label>";
@@ -5042,7 +5797,7 @@ function renderWorkspaceScriptV3() {
         button.addEventListener("click", () => {
           const targetInput = button.dataset.ageTarget ? document.querySelector(button.dataset.ageTarget) : ageInput;
           if (!targetInput) return;
-          const values = new Set(targetInput.value.split(/[\\s,£¬¡¢]+/).map((item) => item.trim()).filter(Boolean));
+          const values = new Set(targetInput.value.split(/[\\s,ï¼Œã€]+/).map((item) => item.trim()).filter(Boolean));
           values.add(button.dataset.age);
           targetInput.value = Array.from(values).map(Number).filter(Number.isFinite).sort((a, b) => a - b).join(",");
         });
@@ -5076,7 +5831,7 @@ function renderWorkspaceScriptV3() {
       });
       const exportChecks = Array.from(document.querySelectorAll("[data-export-check]"));
       const normalizeResultNumber = (value) => {
-        const text = String(value || "").replace(/MPa/ig, "").replace(/£¬/g, ".").trim();
+        const text = String(value || "").replace(/MPa/ig, "").replace(/ï¼Œ/g, ".").trim();
         if (!text) return "";
         const number = Number.parseFloat(text);
         if (!Number.isFinite(number)) return "";
@@ -5093,7 +5848,7 @@ function renderWorkspaceScriptV3() {
       const resultValuesKey = (values) => values.map((value) => normalizeResultNumber(value)).filter(Boolean).join("|");
       const resultValuesLabel = (values) => {
         const normalized = values.map((value) => normalizeResultNumber(value)).filter(Boolean);
-        if (!normalized.length) return "¿Õ";
+        if (!normalized.length) return "ç©º";
         return normalized.map((value) => value + " MPa").join(" / ");
       };
       const changedExistingResults = (form) => Array.from(form.querySelectorAll("[data-result-card]"))
@@ -5103,7 +5858,7 @@ function renderWorkspaceScriptV3() {
           const current = resultCardValues(card);
           if (resultValuesKey(initial) === resultValuesKey(current)) return null;
           return {
-            label: card.dataset.resultLabel || "²âÊÔ½á¹û",
+            label: card.dataset.resultLabel || "æµ‹è¯•ç»“æœ",
             before: resultValuesLabel(initial),
             after: resultValuesLabel(current)
           };
@@ -5116,10 +5871,10 @@ function renderWorkspaceScriptV3() {
         form.addEventListener("submit", (event) => {
           const changes = changedExistingResults(form);
           if (!changes.length) return;
-          const message = "ÄãÕıÔÚĞŞ¸ÄÒÑÓĞÇ¿¶È½á¹û£º\\n"
-            + changes.slice(0, 8).map((item) => item.label + "£ºÓÉ " + item.before + " ¸ÄÎª " + item.after).join("\\n")
-            + (changes.length > 8 ? "\\n»¹ÓĞ " + (changes.length - 8) + " Ïî±ä»¯¡£" : "")
-            + "\\n\\nĞÂÔö¿Õ°×½á¹û²»»áÌáĞÑ¡£È·¶¨±£´æÕâĞ©ĞŞ¸ÄÂğ£¿";
+          const message = "ä½ æ­£åœ¨ä¿®æ”¹å·²æœ‰å¼ºåº¦ç»“æœï¼š\\n"
+            + changes.slice(0, 8).map((item) => item.label + "ï¼šç”± " + item.before + " æ”¹ä¸º " + item.after).join("\\n")
+            + (changes.length > 8 ? "\\nè¿˜æœ‰ " + (changes.length - 8) + " é¡¹å˜åŒ–ã€‚" : "")
+            + "\\n\\næ–°å¢ç©ºç™½ç»“æœä¸ä¼šæé†’ã€‚ç¡®å®šä¿å­˜è¿™äº›ä¿®æ”¹å—ï¼Ÿ";
           if (!confirm(message)) event.preventDefault();
         });
       });
@@ -5137,7 +5892,7 @@ function renderWorkspaceScriptV3() {
         const exportAll = submitter && submitter.name === "exportAll";
         if (!exportAll && !exportChecks.some((input) => input.checked)) {
           event.preventDefault();
-          alert("ÏÈ¹´Ñ¡Òªµ¼³öµÄÊÔ¿é¡£");
+          alert("å…ˆå‹¾é€‰è¦å¯¼å‡ºçš„è¯•å—ã€‚");
         }
       });
 
@@ -5247,9 +6002,9 @@ function renderWorkspaceScriptV3() {
         const cvSlot = summary.querySelector("[data-cv]");
         const warn = summary.querySelector("[data-cv-warning]");
         if (!values.length) {
-          if (meanSlot) meanSlot.textContent = "Î´Â¼";
-          if (stdSlot) stdSlot.textContent = "¿Õ";
-          if (cvSlot) cvSlot.textContent = "¿Õ";
+          if (meanSlot) meanSlot.textContent = "æœªå½•";
+          if (stdSlot) stdSlot.textContent = "ç©º";
+          if (cvSlot) cvSlot.textContent = "ç©º";
           if (warn) warn.hidden = true;
           summary.classList.remove("warn");
           return;
@@ -5262,8 +6017,8 @@ function renderWorkspaceScriptV3() {
         const cv = mean ? (std / mean) * 100 : 0;
         const fmt = (value) => String(Math.round(value * 100) / 100).replace(/\\.0+$/, "").replace(/(\\.\\d*?)0+$/, "$1");
         if (meanSlot) meanSlot.textContent = fmt(mean) + " MPa";
-        if (stdSlot) stdSlot.textContent = values.length > 1 ? fmt(std) + " MPa" : "¿Õ";
-        if (cvSlot) cvSlot.textContent = values.length > 1 ? fmt(cv) + "%" : "¿Õ";
+        if (stdSlot) stdSlot.textContent = values.length > 1 ? fmt(std) + " MPa" : "ç©º";
+        if (cvSlot) cvSlot.textContent = values.length > 1 ? fmt(cv) + "%" : "ç©º";
         const showWarn = values.length > 1 && cv > 15;
         if (warn) warn.hidden = !showWarn;
         summary.classList.toggle("warn", showWarn);
@@ -5325,18 +6080,18 @@ function renderWorkspaceScriptV3() {
           const width = value ? Math.max(4, Math.min(100, (value / Math.max(1, max)) * 100)) : 0;
           return "<span class=\\"trend-bar-v22 age-" + escapeAttr(item.age) + (value ? " filled" : "") + "\\" title=\\"" + escapeAttr(item.label || "") + "\\"><i style=\\"--w:" + width + "%\\" data-chart-bar data-chart-value=\\"" + escapeAttr(value || "") + "\\"></i><b>" + escapeAttr(item.age) + "d</b><em>" + escapeAttr(item.mean || "") + "</em></span>";
         }).join("");
-        return "<article class=\\"trend-row-v22\\" data-chart-row><strong title=\\"" + escapeAttr((row.gangueName || "") + "£ü" + (row.blockName || "")) + "\\"><span>" + escapeAttr(row.blockName || "") + "</span><small>" + escapeAttr(row.gangueName || "") + "</small></strong><div class=\\"trend-bars-v22\\">" + bars + "</div></article>";
+        return "<article class=\\"trend-row-v22\\" data-chart-row><strong title=\\"" + escapeAttr((row.gangueName || "") + "ï½œ" + (row.blockName || "")) + "\\"><span>" + escapeAttr(row.blockName || "") + "</span><small>" + escapeAttr(row.gangueName || "") + "</small></strong><div class=\\"trend-bars-v22\\">" + bars + "</div></article>";
       };
       const applyChartFilter = () => {
         const selected = chartFilter?.value || "";
         const group = (chartData.groups || []).find((item) => item.id === selected) || (chartData.groups || [])[0];
         if (!group || !chartRowsSlot) return;
         if (chartFilter && chartFilter.value !== group.id) chartFilter.value = group.id;
-        if (chartCurrent) chartCurrent.dataset.currentName = group.name || "Î´ÃüÃûÅú´Î";
+        if (chartCurrent) chartCurrent.dataset.currentName = group.name || "æœªå‘½åæ‰¹æ¬¡";
         if (chartStage) chartStage.style.setProperty("--chart-max", group.max || 1);
         chartRowsSlot.innerHTML = (group.rows || []).length
           ? group.rows.map((row) => renderChartRow(row, group.max || 1)).join("")
-          : "<p class=\\"empty-v22\\" data-chart-empty>Õâ¸öÅú´Î»¹Ã»ÓĞ¿ÉÕ¹Ê¾µÄÊÔ¿éÇ¿¶È¡£</p>";
+          : "<p class=\\"empty-v22\\" data-chart-empty>è¿™ä¸ªæ‰¹æ¬¡è¿˜æ²¡æœ‰å¯å±•ç¤ºçš„è¯•å—å¼ºåº¦ã€‚</p>";
       };
       chartFilter?.addEventListener("change", applyChartFilter);
       applyChartFilter();
@@ -5402,7 +6157,7 @@ function renderWorkspaceScriptV3() {
 
       const lightbox = document.createElement("div");
       lightbox.className = "lab-lightbox-v22";
-      lightbox.innerHTML = "<img alt=\\"ÊµÑéÔ­Í¼\\"><div class=\\"lab-lightbox-actions-v22\\"><a download>ÏÂÔØÔ­Í¼</a><button type=\\"button\\">ÍË³ö</button></div>";
+      lightbox.innerHTML = "<img alt=\\"å®éªŒåŸå›¾\\"><div class=\\"lab-lightbox-actions-v22\\"><a download>ä¸‹è½½åŸå›¾</a><button type=\\"button\\">é€€å‡º</button></div>";
       document.body.appendChild(lightbox);
       const lightboxImage = lightbox.querySelector("img");
       const lightboxDownload = lightbox.querySelector("a");
@@ -5430,12 +6185,12 @@ function renderWorkspaceScriptV3() {
 
       document.querySelectorAll(".delete-block").forEach((button) => {
         button.addEventListener("click", (event) => {
-          if (!confirm("È·¶¨É¾³ıÕâÌõÊÔ¿é¼ÇÂ¼Âğ£¿")) event.preventDefault();
+          if (!confirm("ç¡®å®šåˆ é™¤è¿™æ¡è¯•å—è®°å½•å—ï¼Ÿ")) event.preventDefault();
         });
       });
       document.querySelectorAll(".delete-lab-image").forEach((button) => {
         button.addEventListener("click", (event) => {
-          if (!confirm("È·¶¨É¾³ıÕâÕÅÊµÑéÍ¼Æ¬Âğ£¿")) event.preventDefault();
+          if (!confirm("ç¡®å®šåˆ é™¤è¿™å¼ å®éªŒå›¾ç‰‡å—ï¼Ÿ")) event.preventDefault();
         });
       });
 
@@ -5455,20 +6210,20 @@ function renderWorkspaceScriptV3() {
           if (progress) progress.classList.add("active");
           if (button) {
             button.disabled = true;
-            button.textContent = "ÉÏ´«ÖĞ...";
+            button.textContent = "ä¸Šä¼ ä¸­...";
           }
           xhr.upload.onprogress = (progressEvent) => {
             if (!progressEvent.lengthComputable) return;
             const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
             if (bar) bar.style.width = percent + "%";
-            if (text) text.textContent = "ÕıÔÚÉÏ´« " + files.length + " ÕÅÍ¼Æ¬£º" + percent + "%";
+            if (text) text.textContent = "æ­£åœ¨ä¸Šä¼  " + files.length + " å¼ å›¾ç‰‡ï¼š" + percent + "%";
           };
           xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
               const targetType = form.querySelector("[name='targetType']")?.value || "";
               const targetId = form.querySelector("[name='targetId']")?.value || "";
               const params = new URLSearchParams();
-              params.set("msg", files.length + " ÕÅÊµÑéÍ¼Æ¬ÒÑÉÏ´«");
+              params.set("msg", files.length + " å¼ å®éªŒå›¾ç‰‡å·²ä¸Šä¼ ");
               if (targetType === "block" && targetId) {
                 params.set("openBlock", targetId);
                 params.set("tab", "images");
@@ -5479,17 +6234,17 @@ function renderWorkspaceScriptV3() {
               window.location.href = location.pathname + "?" + params.toString() + hash;
               return;
             }
-            if (text) text.textContent = "ÉÏ´«Ê§°Ü£¬ÇëÖØÊÔ";
+            if (text) text.textContent = "ä¸Šä¼ å¤±è´¥ï¼Œè¯·é‡è¯•";
             if (button) {
               button.disabled = false;
-              button.textContent = "ÖØĞÂÉÏ´«";
+              button.textContent = "é‡æ–°ä¸Šä¼ ";
             }
           };
           xhr.onerror = () => {
-            if (text) text.textContent = "ÍøÂçÖĞ¶Ï£¬ÉÏ´«Ê§°Ü";
+            if (text) text.textContent = "ç½‘ç»œä¸­æ–­ï¼Œä¸Šä¼ å¤±è´¥";
             if (button) {
               button.disabled = false;
-              button.textContent = "ÖØĞÂÉÏ´«";
+              button.textContent = "é‡æ–°ä¸Šä¼ ";
             }
           };
           xhr.send(new FormData(form));
@@ -5510,20 +6265,20 @@ function area(name, label, value) {
 function noteFields(item) {
   return `<div class="item">
     <div class="grid">
-      ${field("noteDate", "ÈÕÆÚ", item.date || "")}
-      ${field("noteTitle", "±êÌâ", item.title || "")}
+      ${field("noteDate", "æ—¥æœŸ", item.date || "")}
+      ${field("noteTitle", "æ ‡é¢˜", item.title || "")}
     </div>
-    ${area("noteBody", "ÕıÎÄ", item.body || "")}
+    ${area("noteBody", "æ­£æ–‡", item.body || "")}
   </div>`;
 }
 
 function ideaFields(item) {
   return `<div class="item">
     <div class="grid">
-      ${field("ideaTag", "±êÇ©", item.tag || "")}
-      ${field("ideaTitle", "±êÌâ", item.title || "")}
+      ${field("ideaTag", "æ ‡ç­¾", item.tag || "")}
+      ${field("ideaTitle", "æ ‡é¢˜", item.title || "")}
     </div>
-    ${area("ideaBody", "ËµÃ÷", item.body || "")}
+    ${area("ideaBody", "è¯´æ˜", item.body || "")}
   </div>`;
 }
 
@@ -5682,13 +6437,13 @@ function authProfile(scope) {
       logout: `${BASE_PATH}/logout`,
       cookie: "xx520_admin_session",
       prefixes: [BASE_PATH],
-      title: "ÄÚÈİºóÌ¨",
-      subtitle: "¸ÄÊ×Ò³¡¢Ğ´±Ê¼Ç¡¢´«ÕÕÆ¬£¬¶¼´ÓÕâÀï½øÈë¡£",
-      mark: "¿Ø",
+      title: "å†…å®¹åå°",
+      subtitle: "æ”¹é¦–é¡µã€å†™ç¬”è®°ã€ä¼ ç…§ç‰‡ï¼Œéƒ½ä»è¿™é‡Œè¿›å…¥ã€‚",
+      mark: "æ§",
       usernameField: true,
-      usernameLabel: "ÕËºÅ",
+      usernameLabel: "è´¦å·",
       usernameValue: ADMIN_LOGIN_USER,
-      passwordLabel: "ÃÜÂë",
+      passwordLabel: "å¯†ç ",
       validate: (username, password) => username === ADMIN_LOGIN_USER && password === ADMIN_LOGIN_PASS
     };
   }
@@ -5699,13 +6454,13 @@ function authProfile(scope) {
       logout: `${WORK_PATH}/logout`,
       cookie: "xx520_work_session",
       prefixes: [WORK_PATH],
-      title: "¹¤×÷ÇøµÇÂ¼",
-      subtitle: "µÇ¼ÇÊÔ¿é¡¢²é¿´ÈÕÀúºÍÌáĞÑ£¬ĞèÒªÏÈÑéÖ¤Éí·İ¡£",
-      mark: "¹¤",
+      title: "å·¥ä½œåŒºç™»å½•",
+      subtitle: "ç™»è®°è¯•å—ã€æŸ¥çœ‹æ—¥å†å’Œæé†’ï¼Œéœ€è¦å…ˆéªŒè¯èº«ä»½ã€‚",
+      mark: "å·¥",
       usernameField: true,
-      usernameLabel: "ÕËºÅ",
+      usernameLabel: "è´¦å·",
       usernameValue: WORK_LOGIN_USER,
-      passwordLabel: "ÃÜÂë",
+      passwordLabel: "å¯†ç ",
       validate: (username, password) => username === WORK_LOGIN_USER && password === WORK_LOGIN_PASS
     };
   }
@@ -5715,11 +6470,11 @@ function authProfile(scope) {
     logout: `${PRIVATE_GALLERY_PATH}/logout`,
     cookie: "xx520_album_session",
     prefixes: [PRIVATE_GALLERY_PATH, PRIVATE_UPLOAD_PATH, PRIVATE_THUMB_PATH],
-    title: "Ë½ÃÜÏà²á",
-    subtitle: "ÊäÈëÏà²áÃÜÂëºó£¬¿ÉÒÔ²é¿´ÕÕÆ¬¡¢Ô­Í¼ºÍÏÂÔØÈë¿Ú¡£",
-    mark: "Ïà",
+    title: "ç§å¯†ç›¸å†Œ",
+    subtitle: "è¾“å…¥ç›¸å†Œå¯†ç åï¼Œå¯ä»¥æŸ¥çœ‹ç…§ç‰‡ã€åŸå›¾å’Œä¸‹è½½å…¥å£ã€‚",
+    mark: "ç›¸",
     usernameField: false,
-    passwordLabel: "Ïà²áÃÜÂë",
+    passwordLabel: "ç›¸å†Œå¯†ç ",
     validate: (_username, password) => password === PRIVATE_GALLERY_PASS
   };
 }
@@ -5775,7 +6530,7 @@ async function handleCustomLogin(req, res, url, scope) {
   const loginUser = String(loginParams.get("username") || "").trim();
   const loginPass = String(loginParams.get("password") || "");
   if (!loginProfile.validate(loginUser, loginPass)) {
-    return send(res, 401, renderLoginPage(loginOptions(scope, loginNext, "ÕËºÅ»òÃÜÂë²»¶Ô£¬ÔÙÊÔÒ»´Î¡£")));
+    return send(res, 401, renderLoginPage(loginOptions(scope, loginNext, "è´¦å·æˆ–å¯†ç ä¸å¯¹ï¼Œå†è¯•ä¸€æ¬¡ã€‚")));
   }
   setLoginCookie(res, authCookieName(scope), scope);
   redirectTo(res, loginNext);
@@ -5849,28 +6604,28 @@ async function saveReminderState(state) {
 function reminderSubject(referenceDate, items) {
   const demoldCount = items.filter((item) => item.type === "demold").length;
   const ageCount = items.filter((item) => item.type === "age").length;
-  return `»ìÄıÍÁÊÔ¿éÌáĞÑ ${referenceDate}£º²ğÄ£${demoldCount}Ïî£¬ÁäÆÚ${ageCount}Ïî`;
+  return `æ··å‡åœŸè¯•å—æé†’ ${referenceDate}ï¼šæ‹†æ¨¡${demoldCount}é¡¹ï¼Œé¾„æœŸ${ageCount}é¡¹`;
 }
 
 function reminderBody(content, referenceDate, items, forced = false) {
   if (!items.length) {
-    return `½ñÌìÊÇ ${referenceDate}¡£\n\nµ±Ç°Ã»ÓĞ½ñÈÕ»òÓâÆÚµÄ²ğÄ£/ÁäÆÚÌáĞÑ¡£\n\n-- ${content.siteTitle}`;
+    return `ä»Šå¤©æ˜¯ ${referenceDate}ã€‚\n\nå½“å‰æ²¡æœ‰ä»Šæ—¥æˆ–é€¾æœŸçš„æ‹†æ¨¡/é¾„æœŸæé†’ã€‚\n\n-- ${content.siteTitle}`;
   }
   const overdue = items.filter((item) => item.date < referenceDate);
   const todayItems = items.filter((item) => item.date === referenceDate);
   const lines = [
-    `½ñÌìÊÇ ${referenceDate}¡£`,
+    `ä»Šå¤©æ˜¯ ${referenceDate}ã€‚`,
     "",
-    forced ? "ÕâÊÇÊÖ¶¯·¢ËÍµÄÌáĞÑÕªÒª¡£" : "ÒÔÏÂÊÇ½ñÈÕºÍÓâÆÚµÄÊÔ¿éÌáĞÑ¡£",
+    forced ? "è¿™æ˜¯æ‰‹åŠ¨å‘é€çš„æé†’æ‘˜è¦ã€‚" : "ä»¥ä¸‹æ˜¯ä»Šæ—¥å’Œé€¾æœŸçš„è¯•å—æé†’ã€‚",
     ""
   ];
   if (todayItems.length) {
-    lines.push("½ñÈÕÊÂÏî£º");
+    lines.push("ä»Šæ—¥äº‹é¡¹ï¼š");
     todayItems.forEach((item) => lines.push(`- ${formatCalendarItem(item)}`));
     lines.push("");
   }
   if (overdue.length) {
-    lines.push("ÓâÆÚÊÂÏî£º");
+    lines.push("é€¾æœŸäº‹é¡¹ï¼š");
     overdue.forEach((item) => lines.push(`- ${formatCalendarItem(item)}`));
     lines.push("");
   }
@@ -5880,26 +6635,26 @@ function reminderBody(content, referenceDate, items, forced = false) {
 
 function weatherCodeText(code) {
   const id = Number(code);
-  if (id === 0) return "Çç";
-  if ([1, 2].includes(id)) return "ÉÙÔÆ";
-  if (id === 3) return "Òõ";
-  if ([45, 48].includes(id)) return "Îí";
-  if ([51, 53, 55, 56, 57].includes(id)) return "Ã«Ã«Óê";
-  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(id)) return "Óê";
-  if ([71, 73, 75, 77, 85, 86].includes(id)) return "Ñ©";
-  if ([95, 96, 99].includes(id)) return "À×ÕóÓê";
-  return "ÌìÆø";
+  if (id === 0) return "æ™´";
+  if ([1, 2].includes(id)) return "å°‘äº‘";
+  if (id === 3) return "é˜´";
+  if ([45, 48].includes(id)) return "é›¾";
+  if ([51, 53, 55, 56, 57].includes(id)) return "æ¯›æ¯›é›¨";
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(id)) return "é›¨";
+  if ([71, 73, 75, 77, 85, 86].includes(id)) return "é›ª";
+  if ([95, 96, 99].includes(id)) return "é›·é˜µé›¨";
+  return "å¤©æ°”";
 }
 
 function weatherValue(value, suffix = "") {
   const number = Number(value);
-  if (!Number.isFinite(number)) return "Î´Öª";
+  if (!Number.isFinite(number)) return "æœªçŸ¥";
   return `${Math.round(number * 10) / 10}${suffix}`;
 }
 
 async function fetchCampusWeather() {
   if (!WEATHER_CONFIG.enabled || !Number.isFinite(WEATHER_CONFIG.latitude) || !Number.isFinite(WEATHER_CONFIG.longitude)) {
-    return { ok: false, error: "weather disabled", lines: [`${WEATHER_CONFIG.location}£ºÌìÆøÎ´ÆôÓÃ¡£`] };
+    return { ok: false, error: "weather disabled", lines: [`${WEATHER_CONFIG.location}ï¼šå¤©æ°”æœªå¯ç”¨ã€‚`] };
   }
   const params = new URLSearchParams({
     latitude: String(WEATHER_CONFIG.latitude),
@@ -5917,18 +6672,18 @@ async function fetchCampusWeather() {
     const data = await response.json();
     const current = data.current || {};
     const daily = data.daily || {};
-    const summary = `${weatherCodeText(current.weather_code)} ${weatherValue(current.temperature_2m, "¡æ")}`;
+    const summary = `${weatherCodeText(current.weather_code)} ${weatherValue(current.temperature_2m, "â„ƒ")}`;
     return {
       ok: true,
       summary,
       lines: [
-        `${WEATHER_CONFIG.location}£º${summary}`,
-        `Ìå¸Ğ ${weatherValue(current.apparent_temperature, "¡æ")}£¬·çËÙ ${weatherValue(current.wind_speed_10m, "km/h")}`,
-        `½ñÈÕ ${weatherValue((daily.temperature_2m_min || [])[0], "¡æ")} - ${weatherValue((daily.temperature_2m_max || [])[0], "¡æ")}£¬½µË®¸ÅÂÊ ${weatherValue((daily.precipitation_probability_max || [])[0], "%")}£¬½µË®Á¿ ${weatherValue((daily.precipitation_sum || [])[0], "mm")}`
+        `${WEATHER_CONFIG.location}ï¼š${summary}`,
+        `ä½“æ„Ÿ ${weatherValue(current.apparent_temperature, "â„ƒ")}ï¼Œé£é€Ÿ ${weatherValue(current.wind_speed_10m, "km/h")}`,
+        `ä»Šæ—¥ ${weatherValue((daily.temperature_2m_min || [])[0], "â„ƒ")} - ${weatherValue((daily.temperature_2m_max || [])[0], "â„ƒ")}ï¼Œé™æ°´æ¦‚ç‡ ${weatherValue((daily.precipitation_probability_max || [])[0], "%")}ï¼Œé™æ°´é‡ ${weatherValue((daily.precipitation_sum || [])[0], "mm")}`
       ]
     };
   } catch (error) {
-    return { ok: false, error: error.message || "weather failed", lines: [`${WEATHER_CONFIG.location}£ºÌìÆøÔİÊ±»ñÈ¡Ê§°Ü£¬ÉÔºó¿ÉÔÙ¿´¡£`] };
+    return { ok: false, error: error.message || "weather failed", lines: [`${WEATHER_CONFIG.location}ï¼šå¤©æ°”æš‚æ—¶è·å–å¤±è´¥ï¼Œç¨åå¯å†çœ‹ã€‚`] };
   } finally {
     clearTimeout(timeout);
   }
@@ -5937,32 +6692,32 @@ async function fetchCampusWeather() {
 function reminderSubjectV2(referenceDate, items, weather) {
   const demoldCount = items.filter((item) => item.type === "demold").length;
   const ageCount = items.filter((item) => item.type === "age").length;
-  const weatherText = weather && weather.ok ? `£¬${weather.summary}` : "";
-  return `¹¤×÷ÇøÌáĞÑ ${referenceDate}£º²ğÄ£${demoldCount}Ïî£¬ÁäÆÚ${ageCount}Ïî${weatherText}`;
+  const weatherText = weather && weather.ok ? `ï¼Œ${weather.summary}` : "";
+  return `å·¥ä½œåŒºæé†’ ${referenceDate}ï¼šæ‹†æ¨¡${demoldCount}é¡¹ï¼Œé¾„æœŸ${ageCount}é¡¹${weatherText}`;
 }
 
 function reminderBodyV2(content, referenceDate, items, forced = false, weather = null) {
   const overdue = items.filter((item) => item.date < referenceDate);
   const todayItems = items.filter((item) => item.date === referenceDate);
   const lines = [
-    `½ñÌìÊÇ ${referenceDate}¡£`,
+    `ä»Šå¤©æ˜¯ ${referenceDate}ã€‚`,
     "",
-    "»¢ÓøĞ£ÇøÌìÆø£º",
-    ...(weather && Array.isArray(weather.lines) ? weather.lines.map((line) => `- ${line}`) : [`- ${WEATHER_CONFIG.location}£ºÌìÆøÔİÊ±»ñÈ¡Ê§°Ü¡£`]),
+    "è™å³ªæ ¡åŒºå¤©æ°”ï¼š",
+    ...(weather && Array.isArray(weather.lines) ? weather.lines.map((line) => `- ${line}`) : [`- ${WEATHER_CONFIG.location}ï¼šå¤©æ°”æš‚æ—¶è·å–å¤±è´¥ã€‚`]),
     "",
-    forced ? "ÕâÊÇÊÖ¶¯·¢ËÍµÄÌáĞÑÕªÒª¡£" : "ÒÔÏÂÊÇ½ñÈÕºÍÓâÆÚµÄÊÔ¿éÌáĞÑ¡£",
+    forced ? "è¿™æ˜¯æ‰‹åŠ¨å‘é€çš„æé†’æ‘˜è¦ã€‚" : "ä»¥ä¸‹æ˜¯ä»Šæ—¥å’Œé€¾æœŸçš„è¯•å—æé†’ã€‚",
     ""
   ];
   if (!items.length) {
-    lines.push("µ±Ç°Ã»ÓĞ½ñÈÕ»òÓâÆÚµÄ²ğÄ£/ÁäÆÚÌáĞÑ¡£", "");
+    lines.push("å½“å‰æ²¡æœ‰ä»Šæ—¥æˆ–é€¾æœŸçš„æ‹†æ¨¡/é¾„æœŸæé†’ã€‚", "");
   }
   if (todayItems.length) {
-    lines.push("½ñÈÕÊÂÏî£º");
+    lines.push("ä»Šæ—¥äº‹é¡¹ï¼š");
     todayItems.forEach((item) => lines.push(`- ${formatCalendarItem(item)}`));
     lines.push("");
   }
   if (overdue.length) {
-    lines.push("ÓâÆÚÊÂÏî£º");
+    lines.push("é€¾æœŸäº‹é¡¹ï¼š");
     overdue.forEach((item) => lines.push(`- ${formatCalendarItem(item)}`));
     lines.push("");
   }
@@ -5987,7 +6742,7 @@ async function sendReminderEmail(content, options = {}) {
     }
   });
   await transporter.sendMail({
-    from: `"xx520 ¹¤×÷Çø" <${SMTP_CONFIG.user}>`,
+    from: `"xx520 å·¥ä½œåŒº" <${SMTP_CONFIG.user}>`,
     to: SMTP_CONFIG.to,
     subject: reminderSubjectV2(referenceDate, items, weather),
     text: reminderBodyV2(content, referenceDate, items, options.force === true, weather)
@@ -6047,7 +6802,7 @@ async function handleUpload(req, res) {
     const image = images[i];
     const extension = allowedTypes.get(image.type);
     const safeBase = path.basename(image.filename, path.extname(image.filename)).replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 42) || "image";
-    const imageTitle = title || path.basename(image.filename, path.extname(image.filename)) || "Ïà²áÍ¼Æ¬";
+    const imageTitle = title || path.basename(image.filename, path.extname(image.filename)) || "ç›¸å†Œå›¾ç‰‡";
     const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeBase}${extension}`;
     await writeAtomic(path.join(targetDir, filename), image.body);
     uploaded.push({
@@ -6064,7 +6819,7 @@ async function handleUpload(req, res) {
   if (wantsJson) {
     return send(res, 200, JSON.stringify({ ok: true, count: uploaded.length, photos: uploaded }), "application/json; charset=utf-8");
   }
-  redirect(res, `${uploaded.length} ÕÅÍ¼Æ¬ÒÑÉÏ´«²¢·¢²¼`);
+  redirect(res, `${uploaded.length} å¼ å›¾ç‰‡å·²ä¸Šä¼ å¹¶å‘å¸ƒ`);
 }
 
 async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
@@ -6130,9 +6885,9 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
     return send(res, 200, JSON.stringify({ ok: true, count: uploaded.length, photos: uploaded }), "application/json; charset=utf-8");
   }
   if (targetType === "block") {
-    return redirectTo(res, `${redirectBase}/?msg=${encodeURIComponent(`${uploaded.length} ÕÅÊµÑéÍ¼Æ¬ÒÑÉÏ´«`)}&openBlock=${encodeURIComponent(targetId)}&tab=images#record-${encodeURIComponent(targetId)}`);
+    return redirectTo(res, `${redirectBase}/?msg=${encodeURIComponent(`${uploaded.length} å¼ å®éªŒå›¾ç‰‡å·²ä¸Šä¼ `)}&openBlock=${encodeURIComponent(targetId)}&tab=images#record-${encodeURIComponent(targetId)}`);
   }
-  redirect(res, `${uploaded.length} ÕÅÊµÑéÍ¼Æ¬ÒÑÉÏ´«`, redirectBase, `gangue-${targetId}`);
+  redirect(res, `${uploaded.length} å¼ å®éªŒå›¾ç‰‡å·²ä¸Šä¼ `, redirectBase, `gangue-${targetId}`);
 }
 
 async function handleDeleteLabImage(req, res, redirectBase = WORK_PATH) {
@@ -6163,9 +6918,9 @@ async function handleDeleteLabImage(req, res, redirectBase = WORK_PATH) {
   }
   await saveContent(content);
   if (targetType === "block") {
-    return redirectTo(res, `${redirectBase}/?msg=${encodeURIComponent(removed ? "ÊµÑéÍ¼Æ¬ÒÑÉ¾³ı" : "Ã»ÓĞÕÒµ½ÕâÕÅÊµÑéÍ¼Æ¬")}&openBlock=${encodeURIComponent(targetId)}&tab=images#record-${encodeURIComponent(targetId)}`);
+    return redirectTo(res, `${redirectBase}/?msg=${encodeURIComponent(removed ? "å®éªŒå›¾ç‰‡å·²åˆ é™¤" : "æ²¡æœ‰æ‰¾åˆ°è¿™å¼ å®éªŒå›¾ç‰‡")}&openBlock=${encodeURIComponent(targetId)}&tab=images#record-${encodeURIComponent(targetId)}`);
   }
-  redirect(res, removed ? "ÊµÑéÍ¼Æ¬ÒÑÉ¾³ı" : "Ã»ÓĞÕÒµ½ÕâÕÅÊµÑéÍ¼Æ¬", redirectBase, targetType === "gangue" ? `gangue-${targetId}` : `block-${targetId}`);
+  redirect(res, removed ? "å®éªŒå›¾ç‰‡å·²åˆ é™¤" : "æ²¡æœ‰æ‰¾åˆ°è¿™å¼ å®éªŒå›¾ç‰‡", redirectBase, targetType === "gangue" ? `gangue-${targetId}` : `block-${targetId}`);
 }
 
 async function handleDeleteImage(req, res) {
@@ -6185,7 +6940,7 @@ async function handleDeleteImage(req, res) {
     if (info) await fsp.rm(info.thumbPath, { force: true });
   }
   await saveContent(content);
-  redirect(res, "Í¼Æ¬ÒÑÉ¾³ı");
+  redirect(res, "å›¾ç‰‡å·²åˆ é™¤");
 }
 
 async function handleRenameAlbum(req, res) {
@@ -6201,7 +6956,7 @@ async function handleRenameAlbum(req, res) {
       : item
   ));
   await saveContent(content);
-  redirect(res, "Ïà²áÃû³ÆÒÑ±£´æ");
+  redirect(res, "ç›¸å†Œåç§°å·²ä¿å­˜");
 }
 
 const CRC32_TABLE = Array.from({ length: 256 }, (_, index) => {
@@ -6388,11 +7143,11 @@ function docProps(sheetCount) {
   return {
     core: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <dc:title>»ìÄıÍÁÊÔ¿éµ¼³ö</dc:title><dc:creator>xx520 ¹¤×÷Çø</dc:creator><cp:lastModifiedBy>xx520 ¹¤×÷Çø</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified>
+  <dc:title>æ··å‡åœŸè¯•å—å¯¼å‡º</dc:title><dc:creator>xx520 å·¥ä½œåŒº</dc:creator><cp:lastModifiedBy>xx520 å·¥ä½œåŒº</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified>
 </cp:coreProperties>`,
     app: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
-  <Application>xx520 ¹¤×÷Çø</Application><DocSecurity>0</DocSecurity><ScaleCrop>false</ScaleCrop><HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Worksheets</vt:lpstr></vt:variant><vt:variant><vt:i4>${sheetCount}</vt:i4></vt:variant></vt:vector></HeadingPairs>
+  <Application>xx520 å·¥ä½œåŒº</Application><DocSecurity>0</DocSecurity><ScaleCrop>false</ScaleCrop><HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Worksheets</vt:lpstr></vt:variant><vt:variant><vt:i4>${sheetCount}</vt:i4></vt:variant></vt:vector></HeadingPairs>
 </Properties>`
   };
 }
@@ -6435,20 +7190,20 @@ function createBlocksExportWorkbook(content, blocks) {
   const relatedGangues = getCoalGangueDb(content).filter((item) => relatedGangueIds.has(item.id));
 
   const gangueRows = [[
-    "Ãºí·Ê¯ID", "Ãºí·Ê¯±àºÅ/Ãû³Æ", "À´Ô´/Åú´Î", "²ÉÑùÈÕÆÚ", "Á£¾¶·¶Î§", "±¾ÅúÑ¹ËéÖµ", "±¾ÅúÑ¹ËéÖµÁ£¾¶",
-    "¸÷Á£¾¶Ñ¹ËéÖµÃ÷Ï¸", "Ñ¹ËéÖµµÚ1´Î", "Ñ¹ËéÖµµÚ2´Î", "Ñ¹ËéÖµµÚ3´Î", "Ñ¹ËéÖµÆ½¾ùÖµ",
-    "´Ö¹ÇÁÏÎüË®ÂÊ", "Ï¸¹ÇÁÏÎüË®ÂÊ", "´Ö¹ÇÁÏ±í¹ÛÃÜ¶È", "Ï¸¹ÇÁÏ±í¹ÛÃÜ¶È", "ËÉÉ¢/Ñ¹½ô¶Ñ»ıÃÜ¶È",
-    "ÕëÆ¬×´º¬Á¿", "Ê¯·Û/MB/ÆäËûĞÅÏ¢", "±¸×¢"
+    "ç…¤çŸ¸çŸ³ID", "ç…¤çŸ¸çŸ³ç¼–å·/åç§°", "æ¥æº/æ‰¹æ¬¡", "é‡‡æ ·æ—¥æœŸ", "ç²’å¾„èŒƒå›´", "æœ¬æ‰¹å‹ç¢å€¼", "æœ¬æ‰¹å‹ç¢å€¼ç²’å¾„",
+    "å„ç²’å¾„å‹ç¢å€¼æ˜ç»†", "å‹ç¢å€¼ç¬¬1æ¬¡", "å‹ç¢å€¼ç¬¬2æ¬¡", "å‹ç¢å€¼ç¬¬3æ¬¡", "å‹ç¢å€¼å¹³å‡å€¼",
+    "ç²—éª¨æ–™å¸æ°´ç‡", "ç»†éª¨æ–™å¸æ°´ç‡", "ç²—éª¨æ–™è¡¨è§‚å¯†åº¦", "ç»†éª¨æ–™è¡¨è§‚å¯†åº¦", "æ¾æ•£/å‹ç´§å †ç§¯å¯†åº¦",
+    "é’ˆç‰‡çŠ¶å«é‡", "çŸ³ç²‰/MB/å…¶ä»–ä¿¡æ¯", "å¤‡æ³¨"
   ]];
   relatedGangues.forEach((item) => {
-    const gradationDensity = item.gradations.map((row) => `${row.name || "¼¶Åä"}£ºËÉÉ¢${row.looseBulkDensity || "-"}£¬Ñ¹½ô${row.compactedBulkDensity || "-"}`).join("£»");
-    const flakiness = Object.entries(item.flakinessValues || {}).filter(([, value]) => value).map(([range, value]) => `${range}:${value}`).join("£»");
+    const gradationDensity = item.gradations.map((row) => `${row.name || "çº§é…"}ï¼šæ¾æ•£${row.looseBulkDensity || "-"}ï¼Œå‹ç´§${row.compactedBulkDensity || "-"}`).join("ï¼›");
+    const flakiness = Object.entries(item.flakinessValues || {}).filter(([, value]) => value).map(([range, value]) => `${range}:${value}`).join("ï¼›");
     const crushingSummary = calculateGangueCrushingSummary(item);
     const ranges = item.particleRanges && item.particleRanges.length ? item.particleRanges : defaultParticleRanges();
     const crushingRows = ranges.map((range) => {
       const tests = item.crushingTests?.[range] || [];
       const averageText = formatMeasurementAverage(tests) || item.crushingValues?.[range] || "";
-      const mark = crushingSummary.range === range && averageText ? "£¨±¾Åú×î´ó£©" : "";
+      const mark = crushingSummary.range === range && averageText ? "ï¼ˆæœ¬æ‰¹æœ€å¤§ï¼‰" : "";
       return {
         range,
         tests: [tests[0] || "", tests[1] || "", tests[2] || ""],
@@ -6457,33 +7212,33 @@ function createBlocksExportWorkbook(content, blocks) {
       };
     });
     gangueRows.push([
-      item.id, item.name, item.source, item.updatedAt || "", ranges.join("£¬"), crushingSummary.text || item.batchCrushingValue, crushingSummary.range || item.batchCrushingRange,
-      crushingRows.map((row) => row.text).join("£»"),
-      crushingRows.map((row) => `${row.range}:${row.tests[0] || "-"}`).join("£»"),
-      crushingRows.map((row) => `${row.range}:${row.tests[1] || "-"}`).join("£»"),
-      crushingRows.map((row) => `${row.range}:${row.tests[2] || "-"}`).join("£»"),
-      crushingRows.map((row) => `${row.range}:${row.averageText || "-"}`).join("£»"),
+      item.id, item.name, item.source, item.updatedAt || "", ranges.join("ï¼Œ"), crushingSummary.text || item.batchCrushingValue, crushingSummary.range || item.batchCrushingRange,
+      crushingRows.map((row) => row.text).join("ï¼›"),
+      crushingRows.map((row) => `${row.range}:${row.tests[0] || "-"}`).join("ï¼›"),
+      crushingRows.map((row) => `${row.range}:${row.tests[1] || "-"}`).join("ï¼›"),
+      crushingRows.map((row) => `${row.range}:${row.tests[2] || "-"}`).join("ï¼›"),
+      crushingRows.map((row) => `${row.range}:${row.averageText || "-"}`).join("ï¼›"),
       item.coarseWaterAbsorption, item.fineWaterAbsorption, item.coarseApparentDensity, item.fineApparentDensity,
       gradationDensity, flakiness, item.otherInfo, ""
     ]);
   });
 
-  const gradationRows = [["¼¶ÅäID", "Ãºí·Ê¯ID", "ÊÔ¿é×éID", "Á£¾¶·¶Î§", "·½°¸/Ä£ĞÍ", "nÖµ", "Ä¿±ê×ÜÁ¿g", "¸÷Á£¾¶¿ËÊı", "±¸×¢"]];
+  const gradationRows = [["çº§é…ID", "ç…¤çŸ¸çŸ³ID", "è¯•å—ç»„ID", "ç²’å¾„èŒƒå›´", "æ–¹æ¡ˆ/æ¨¡å‹", "nå€¼", "ç›®æ ‡æ€»é‡g", "å„ç²’å¾„å…‹æ•°", "å¤‡æ³¨"]];
   normalized.forEach(({ block, record }) => {
     const scheme = gradationSchemeForCategory(block.blockCategory);
     const template = scheme.templates[normalizeGradationTemplate(record.gradationTemplate)] || scheme.templates.raw;
     const weights = normalizeBlockGradationWeights(record.gradationWeights, block.blockCategory, record.gradationTemplate);
-    const weightText = Object.entries(weights).filter(([, value]) => value).map(([range, value]) => `${range}:${value}`).join("£»");
+    const weightText = Object.entries(weights).filter(([, value]) => value).map(([range, value]) => `${range}:${value}`).join("ï¼›");
     const total = Object.values(weights).map(parseRecipeWeight).reduce((sum, value) => sum + value, 0);
     gradationRows.push([
-      `${block.id}-gradation`, record.gangueAggregateId, block.id, scheme.ranges.join("£¬"), template.label, template.nValue || record.gradationCoefficient,
+      `${block.id}-gradation`, record.gangueAggregateId, block.id, scheme.ranges.join("ï¼Œ"), template.label, template.nValue || record.gradationCoefficient,
       total ? formatRecipeNumber(total, 2) : "", weightText, record.recipeNote
     ]);
   });
 
   const mixRows = [[
-    "ÅäºÏ±ÈID", "ÊÔ¿é×éID", "ÅäºÏ±ÈÃû³Æ", "½ºÄı²ÄÁÏºÏ¼Æg", "Ãºí·Ê¯/¹ÇÁÏºÏ¼Æg", "Ë®g", "Ë®½º±È", "¹Ç»Ò±È",
-    "¹èËáÑÎË®Äàg", "·ÛÃº»Òg", "ÉúÊ¯»Òg", "Ãºí·Ê¯g", "ÁòËáÄÆg", "ËÙÄı¼Ág", "³ÆÁ¿Ä£°å", "±¸×¢"
+    "é…åˆæ¯”ID", "è¯•å—ç»„ID", "é…åˆæ¯”åç§°", "èƒ¶å‡ææ–™åˆè®¡g", "ç…¤çŸ¸çŸ³/éª¨æ–™åˆè®¡g", "æ°´g", "æ°´èƒ¶æ¯”", "éª¨ç°æ¯”",
+    "ç¡…é…¸ç›æ°´æ³¥g", "ç²‰ç…¤ç°g", "ç”ŸçŸ³ç°g", "ç…¤çŸ¸çŸ³g", "ç¡«é…¸é’ g", "é€Ÿå‡å‰‚g", "ç§°é‡æ¨¡æ¿", "å¤‡æ³¨"
   ]];
   normalized.forEach(({ block, record, recipeMaterials }) => {
     const ratios = calculateRecipeRatios(record);
@@ -6495,28 +7250,28 @@ function createBlocksExportWorkbook(content, blocks) {
     mixRows.push([
       `${block.id}-mix`, block.id, record.mixName, ratios.binderTotal || "", ratios.aggregateTotal || "", ratios.waterTotal || "",
       ratioText(ratios.waterBinderRatio), ratioText(ratios.aggregateBinderRatio),
-      valueFor("¹èËáÑÎË®Äà"), valueFor("·ÛÃº»Ò"), valueFor("ÉúÊ¯»Ò"), valueFor("Ãºí·Ê¯"), valueFor("ÁòËáÄÆ"), valueFor("ËÙÄı¼Á"),
+      valueFor("ç¡…é…¸ç›æ°´æ³¥"), valueFor("ç²‰ç…¤ç°"), valueFor("ç”ŸçŸ³ç°"), valueFor("ç…¤çŸ¸çŸ³"), valueFor("ç¡«é…¸é’ "), valueFor("é€Ÿå‡å‰‚"),
       WEIGHING_TEMPLATES[normalizeWeighingTemplate(record.weighingTemplate, block.blockCategory)]?.label || "", record.recipeNote
     ]);
   });
 
   const blockRows = [[
-    "ÊÔ¿é×éID", "ÊÔ¿é×éÃû³Æ", "Ãºí·Ê¯ID", "Ãºí·Ê¯Ãû³Æ", "ÊÔ¿éÀàĞÍ", "ÊıÁ¿", "Ç¿¶ÈµÈ¼¶", "³ÉĞÍÈÕÆÚ",
-    "3dÈÕÆÚ", "7dÈÕÆÚ", "28dÈÕÆÚ", "È«²¿ÁäÆÚ", "¼¶ÅäÄ£°å", "ÅäºÏ±ÈÄ£°å", "×´Ì¬", "±¸×¢"
+    "è¯•å—ç»„ID", "è¯•å—ç»„åç§°", "ç…¤çŸ¸çŸ³ID", "ç…¤çŸ¸çŸ³åç§°", "è¯•å—ç±»å‹", "æ•°é‡", "å¼ºåº¦ç­‰çº§", "æˆå‹æ—¥æœŸ",
+    "3dæ—¥æœŸ", "7dæ—¥æœŸ", "28dæ—¥æœŸ", "å…¨éƒ¨é¾„æœŸ", "çº§é…æ¨¡æ¿", "é…åˆæ¯”æ¨¡æ¿", "çŠ¶æ€", "å¤‡æ³¨"
   ]];
   normalized.forEach(({ block, record }) => {
     const resultItems = blockResultDueItemsV22([block]);
     const filled = resultItems.filter((item) => item.filled).length;
-    const status = filled >= resultItems.length && resultItems.length ? "È«²¿Íê³É" : filled ? `ÒÑÂ¼ ${filled}/${resultItems.length}` : "Î´Â¼½á¹û";
+    const status = filled >= resultItems.length && resultItems.length ? "å…¨éƒ¨å®Œæˆ" : filled ? `å·²å½• ${filled}/${resultItems.length}` : "æœªå½•ç»“æœ";
     blockRows.push([
       block.id, block.name, record.gangueAggregateId, record.gangueAggregateName, blockCategoryLabelV3(block.blockCategory), block.quantity, block.strength, block.madeDate,
       block.ages.includes(3) ? addDays(block.madeDate, 3) : "", block.ages.includes(7) ? addDays(block.madeDate, 7) : "", block.ages.includes(28) ? addDays(block.madeDate, 28) : "",
-      block.ages.join("£¬"), gradationSchemeForCategory(block.blockCategory).templates[normalizeGradationTemplate(record.gradationTemplate)]?.label || "",
+      block.ages.join("ï¼Œ"), gradationSchemeForCategory(block.blockCategory).templates[normalizeGradationTemplate(record.gradationTemplate)]?.label || "",
       WEIGHING_TEMPLATES[normalizeWeighingTemplate(record.weighingTemplate, block.blockCategory)]?.label || "", status, block.note
     ]);
   });
 
-  const resultRows = [["ÊÔ¿é×éID", "Ãºí·Ê¯ID", "ÊÔ¿é×éÃû³Æ", "ÁäÆÚ", "Ö¸±ê", "µ½ÆÚÈÕÆÚ", "ÊÔÑéÈÕÆÚ", "Ñù±¾ÖµMPa", "ÊÔ¼şÃ÷Ï¸(kN/mm2/MPa)", "¾ùÖµ", "¾ùÖµÀ´Ô´", "±ê×¼²î", "CV%", "ÆÆ»µĞÎÌ¬", "±¸×¢"]];
+  const resultRows = [["è¯•å—ç»„ID", "ç…¤çŸ¸çŸ³ID", "è¯•å—ç»„åç§°", "é¾„æœŸ", "æŒ‡æ ‡", "åˆ°æœŸæ—¥æœŸ", "è¯•éªŒæ—¥æœŸ", "æ ·æœ¬å€¼MPa", "è¯•ä»¶æ˜ç»†(kN/mm2/MPa)", "å‡å€¼", "å‡å€¼æ¥æº", "æ ‡å‡†å·®", "CV%", "ç ´åå½¢æ€", "å¤‡æ³¨"]];
   normalized.forEach(({ block, record, metrics }) => {
     const results = normalizeAgeResults(record, block.ages, metrics);
     block.ages.forEach((age) => {
@@ -6529,15 +7284,15 @@ function createBlocksExportWorkbook(content, blocks) {
         });
         const specimenText = (entry.sampleMeasurements || []).map((sample, index) => {
           const parts = [
-            `ÊÔ¼ş${index + 1}`,
-            sample.pressureKn ? `Ñ¹Á¦${sample.pressureKn}kN` : "",
-            sample.areaMm2 ? `Ãæ»ı${sample.areaMm2}mm2` : "",
-            sample.strengthMpa ? `Ç¿¶È${sample.strengthMpa}MPa` : "",
-            sample.failureMode ? `ÆÆ»µ${sample.failureMode}` : "",
-            sample.remark ? `±¸×¢${sample.remark}` : ""
+            `è¯•ä»¶${index + 1}`,
+            sample.pressureKn ? `å‹åŠ›${sample.pressureKn}kN` : "",
+            sample.areaMm2 ? `é¢ç§¯${sample.areaMm2}mm2` : "",
+            sample.strengthMpa ? `å¼ºåº¦${sample.strengthMpa}MPa` : "",
+            sample.failureMode ? `ç ´å${sample.failureMode}` : "",
+            sample.remark ? `å¤‡æ³¨${sample.remark}` : ""
           ].filter(Boolean);
           return parts.join("/");
-        }).join("£»");
+        }).join("ï¼›");
         resultRows.push([
           block.id, record.gangueAggregateId, block.name, age, metric.label, addDays(block.madeDate, age), row.testDate || "",
           entry.sampleValues.join(", "), specimenText, entry.mean, entry.meanSource, entry.std, entry.cv, entry.failureMode, entry.remark || row.resultNote || ""
@@ -6547,11 +7302,11 @@ function createBlocksExportWorkbook(content, blocks) {
   });
 
   return makeWorkbook([
-    { name: "Ãºí·Ê¯µµ°¸", rows: gangueRows, widths: [22, 24, 22, 12, 34, 12, 16, 82, 42, 42, 42, 42, 14, 14, 16, 16, 36, 32, 36, 20] },
-    { name: "¼¶Åä·½°¸", rows: gradationRows, widths: [24, 22, 22, 38, 18, 10, 12, 70, 28] },
-    { name: "ÅäºÏ±È·½°¸", rows: mixRows, widths: [22, 22, 22, 14, 16, 10, 10, 10, 12, 12, 12, 12, 12, 12, 16, 32] },
-    { name: "ÊÔ¿é¼ÇÂ¼", rows: blockRows, widths: [22, 26, 22, 22, 12, 8, 10, 12, 12, 12, 12, 16, 16, 16, 14, 34] },
-    { name: "Ç¿¶È½á¹û", rows: resultRows, widths: [22, 22, 26, 10, 18, 12, 12, 24, 48, 12, 12, 12, 10, 18, 34] }
+    { name: "ç…¤çŸ¸çŸ³æ¡£æ¡ˆ", rows: gangueRows, widths: [22, 24, 22, 12, 34, 12, 16, 82, 42, 42, 42, 42, 14, 14, 16, 16, 36, 32, 36, 20] },
+    { name: "çº§é…æ–¹æ¡ˆ", rows: gradationRows, widths: [24, 22, 22, 38, 18, 10, 12, 70, 28] },
+    { name: "é…åˆæ¯”æ–¹æ¡ˆ", rows: mixRows, widths: [22, 22, 22, 14, 16, 10, 10, 10, 12, 12, 12, 12, 12, 12, 16, 32] },
+    { name: "è¯•å—è®°å½•", rows: blockRows, widths: [22, 26, 22, 22, 12, 8, 10, 12, 12, 12, 12, 16, 16, 16, 14, 34] },
+    { name: "å¼ºåº¦ç»“æœ", rows: resultRows, widths: [22, 22, 26, 10, 18, 12, 12, 24, 48, 12, 12, 12, 10, 18, 34] }
   ]);
 }
 
@@ -6570,13 +7325,13 @@ async function handleExportBlocks(req, res, redirectBase = WORK_PATH) {
   const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
   const exportAll = params.get("exportAll") === "1";
   const ids = params.getAll("blockIds").map((id) => String(id || "").trim()).filter(Boolean);
-  if (!exportAll && !ids.length) return redirect(res, "ÇëÏÈ¹´Ñ¡Òªµ¼³öµÄÊÔ¿é", redirectBase);
+  if (!exportAll && !ids.length) return redirect(res, "è¯·å…ˆå‹¾é€‰è¦å¯¼å‡ºçš„è¯•å—", redirectBase);
   const idSet = new Set(ids);
   const content = await readContent();
   const blocks = exportAll ? getTestBlocks(content) : getTestBlocks(content).filter((block) => idSet.has(block.id));
-  if (!blocks.length) return redirect(res, "Ã»ÓĞÕÒµ½Òªµ¼³öµÄÊÔ¿é", redirectBase);
+  if (!blocks.length) return redirect(res, "æ²¡æœ‰æ‰¾åˆ°è¦å¯¼å‡ºçš„è¯•å—", redirectBase);
   const workbook = createBlocksExportWorkbook(content, blocks);
-  sendDownload(res, `${exportAll ? "È«²¿ÊÔ¿éµ¼³ö" : "ÊÔ¿éµ¼³ö"}-${today()}.xlsx`, workbook);
+  sendDownload(res, `${exportAll ? "å…¨éƒ¨è¯•å—å¯¼å‡º" : "è¯•å—å¯¼å‡º"}-${today()}.xlsx`, workbook);
 }
 
 function coalGangueFromParams(params, existing = {}) {
@@ -6664,7 +7419,7 @@ async function handleAddGangue(req, res, redirectBase = WORK_PATH) {
   const item = coalGangueFromParams(params, { id: crypto.randomUUID() });
   content.coalGangueDb = [item, ...getCoalGangueDb(content)];
   await saveContent(content);
-  redirect(res, "Ãºí·Ê¯Êı¾İÒÑĞÂÔö", redirectBase, `gangue-${item.id}`);
+  redirect(res, "ç…¤çŸ¸çŸ³æ•°æ®å·²æ–°å¢", redirectBase, `gangue-${item.id}`);
 }
 
 async function handleUpdateGangue(req, res, redirectBase = WORK_PATH) {
@@ -6680,7 +7435,7 @@ async function handleUpdateGangue(req, res, redirectBase = WORK_PATH) {
   });
   if (!found) throw Object.assign(new Error("gangue not found"), { statusCode: 404 });
   await saveContent(content);
-  redirect(res, "Ãºí·Ê¯Êı¾İÒÑ±£´æ", redirectBase, `gangue-${id}`);
+  redirect(res, "ç…¤çŸ¸çŸ³æ•°æ®å·²ä¿å­˜", redirectBase, `gangue-${id}`);
 }
 
 async function handleDeleteGangue(req, res, redirectBase = WORK_PATH) {
@@ -6689,7 +7444,7 @@ async function handleDeleteGangue(req, res, redirectBase = WORK_PATH) {
   const content = await readContent();
   content.coalGangueDb = getCoalGangueDb(content).filter((item) => item.id !== id);
   await saveContent(content);
-  redirect(res, "Ãºí·Ê¯Êı¾İÒÑÉ¾³ı", redirectBase);
+  redirect(res, "ç…¤çŸ¸çŸ³æ•°æ®å·²åˆ é™¤", redirectBase);
 }
 
 async function handleAddBlock(req, res, redirectBase = BASE_PATH) {
@@ -6741,7 +7496,7 @@ async function handleAddBlock(req, res, redirectBase = BASE_PATH) {
     note: String(params.get("note") || "").trim()
   }, ...getTestBlocks(content)];
   await saveContent(content);
-  redirect(res, "ÊÔ¿éÒÑµÇ¼Ç£¬ÈÕÀúÒÑ¸üĞÂ", redirectBase, `block-${blockId}`);
+  redirect(res, "è¯•å—å·²ç™»è®°ï¼Œæ—¥å†å·²æ›´æ–°", redirectBase, `block-${blockId}`);
 }
 
 async function handleDeleteBlock(req, res, redirectBase = BASE_PATH) {
@@ -6750,7 +7505,7 @@ async function handleDeleteBlock(req, res, redirectBase = BASE_PATH) {
   const content = await readContent();
   content.testBlocks = getTestBlocks(content).filter((item) => item.id !== id);
   await saveContent(content);
-  redirect(res, "ÊÔ¿é¼ÇÂ¼ÒÑÉ¾³ı", redirectBase);
+  redirect(res, "è¯•å—è®°å½•å·²åˆ é™¤", redirectBase);
 }
 
 async function handleUpdateRecipeMaterialLibrary(req, res, redirectBase = WORK_PATH) {
@@ -6782,7 +7537,7 @@ async function handleUpdateRecipeMaterialLibrary(req, res, redirectBase = WORK_P
       return byCategory || a.label.localeCompare(b.label, "zh-CN");
     });
   await saveContent(content);
-  redirect(res, "²ÄÁÏ¿âÒÑ±£´æ", redirectBase);
+  redirect(res, "ææ–™åº“å·²ä¿å­˜", redirectBase);
 }
 
 function sampleMeasurementsFromParams(params, ageKey, metricId) {
@@ -6875,8 +7630,8 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
           sampleMeasurements,
           sampleValues,
           manualMean,
-          failureMode: sampleMeasurements.map((sample) => sample.failureMode).filter(Boolean).join("£»"),
-          remark: sampleMeasurements.map((sample) => sample.remark).filter(Boolean).join("£»")
+          failureMode: sampleMeasurements.map((sample) => sample.failureMode).filter(Boolean).join("ï¼›"),
+          remark: sampleMeasurements.map((sample) => sample.remark).filter(Boolean).join("ï¼›")
         }, manualMean, { age, metric: metric.id, dueDate: addDays(nextMadeDate, age) });
         metricResults[metric.id] = entry;
         metricValues[metric.id] = entry.mean || entry.manualMean || "";
@@ -6920,7 +7675,7 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
   });
   if (!found) throw Object.assign(new Error("block not found"), { statusCode: 404 });
   await saveContent(content);
-  redirect(res, "ÊÔ¿éµµ°¸ÒÑ±£´æ", redirectBase, `record-${id}`);
+  redirect(res, "è¯•å—æ¡£æ¡ˆå·²ä¿å­˜", redirectBase, `record-${id}`);
 }
 
 async function handleToggleTask(req, res, redirectBase = WORK_PATH) {
@@ -6943,7 +7698,7 @@ async function handleToggleTask(req, res, redirectBase = WORK_PATH) {
     return { ...block, completed };
   });
   await saveContent(content);
-  redirect(res, done ? "ÈÎÎñÒÑ±ê¼ÇÍê³É" : "ÈÎÎñÒÑÈ¡ÏûÍê³É", redirectBase, returnAnchor);
+  redirect(res, done ? "ä»»åŠ¡å·²æ ‡è®°å®Œæˆ" : "ä»»åŠ¡å·²å–æ¶ˆå®Œæˆ", redirectBase, returnAnchor);
 }
 
 async function handleDeleteReminder(req, res, redirectBase = WORK_PATH) {
@@ -6965,27 +7720,27 @@ async function handleDeleteReminder(req, res, redirectBase = WORK_PATH) {
   });
   if (!found) throw Object.assign(new Error("block not found"), { statusCode: 404 });
   await saveContent(content);
-  redirect(res, "ÌáĞÑÒÑÉ¾³ı", redirectBase, returnAnchor);
+  redirect(res, "æé†’å·²åˆ é™¤", redirectBase, returnAnchor);
 }
 
 async function handleDismissAnomalies(req, res, redirectBase = WORK_PATH) {
   const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
   const ids = normalizeDismissedAnomalyIds(params.getAll("anomalyIds"));
-  if (!ids.length) return redirect(res, "ÏÈ¹´Ñ¡ÒªÉ¾³ıµÄÒì³£ÌáĞÑ", redirectBase, "anomalies");
+  if (!ids.length) return redirect(res, "å…ˆå‹¾é€‰è¦åˆ é™¤çš„å¼‚å¸¸æé†’", redirectBase, "anomalies");
   const content = await readContent();
   const merged = normalizeDismissedAnomalyIds([...(content.dismissedAnomalies || []), ...ids]);
   content.dismissedAnomalies = merged.slice(-500);
   await saveContent(content);
-  redirect(res, `ÒÑÉ¾³ı ${ids.length} ÌõÒì³£ÌáĞÑ`, redirectBase, "anomalies");
+  redirect(res, `å·²åˆ é™¤ ${ids.length} æ¡å¼‚å¸¸æé†’`, redirectBase, "anomalies");
 }
 
 async function handleSendReminder(req, res) {
   const content = await readContent();
   try {
     await sendReminderEmail(content, { force: true });
-    redirect(res, "ÌáĞÑÓÊ¼şÒÑ·¢ËÍ", WORK_PATH);
+    redirect(res, "æé†’é‚®ä»¶å·²å‘é€", WORK_PATH);
   } catch (error) {
-    const reason = error.responseCode === 535 ? "QQ ÓÊÏäÈÏÖ¤Ê§°Ü£¬ÇëÖØĞÂÈ·ÈÏ SMTP ÊÚÈ¨Âë" : "ÓÊ¼ş·¢ËÍÊ§°Ü£¬Çë¼ì²é SMTP ÅäÖÃ";
+    const reason = error.responseCode === 535 ? "QQ é‚®ç®±è®¤è¯å¤±è´¥ï¼Œè¯·é‡æ–°ç¡®è®¤ SMTP æˆæƒç " : "é‚®ä»¶å‘é€å¤±è´¥ï¼Œè¯·æ£€æŸ¥ SMTP é…ç½®";
     redirect(res, reason, WORK_PATH);
   }
 }
@@ -7045,7 +7800,7 @@ async function route(req, res) {
     const previous = await readContent();
     const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
     await saveContent(contentFromForm(params, previous));
-    return redirect(res, "ÄÚÈİÒÑ±£´æ²¢·¢²¼");
+    return redirect(res, "å†…å®¹å·²ä¿å­˜å¹¶å‘å¸ƒ");
   }
   if (req.method === "POST" && url.pathname === `${BASE_PATH}/upload`) return handleUpload(req, res);
   if (req.method === "POST" && url.pathname === `${BASE_PATH}/delete-image`) return handleDeleteImage(req, res);
