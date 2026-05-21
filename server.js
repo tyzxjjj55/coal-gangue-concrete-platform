@@ -497,7 +497,7 @@ function calculateResultSamples(samples) {
   const values = parseResultSamples(samples);
   const numbers = values.map(parseMeasurementNumber).filter((number) => number !== null);
   if (!numbers.length) {
-    return { values, mean: "", std: "", cv: "", meanSource: "未录入" };
+    return { values, mean: "", std: "", cv: "", min: "", max: "", n: "", meanSource: "未录入" };
   }
   const mean = numbers.reduce((total, number) => total + number, 0) / numbers.length;
   const variance = numbers.length > 1
@@ -510,6 +510,9 @@ function calculateResultSamples(samples) {
     mean: formatRecipeNumber(mean, 3),
     std: std === "" ? "" : formatRecipeNumber(std, 3),
     cv: cv === "" ? "" : formatRecipeNumber(cv, 2),
+    min: formatRecipeNumber(Math.min(...numbers), 3),
+    max: formatRecipeNumber(Math.max(...numbers), 3),
+    n: String(numbers.length),
     meanSource: numbers.length >= 3 ? "三块计算" : numbers.length === 2 ? "多块计算" : "单块计算"
   };
 }
@@ -588,6 +591,9 @@ function normalizeMetricResultEntry(value, legacyValue = "", options = {}) {
     mean,
     std: hasSamples ? sampleStats.std : "",
     cv: hasSamples ? sampleStats.cv : "",
+    min: hasSamples ? sampleStats.min : "",
+    max: hasSamples ? sampleStats.max : "",
+    n: hasSamples ? sampleStats.n : "",
     meanSource: sourceLabel,
     failureMode: String(source.failureMode || measurementFailureMode || "").trim(),
     remark: String(source.remark || source.resultNote || measurementRemark || "").trim()
@@ -2844,6 +2850,22 @@ function dataHealthItemsV23(content) {
   const blocks = getTestBlocks(content);
   const gangues = getCoalGangueDb(content);
   const blockHasStrength = (block) => blockResultDueItemsV22([block]).some((item) => item.metric.id === "compressionStrength" && item.filled);
+  const cvAlerts = blocks.flatMap((block) => {
+    const metrics = normalizeResultMetrics(block.metrics || (block.record && block.record.metrics), "", { fallbackToDefault: true });
+    const record = normalizeBlockRecord(block.record, block.ages, metrics, block.recipeMaterials);
+    const results = normalizeAgeResults(record, block.ages, metrics);
+    return normalizeAges(block.ages).flatMap((age) => metrics.map((metric) => {
+      const row = results[String(age)] || {};
+      const entry = normalizeMetricResultEntry((row.metricResults || {})[metric.id], (row.metrics || {})[metric.id], {
+        age,
+        metric: metric.id,
+        dueDate: addDays(block.madeDate, age)
+      });
+      return Number.parseFloat(entry.cv) > 15
+        ? { label: `${block.name} ${age}d ${metric.label} CV ${entry.cv}%`, href: `#record-${block.id}` }
+        : null;
+    }).filter(Boolean));
+  });
   const groups = [
     {
       key: "strength",
@@ -2877,6 +2899,11 @@ function dataHealthItemsV23(content) {
         ...gangues.filter((item) => !normalizeLabImages(item.images).length).map((item) => ({ label: item.name, href: `#gangue-${item.id}` })),
         ...blocks.filter((block) => !normalizeLabImages(block.images).length).map((block) => ({ label: block.name, href: `#record-${block.id}` }))
       ]
+    },
+    {
+      key: "cv",
+      title: "CV 异常",
+      items: cvAlerts
     }
   ];
   return groups.map((group) => ({ ...group, count: group.items.length }));
@@ -5026,6 +5053,8 @@ function renderAgeResultsV3(block, record) {
     });
     const meanDisplay = formatMpaValue(result.mean || result.manualMean) || "未录";
     const stdDisplay = result.std ? formatMpaValue(result.std) : "空";
+    const minDisplay = result.min ? formatMpaValue(result.min) : "空";
+    const maxDisplay = result.max ? formatMpaValue(result.max) : "空";
     const manualMeanValue = result.sampleValues.length ? "" : formatMpaNumberInput(result.manualMean || result.mean);
     return `<div class="metric-result-card-v22" data-result-card data-result-label="${attr(`${age}d ${metric.label}`)}">
               <div class="metric-result-head-v22">
@@ -5033,6 +5062,7 @@ function renderAgeResultsV3(block, record) {
                 <span class="source-pill-v22">均值：${html(meanDisplay)}</span>
                 <span class="source-pill-v22">标准差：${html(stdDisplay)}</span>
                 <span class="source-pill-v22">CV：${html(result.cv ? `${result.cv}%` : "空")}</span>
+                <span class="source-pill-v22">样本：${html(result.n || "空")}</span>
                 <span class="source-pill-v22">${html(result.meanSource)}</span>
               </div>
               <input type="hidden" name="manualMean_${key}_${attr(metric.id)}" value="${attr(manualMeanValue)}">
@@ -5050,6 +5080,9 @@ function renderAgeResultsV3(block, record) {
                   <span>均值 <b data-mean>${html(meanDisplay)}</b></span>
                   <span>标准差 <b data-std>${html(stdDisplay)}</b></span>
                   <span>CV <b data-cv>${html(result.cv ? `${result.cv}%` : "空")}</b></span>
+                  <span>最小 <b data-min>${html(minDisplay)}</b></span>
+                  <span>最大 <b data-max>${html(maxDisplay)}</b></span>
+                  <span>n <b data-n>${html(result.n || "空")}</b></span>
                   <em data-cv-warning hidden>CV 超过 15%，建议核对试件离散性</em>
                 </div>
               </div>
@@ -5523,11 +5556,17 @@ function renderWorkspaceScriptV3() {
         const meanSlot = summary.querySelector("[data-mean]");
         const stdSlot = summary.querySelector("[data-std]");
         const cvSlot = summary.querySelector("[data-cv]");
+        const minSlot = summary.querySelector("[data-min]");
+        const maxSlot = summary.querySelector("[data-max]");
+        const nSlot = summary.querySelector("[data-n]");
         const warn = summary.querySelector("[data-cv-warning]");
         if (!values.length) {
           if (meanSlot) meanSlot.textContent = "未录";
           if (stdSlot) stdSlot.textContent = "空";
           if (cvSlot) cvSlot.textContent = "空";
+          if (minSlot) minSlot.textContent = "空";
+          if (maxSlot) maxSlot.textContent = "空";
+          if (nSlot) nSlot.textContent = "空";
           if (warn) warn.hidden = true;
           summary.classList.remove("warn");
           return;
@@ -5542,6 +5581,9 @@ function renderWorkspaceScriptV3() {
         if (meanSlot) meanSlot.textContent = fmt(mean) + " MPa";
         if (stdSlot) stdSlot.textContent = values.length > 1 ? fmt(std) + " MPa" : "空";
         if (cvSlot) cvSlot.textContent = values.length > 1 ? fmt(cv) + "%" : "空";
+        if (minSlot) minSlot.textContent = fmt(Math.min(...values)) + " MPa";
+        if (maxSlot) maxSlot.textContent = fmt(Math.max(...values)) + " MPa";
+        if (nSlot) nSlot.textContent = String(values.length);
         const showWarn = values.length > 1 && cv > 15;
         if (warn) warn.hidden = !showWarn;
         summary.classList.toggle("warn", showWarn);
