@@ -6505,30 +6505,6 @@ function loginOptions(scope, next, error = "") {
     usernameValue: profile.usernameValue,
     passwordLabel: profile.passwordLabel
   };
-  if (scope === "work") {
-    return {
-      title: "工作区登录",
-      subtitle: "登记试块、查看日历和提醒，需要先验证身份。",
-      mark: "工",
-      action: `${WORK_PATH}/login`,
-      next,
-      error,
-      usernameField: true,
-      usernameLabel: "账号",
-      usernameValue: WORK_LOGIN_USER,
-      passwordLabel: "密码"
-    };
-  }
-  return {
-    title: "私密相册",
-    subtitle: "输入相册密码后，可以查看照片、原图和下载入口。",
-    mark: "相",
-    action: `${PRIVATE_GALLERY_PATH}/login`,
-    next,
-    error,
-    usernameField: false,
-    passwordLabel: "相册密码"
-  };
 }
 
 function ensureAuthed(req, res, url, scope) {
@@ -6539,16 +6515,6 @@ function ensureAuthed(req, res, url, scope) {
     return send(res, 200, renderLoginPage(loginOptions(scope, authNext)));
   }
   redirectTo(res, `${authProfileData.login}?next=${encodeURIComponent(authNext)}`);
-  return false;
-  const fallback = scope === "work" ? `${WORK_PATH}/` : `${PRIVATE_GALLERY_PATH}/`;
-  const prefixes = scope === "work"
-    ? [WORK_PATH]
-    : [PRIVATE_GALLERY_PATH, PRIVATE_UPLOAD_PATH, PRIVATE_THUMB_PATH];
-  const next = safeNext(`${url.pathname}${url.search}`, fallback, prefixes);
-  if (req.method === "GET" || req.method === "HEAD") {
-    return send(res, 200, renderLoginPage(loginOptions(scope, next)));
-  }
-  redirectTo(res, `${authLoginPath(scope)}?next=${encodeURIComponent(next)}`);
   return false;
 }
 
@@ -6569,27 +6535,6 @@ async function handleCustomLogin(req, res, url, scope) {
   setLoginCookie(res, authCookieName(scope), scope);
   redirectTo(res, loginNext);
   return;
-  const fallback = scope === "work" ? `${WORK_PATH}/` : `${PRIVATE_GALLERY_PATH}/`;
-  const prefixes = scope === "work"
-    ? [WORK_PATH]
-    : [PRIVATE_GALLERY_PATH, PRIVATE_UPLOAD_PATH, PRIVATE_THUMB_PATH];
-  const nextFromUrl = safeNext(url.searchParams.get("next"), fallback, prefixes);
-  if (req.method === "GET" || req.method === "HEAD") {
-    return send(res, 200, renderLoginPage(loginOptions(scope, nextFromUrl)));
-  }
-  if (req.method !== "POST") return send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
-  const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
-  const next = safeNext(params.get("next"), nextFromUrl, prefixes);
-  const username = String(params.get("username") || "").trim();
-  const password = String(params.get("password") || "");
-  const ok = scope === "work"
-    ? username === WORK_LOGIN_USER && password === WORK_LOGIN_PASS
-    : password === PRIVATE_GALLERY_PASS;
-  if (!ok) {
-    return send(res, 401, renderLoginPage(loginOptions(scope, next, "账号或密码不对，再试一次。")));
-  }
-  setLoginCookie(res, authCookieName(scope), scope);
-  redirectTo(res, next);
 }
 
 function handleCustomLogout(res, scope) {
