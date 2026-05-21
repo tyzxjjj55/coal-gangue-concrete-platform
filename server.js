@@ -36,6 +36,8 @@ const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_BYTES || 20 * 1024 * 1024
 const THUMB_WIDTH = Number(process.env.THUMB_WIDTH || 900);
 const DEFAULT_ALBUM = "默认相册";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+const LOGIN_ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
+const LOGIN_ATTEMPT_LIMIT = 8;
 const WORK_LOGIN_USER = process.env.WORK_LOGIN_USER || "xx";
 const WORK_LOGIN_PASS = requiredEnv("WORK_LOGIN_PASS");
 const ADMIN_LOGIN_USER = process.env.ADMIN_LOGIN_USER || WORK_LOGIN_USER;
@@ -5700,6 +5702,42 @@ function redirectTo(res, location) {
   res.end();
 }
 
+const loginAttempts = new Map();
+
+function clientIp(req) {
+  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  return forwarded || req.socket.remoteAddress || "unknown";
+}
+
+function loginAttemptKey(req, scope) {
+  return `${scope}:${clientIp(req)}`;
+}
+
+function loginAttemptState(req, scope) {
+  const key = loginAttemptKey(req, scope);
+  const now = Date.now();
+  const current = loginAttempts.get(key);
+  if (!current || now - current.firstAt > LOGIN_ATTEMPT_WINDOW_MS) {
+    const fresh = { count: 0, firstAt: now };
+    loginAttempts.set(key, fresh);
+    return { key, state: fresh };
+  }
+  return { key, state: current };
+}
+
+function tooManyLoginAttempts(req, scope) {
+  return loginAttemptState(req, scope).state.count >= LOGIN_ATTEMPT_LIMIT;
+}
+
+function recordLoginFail(req, scope) {
+  const { state } = loginAttemptState(req, scope);
+  state.count += 1;
+}
+
+function clearLoginFail(req, scope) {
+  loginAttempts.delete(loginAttemptKey(req, scope));
+}
+
 function authProfile(scope) {
   if (scope === "admin") {
     return {
@@ -5796,13 +5834,18 @@ async function handleCustomLogin(req, res, url, scope) {
     return send(res, 200, renderLoginPage(loginOptions(scope, loginNextFromUrl)));
   }
   if (req.method !== "POST") return send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+  if (tooManyLoginAttempts(req, scope)) {
+    return send(res, 429, renderLoginPage(loginOptions(scope, loginNextFromUrl, "Too many failed attempts. Try again in 10 minutes.")));
+  }
   const loginParams = new URLSearchParams((await parseBody(req)).toString("utf8"));
   const loginNext = safeNext(loginParams.get("next"), loginNextFromUrl, loginProfile.prefixes);
   const loginUser = String(loginParams.get("username") || "").trim();
   const loginPass = String(loginParams.get("password") || "");
   if (!loginProfile.validate(loginUser, loginPass)) {
+    recordLoginFail(req, scope);
     return send(res, 401, renderLoginPage(loginOptions(scope, loginNext, "账号或密码不对，再试一次。")));
   }
+  clearLoginFail(req, scope);
   setLoginCookie(res, authCookieName(scope), scope);
   redirectTo(res, loginNext);
   return;
