@@ -31,6 +31,7 @@ const CONTENT_FILE = path.join(DATA_DIR, "content.json");
 const REMINDER_STATE_FILE = path.join(DATA_DIR, "reminder-state.json");
 const SESSION_SECRET_FILE = path.join(DATA_DIR, "session-secret");
 const BACKUP_DIR = path.join(DATA_DIR, "backups");
+const BACKUP_KEEP = Number(process.env.BACKUP_KEEP || 30);
 const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_BYTES || 20 * 1024 * 1024);
 const THUMB_WIDTH = Number(process.env.THUMB_WIDTH || 900);
 const DEFAULT_ALBUM = "默认相册";
@@ -1162,6 +1163,30 @@ function normalizeContent(input) {
   return content;
 }
 
+async function cleanupBackups(label) {
+  if (!Number.isFinite(BACKUP_KEEP) || BACKUP_KEEP < 1) return;
+  let entries;
+  try {
+    entries = await fsp.readdir(BACKUP_DIR, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  const prefix = `${label}-`;
+  const files = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.startsWith(prefix)) continue;
+    const filePath = path.join(BACKUP_DIR, entry.name);
+    try {
+      const stat = await fsp.stat(filePath);
+      files.push({ filePath, mtime: stat.mtimeMs });
+    } catch {
+      // Ignore files that disappear during cleanup.
+    }
+  }
+  files.sort((a, b) => b.mtime - a.mtime);
+  await Promise.all(files.slice(BACKUP_KEEP).map((file) => fsp.rm(file.filePath, { force: true }).catch(() => {})));
+}
+
 async function backupIfExists(filePath, label) {
   try {
     await fsp.access(filePath);
@@ -1169,6 +1194,7 @@ async function backupIfExists(filePath, label) {
     return;
   }
   await fsp.copyFile(filePath, path.join(BACKUP_DIR, `${label}-${stamp()}${path.extname(filePath) || ".bak"}`));
+  await cleanupBackups(label);
 }
 
 async function writeAtomic(filePath, data) {
