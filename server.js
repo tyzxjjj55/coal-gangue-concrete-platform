@@ -1549,6 +1549,7 @@ function normalizeCoalGangueItem(item = {}) {
     id: String(item.id || crypto.randomUUID()),
     name: String(item.name || "未命名煤矸石").trim() || "未命名煤矸石",
     source: String(item.source || item.origin || "").trim(),
+    shortCode: String(item.shortCode || item.batchCode || "").trim(),
     particleRanges: ranges,
     crushingValues,
     crushingTests,
@@ -3349,6 +3350,9 @@ function workspaceStylesV3() {
     .task-form span { font-size:13px; }
     .reminder-delete-v22 { min-height:28px; padding:0 8px; margin-left:auto; border:1px solid #ead2cb; border-radius:8px; background:#fff8f4; color:#a8422d; font-size:12px; box-shadow:none; }
     .block-toolbar { grid-template-columns:minmax(0,1fr) auto auto; }
+    .block-code-hint-v24 { display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-height:54px; padding:10px; border:1px dashed #bfd8cf; border-radius:8px; background:#f5fbf8; }
+    .block-code-hint-v24 strong { color:var(--green); font-size:15px; letter-spacing:0; }
+    .block-code-hint-v24 small { color:var(--muted); font-weight:800; }
     .archive-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
     .archive-actions .chip-button { min-height:36px; padding:0 12px; box-shadow:none; }
     .export-check { display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:0 10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--green); font-size:13px; font-weight:900; }
@@ -3754,6 +3758,44 @@ function renderTestBlocksPanelV3(content, options = {}) {
 function blockGangueIdV3(block) {
   const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
   return String(record.gangueAggregateId || "").trim();
+}
+
+function normalizedShortCodeV24(value, fallback = "CG") {
+  const compact = String(value || "")
+    .normalize("NFKC")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, "")
+    .slice(0, 12);
+  return compact ? compact.toUpperCase() : fallback;
+}
+
+function gangueShortCodeV24(gangue) {
+  return normalizedShortCodeV24(gangue?.shortCode || gangue?.source || gangue?.name, "CG");
+}
+
+function gradationCodeV24(category, templateKey, coefficient = "") {
+  const coefficientText = gradationCoefficientForTemplate(category, templateKey) || String(coefficient || "").trim();
+  if (!coefficientText || normalizeGradationTemplate(templateKey) === "raw") return "NRAW";
+  const digits = coefficientText.replace(/^n\s*=?/i, "").replace(/[^\d]+/g, "");
+  return digits ? `N${digits.padEnd(2, "0").slice(0, 2)}` : "NRAW";
+}
+
+function suggestBlockCodeV24(content, gangue, category, madeDate, templateKey, coefficient = "") {
+  const blockCategory = normalizeBlockCategory(category, "road");
+  const prefix = blockCategory === "spray" ? "SP" : "RD";
+  const dateCode = normalizeDateValue(madeDate).replace(/-/g, "");
+  const gangueCode = gangueShortCodeV24(gangue);
+  const gradationCode = gradationCodeV24(blockCategory, templateKey, coefficient);
+  const sameContext = getTestBlocks(content).filter((block) => {
+    const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+    const matchedGangue = record.gangueAggregateId && gangue?.id
+      ? record.gangueAggregateId === gangue.id
+      : gangueShortCodeV24({ name: record.gangueAggregateName }) === gangueCode;
+    return matchedGangue
+      && normalizeBlockCategory(block.blockCategory) === blockCategory
+      && normalizeDateValue(block.madeDate) === normalizeDateValue(madeDate)
+      && gradationCodeV24(blockCategory, record.gradationTemplate, record.gradationCoefficient) === gradationCode;
+  }).length;
+  return `${prefix}-${dateCode}-${gangueCode}-${gradationCode}-${String(sameContext + 1).padStart(3, "0")}`;
 }
 
 function blocksForGangueV3(content, gangueId) {
@@ -4196,6 +4238,7 @@ function renderTemplateDataScriptV3() {
 
 function renderGangueAddBlockFormV3(item, content, actionBase) {
   const ageId = `ages-${item.id}`;
+  const suggestedCode = suggestBlockCodeV24(content, item, "road", today(), "raw", "");
   return `<details class="folder-section add-block-panel">
       <summary>
       <h4>新增这个煤矸石下的试块 <small>试块编号是最小实验单位</small></h4>
@@ -4203,7 +4246,8 @@ function renderGangueAddBlockFormV3(item, content, actionBase) {
       <form method="post" action="${actionBase}/add-block">
         <input type="hidden" name="gangueAggregateId" value="${attr(item.id)}">
         <div class="form-grid">
-          <label class="field wide"><span>试块编号/部位</span><input name="blockName" placeholder="例：${attr(item.name)}-01" required></label>
+          <label class="field wide"><span>试块编号/部位</span><input name="blockName" placeholder="例：${attr(item.name)}-01" data-block-name-input required></label>
+          <div class="field wide block-code-hint-v24"><span>推荐编号</span><strong data-block-code-suggestion>${html(suggestedCode)}</strong><button class="chip-button" type="button" data-use-block-code>填入编号</button><small>只给建议，不会覆盖已有试块名称。</small></div>
           ${renderBlockCategorySelectV3("road")}
           ${renderWeighingTemplateSelectV3("withoutAccelerator", "road")}
           ${renderGradationTemplateSelectV3("road", "raw")}
@@ -4388,6 +4432,7 @@ function renderCoalGangueDatabasePanelV3(content, actionBase = WORK_PATH) {
         <div class="form-grid">
           <label class="field"><span>煤矸石名称</span><input name="gangueName" placeholder="例：朔州水洗煤矸石" required></label>
           <label class="field"><span>来源/批次</span><input name="source" placeholder="例：朔州 XX 矿 2026-05"></label>
+          <label class="field"><span>批次短码</span><input name="shortCode" placeholder="例：SZ01"></label>
           <label class="field wide"><span>粒径区间</span><input name="particleRanges" value="0.3-0.6,0.6-1.18,1.18-2.36,2.36-4.75" placeholder="例：0.3-0.6,0.6-1.18,1.18-2.36,2.36-4.75"></label>
           <label class="field"><span>粗骨料吸水率</span><input name="coarseWaterAbsorption" placeholder="例：5.2%"></label>
           <label class="field"><span>细骨料吸水率</span><input name="fineWaterAbsorption" placeholder="例：7.8%"></label>
@@ -4411,13 +4456,14 @@ function renderCoalGangueCardV3(item, actionBase = WORK_PATH) {
   return `<details class="gangue-card" id="gangue-edit-${attr(item.id)}">
       <summary>
         <strong>${html(item.name)}</strong>
-        <span>${html(item.source || "未填来源")} · ${ranges.length} 个粒径区间 · ${item.gradations.length} 个级配${crushingSummary.text ? ` · 本批压碎值 ${html(crushingSummary.text)}` : ""}</span>
+        <span>${html(item.source || "未填来源")}${item.shortCode ? ` · 短码 ${html(item.shortCode)}` : ""} · ${ranges.length} 个粒径区间 · ${item.gradations.length} 个级配${crushingSummary.text ? ` · 本批压碎值 ${html(crushingSummary.text)}` : ""}</span>
       </summary>
       <form class="gangue-form" method="post" action="${actionBase}/update-gangue">
         <input type="hidden" name="id" value="${attr(item.id)}">
         <div class="form-grid">
           <label class="field"><span>煤矸石名称</span><input name="gangueName" value="${attr(item.name)}" required></label>
           <label class="field"><span>来源/批次</span><input name="source" value="${attr(item.source)}"></label>
+          <label class="field"><span>批次短码</span><input name="shortCode" value="${attr(item.shortCode)}" placeholder="例：SZ01"></label>
           <label class="field wide"><span>粒径区间</span><input name="particleRanges" value="${attr(ranges.join(","))}" placeholder="例：0.3-0.6,0.6-1.18,1.18-2.36,2.36-4.75"></label>
           <label class="field"><span>粗骨料吸水率</span><input name="coarseWaterAbsorption" value="${attr(item.coarseWaterAbsorption)}"></label>
           <label class="field"><span>细骨料吸水率</span><input name="fineWaterAbsorption" value="${attr(item.fineWaterAbsorption)}"></label>
@@ -5356,6 +5402,14 @@ function renderWorkspaceScriptV3() {
           const values = new Set(targetInput.value.split(/[\\s,，、]+/).map((item) => item.trim()).filter(Boolean));
           values.add(button.dataset.age);
           targetInput.value = Array.from(values).map(Number).filter(Number.isFinite).sort((a, b) => a - b).join(",");
+        });
+      });
+      document.querySelectorAll("[data-use-block-code]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const scope = button.closest("form");
+          const input = scope?.querySelector("[data-block-name-input]");
+          const suggestion = scope?.querySelector("[data-block-code-suggestion]")?.textContent?.trim();
+          if (input && suggestion) input.value = suggestion;
         });
       });
 
@@ -7022,6 +7076,7 @@ function coalGangueFromParams(params, existing = {}) {
     ...existing,
     name: params.get("gangueName"),
     source: params.get("source"),
+    shortCode: params.get("shortCode"),
     particleRanges: ranges,
     crushingValues,
     crushingTests,
