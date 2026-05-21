@@ -6021,28 +6021,36 @@ async function sendReminderEmail(content, options = {}) {
   return items.length;
 }
 
+let reminderSending = false;
+
 async function checkDailyReminder() {
   if (!smtpReady()) return;
-  const parts = beijingParts();
-  const referenceDate = `${parts.year}-${parts.month}-${parts.day}`;
-  if (parts.hour < REMINDER_HOUR) return;
-  const state = await readReminderState();
-  if (state.lastDailyDate === referenceDate) return;
-  const content = await readContent();
-  const items = activeMailItems(content, referenceDate);
+  if (reminderSending) return;
+  reminderSending = true;
   try {
-    await sendReminderEmail(content, { referenceDate, items });
-    state.lastResult = `sent-${items.length}`;
-    state.lastSentAt = new Date().toISOString();
-  } catch (error) {
+    const parts = beijingParts();
+    const referenceDate = `${parts.year}-${parts.month}-${parts.day}`;
+    if (parts.hour < REMINDER_HOUR) return;
+    const state = await readReminderState();
+    if (state.lastDailyDate === referenceDate) return;
+    const content = await readContent();
+    const items = activeMailItems(content, referenceDate);
+    try {
+      await sendReminderEmail(content, { referenceDate, items });
+      state.lastResult = `sent-${items.length}`;
+      state.lastSentAt = new Date().toISOString();
+    } catch (error) {
+      state.lastDailyDate = referenceDate;
+      state.lastResult = `error-${error.responseCode || error.code || "send"}`;
+      state.lastErrorAt = new Date().toISOString();
+      await saveReminderState(state);
+      throw error;
+    }
     state.lastDailyDate = referenceDate;
-    state.lastResult = `error-${error.responseCode || error.code || "send"}`;
-    state.lastErrorAt = new Date().toISOString();
     await saveReminderState(state);
-    throw error;
+  } finally {
+    reminderSending = false;
   }
-  state.lastDailyDate = referenceDate;
-  await saveReminderState(state);
 }
 
 async function handleUpload(req, res) {
