@@ -4864,6 +4864,11 @@ function calculateRecipeRatios(record) {
   const aggregateTotal = sumByCategory("aggregate");
   const waterTotal = sumByCategory("water");
   const cementWeight = rows.find((item) => item.id === "cement")?.grams || 0;
+  const totalFor = (predicate) => rows.filter(predicate).reduce((total, item) => total + item.grams, 0);
+  const gangueTotal = totalFor((item) => item.id === "煤矸石" || /煤矸石/.test(item.label));
+  const acceleratorTotal = totalFor((item) => item.id === "accelerator" || /速凝剂/.test(item.label));
+  const sodiumSulfateTotal = totalFor((item) => /硫酸钠/.test(item.label));
+  const dryTotal = binderTotal + admixtureTotal + aggregateTotal;
   const binderParts = rows
     .filter((item) => item.category === "binder" && item.grams > 0)
     .map((item) => ({
@@ -4873,15 +4878,22 @@ function calculateRecipeRatios(record) {
     }));
   return {
     binderTotal,
+    dryTotal,
     admixtureTotal,
     aggregateTotal,
     waterTotal,
+    gangueTotal,
+    acceleratorTotal,
+    sodiumSulfateTotal,
     cementWeight,
     binderParts,
     aggregateBinderRatio: binderTotal > 0 && aggregateTotal > 0 ? aggregateTotal / binderTotal : null,
+    gangueBinderRatio: binderTotal > 0 && gangueTotal > 0 ? gangueTotal / binderTotal : null,
     waterBinderRatio: binderTotal > 0 && waterTotal > 0 ? waterTotal / binderTotal : null,
     waterCementRatio: cementWeight > 0 && waterTotal > 0 ? waterTotal / cementWeight : null,
-    admixtureBinderPercent: binderTotal > 0 && admixtureTotal > 0 ? admixtureTotal / binderTotal : null
+    admixtureBinderPercent: binderTotal > 0 && admixtureTotal > 0 ? admixtureTotal / binderTotal : null,
+    acceleratorBinderPercent: binderTotal > 0 && acceleratorTotal > 0 ? acceleratorTotal / binderTotal : null,
+    sodiumSulfateBinderPercent: binderTotal > 0 && sodiumSulfateTotal > 0 ? sodiumSulfateTotal / binderTotal : null
   };
 }
 
@@ -4915,13 +4927,17 @@ function renderRecipeRatioPanelV3(record) {
   }
   const ratioItems = [
     ["胶凝总量", ratios.binderTotal ? formatRecipeWeight(ratios.binderTotal) : "未填"],
+    ["总干料", ratios.dryTotal ? formatRecipeWeight(ratios.dryTotal) : "未填"],
     ["外加剂总量", ratios.admixtureTotal ? formatRecipeWeight(ratios.admixtureTotal) : "未填"],
     ["骨料总量", ratios.aggregateTotal ? formatRecipeWeight(ratios.aggregateTotal) : "未填"],
     ["水总量", ratios.waterTotal ? formatRecipeWeight(ratios.waterTotal) : "未填"],
     ["骨灰比", ratios.aggregateBinderRatio ? formatRecipeNumber(ratios.aggregateBinderRatio) : "缺胶凝或骨料"],
+    ["煤矸石:胶凝", ratios.gangueBinderRatio ? formatRecipeNumber(ratios.gangueBinderRatio) : "缺煤矸石或胶凝"],
     ["水灰比", ratios.waterCementRatio ? formatRecipeNumber(ratios.waterCementRatio) : "缺水泥或水"],
     ["水胶比", ratios.waterBinderRatio ? formatRecipeNumber(ratios.waterBinderRatio) : "缺胶凝或水"],
-    ["外加剂/胶凝", ratios.admixtureBinderPercent ? `${formatRecipeNumber(ratios.admixtureBinderPercent * 100, 2)}%` : "未填"]
+    ["外加剂掺量", ratios.admixtureBinderPercent ? `${formatRecipeNumber(ratios.admixtureBinderPercent * 100, 2)}%` : "未填"],
+    ["速凝剂掺量", ratios.acceleratorBinderPercent ? `${formatRecipeNumber(ratios.acceleratorBinderPercent * 100, 2)}%` : "未填"],
+    ["硫酸钠掺量", ratios.sodiumSulfateBinderPercent ? `${formatRecipeNumber(ratios.sodiumSulfateBinderPercent * 100, 2)}%` : "未填"]
   ];
   const binderText = ratios.binderParts.length
     ? ratios.binderParts.map((item) => `${item.label} ${formatRecipeNumber(item.percent * 100, 2)}%`).join("，")
