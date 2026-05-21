@@ -5,7 +5,8 @@
   "description": "Small private editor for xx520 static homepage",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "check": "node --check server.js"
   },
   "dependencies": {
     "nodemailer": "^6.9.16"
