@@ -38,6 +38,8 @@ const DEFAULT_ALBUM = "默认相册";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const LOGIN_ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
 const LOGIN_ATTEMPT_LIMIT = 8;
+const CSRF_COOKIE_NAME = "xx520_csrf_token";
+const CSRF_TOKEN_BYTES = 24;
 const WORK_LOGIN_USER = process.env.WORK_LOGIN_USER || "xx";
 const WORK_LOGIN_PASS = requiredEnv("WORK_LOGIN_PASS");
 const ADMIN_LOGIN_USER = process.env.ADMIN_LOGIN_USER || WORK_LOGIN_USER;
@@ -250,6 +252,17 @@ function parseCookies(req) {
   return cookies;
 }
 
+function appendSetCookie(res, cookie) {
+  const current = res.getHeader("Set-Cookie");
+  if (!current) {
+    res.setHeader("Set-Cookie", cookie);
+  } else if (Array.isArray(current)) {
+    res.setHeader("Set-Cookie", [...current, cookie]);
+  } else {
+    res.setHeader("Set-Cookie", [current, cookie]);
+  }
+}
+
 function sessionSignature(scope, expiresAt) {
   return crypto
     .createHmac("sha256", sessionSecret)
@@ -277,11 +290,44 @@ function validSession(req, cookieName, scope) {
 }
 
 function setLoginCookie(res, cookieName, scope) {
-  res.setHeader("Set-Cookie", `${cookieName}=${encodeURIComponent(sessionCookieValue(scope))}; Path=/; Max-Age=${SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Lax`);
+  appendSetCookie(res, `${cookieName}=${encodeURIComponent(sessionCookieValue(scope))}; Path=/; Max-Age=${SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Lax`);
 }
 
 function clearLoginCookie(res, cookieName) {
-  res.setHeader("Set-Cookie", `${cookieName}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
+  appendSetCookie(res, `${cookieName}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
+}
+
+function csrfCookieValue() {
+  return crypto.randomBytes(CSRF_TOKEN_BYTES).toString("base64url");
+}
+
+function setCsrfCookie(res, token) {
+  appendSetCookie(res, `${CSRF_COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; Max-Age=${SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Lax`);
+}
+
+function clearCsrfCookie(res) {
+  appendSetCookie(res, `${CSRF_COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
+}
+
+function ensureCsrfToken(req, res) {
+  let token = parseCookies(req).get(CSRF_COOKIE_NAME) || "";
+  if (!/^[A-Za-z0-9_-]{32,128}$/.test(token)) {
+    token = csrfCookieValue();
+    setCsrfCookie(res, token);
+  }
+  return token;
+}
+
+function csrfField(token) {
+  return `<input type="hidden" name="_csrf" value="${attr(token)}">`;
+}
+
+function injectCsrfFields(body, token) {
+  return String(body).replace(/<form\b[^>]*>/gi, (tag) => {
+    if (!/\bmethod\s*=\s*["']?post/i.test(tag) || /\bdata-no-csrf\b/i.test(tag)) return tag;
+    return `${tag}
+      ${csrfField(token)}`;
+  });
 }
 
 function safeNext(value, fallback, prefixes) {
@@ -2291,6 +2337,7 @@ function renderAdmin(content, message = "") {
         const title = String(form.get("imageTitle") || "").trim();
         const caption = String(form.get("imageCaption") || "").trim();
         const privateAlbum = form.get("privateAlbum") ? "1" : "";
+        const csrfToken = String(form.get("_csrf") || "");
         for (let i = 0; i < files.length; i += 1) {
           const file = files[i];
           const data = new FormData();
@@ -2299,6 +2346,7 @@ function renderAdmin(content, message = "") {
           data.append("imageTitle", fileTitle);
           data.append("imageCaption", caption);
           if (privateAlbum) data.append("privateAlbum", privateAlbum);
+          if (csrfToken) data.append("_csrf", csrfToken);
           data.append("image", file, file.name);
           await uploadOne(data, file, i, files.length);
         }
@@ -5556,6 +5604,10 @@ function ideaFields(item) {
 }
 
 async function parseBody(req, limit = 1024 * 1024) {
+  if (req._bodyBuffer) {
+    if (req._bodyBuffer.length > limit) throw Object.assign(new Error("body too large"), { statusCode: 413 });
+    return req._bodyBuffer;
+  }
   const chunks = [];
   let size = 0;
   for await (const chunk of req) {
@@ -5563,7 +5615,8 @@ async function parseBody(req, limit = 1024 * 1024) {
     if (size > limit) throw Object.assign(new Error("body too large"), { statusCode: 413 });
     chunks.push(chunk);
   }
-  return Buffer.concat(chunks);
+  req._bodyBuffer = Buffer.concat(chunks);
+  return req._bodyBuffer;
 }
 
 function contentFromForm(params, previous) {
@@ -5646,6 +5699,11 @@ function send(res, status, body, type = "text/html; charset=utf-8") {
   res.end(body);
 }
 
+function sendProtectedHtml(req, res, status, body) {
+  const token = ensureCsrfToken(req, res);
+  return send(res, status, injectCsrfFields(body, token));
+}
+
 function mimeType(filePath) {
   const extension = path.extname(filePath).toLowerCase();
   return {
@@ -5700,6 +5758,38 @@ async function serveStaticFromPrefix(req, res, urlPath, prefix, rootDir) {
 function redirectTo(res, location) {
   res.writeHead(303, { Location: location });
   res.end();
+}
+
+function csrfTokenFromBody(req, body) {
+  const type = String(req.headers["content-type"] || "");
+  if (/multipart\/form-data/i.test(type)) {
+    try {
+      return parseMultipart(body, type).find((part) => part.name === "_csrf")?.body.toString("utf8").trim() || "";
+    } catch {
+      return "";
+    }
+  }
+  return new URLSearchParams(body.toString("utf8")).get("_csrf") || "";
+}
+
+function safeTokenEqual(a, b) {
+  const left = Buffer.from(String(a || ""));
+  const right = Buffer.from(String(b || ""));
+  return left.length > 0 && left.length === right.length && crypto.timingSafeEqual(left, right);
+}
+
+function bodyLimitForPath(pathname) {
+  return pathname === `${BASE_PATH}/upload` || pathname === `${WORK_PATH}/upload-lab-image`
+    ? MAX_UPLOAD_BYTES * 10 + 1024 * 1024
+    : 1024 * 1024;
+}
+
+async function verifyCsrfRequest(req, res, url) {
+  const body = await parseBody(req, bodyLimitForPath(url.pathname));
+  const cookieToken = parseCookies(req).get(CSRF_COOKIE_NAME) || "";
+  const bodyToken = csrfTokenFromBody(req, body);
+  if (safeTokenEqual(cookieToken, bodyToken)) return true;
+  return send(res, 403, "CSRF token invalid", "text/plain; charset=utf-8");
 }
 
 const loginAttempts = new Map();
@@ -5847,12 +5937,14 @@ async function handleCustomLogin(req, res, url, scope) {
   }
   clearLoginFail(req, scope);
   setLoginCookie(res, authCookieName(scope), scope);
+  setCsrfCookie(res, csrfCookieValue());
   redirectTo(res, loginNext);
   return;
 }
 
 function handleCustomLogout(res, scope) {
   clearLoginCookie(res, authCookieName(scope));
+  clearCsrfCookie(res);
   redirectTo(res, authLoginPath(scope));
 }
 
@@ -7089,8 +7181,9 @@ async function route(req, res) {
     }
     if ((req.method === "GET" || req.method === "HEAD") && url.pathname === `${WORK_PATH}/`) {
       const content = await readContent();
-      return send(res, 200, renderWorkspaceV3(content, url.searchParams.get("msg") || ""));
+      return sendProtectedHtml(req, res, 200, renderWorkspaceV3(content, url.searchParams.get("msg") || ""));
     }
+    if (req.method === "POST" && !(await verifyCsrfRequest(req, res, url))) return;
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/add-block`) return handleAddBlock(req, res, WORK_PATH);
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-block`) return handleDeleteBlock(req, res, WORK_PATH);
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/toggle-task`) return handleToggleTask(req, res, WORK_PATH);
@@ -7116,8 +7209,9 @@ async function route(req, res) {
 
   if ((req.method === "GET" || req.method === "HEAD") && url.pathname === `${BASE_PATH}/`) {
     const content = await readContent();
-    return send(res, 200, renderAdmin(content, url.searchParams.get("msg") || ""));
+    return sendProtectedHtml(req, res, 200, renderAdmin(content, url.searchParams.get("msg") || ""));
   }
+  if (req.method === "POST" && !(await verifyCsrfRequest(req, res, url))) return;
   if (req.method === "POST" && url.pathname === `${BASE_PATH}/save`) {
     const previous = await readContent();
     const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
