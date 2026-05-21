@@ -6929,7 +6929,7 @@ function createBlocksExportWorkbook(content, blocks) {
   const relatedGangues = getCoalGangueDb(content).filter((item) => relatedGangueIds.has(item.id));
 
   const gangueRows = [[
-    "煤矸石ID", "煤矸石编号/名称", "来源/批次", "采样日期", "粒径范围", "本批压碎值", "本批压碎值粒径",
+    "煤矸石ID", "煤矸石编号/名称", "批次短码", "来源/批次", "采样日期", "粒径范围", "本批压碎值", "本批压碎值粒径",
     "各粒径压碎值明细", "压碎值第1次", "压碎值第2次", "压碎值第3次", "压碎值平均值",
     "粗骨料吸水率", "细骨料吸水率", "粗骨料表观密度", "细骨料表观密度", "松散/压紧堆积密度",
     "针片状含量", "石粉/MB/其他信息", "备注"
@@ -6951,7 +6951,7 @@ function createBlocksExportWorkbook(content, blocks) {
       };
     });
     gangueRows.push([
-      item.id, item.name, item.source, item.updatedAt || "", ranges.join("，"), crushingSummary.text || item.batchCrushingValue, crushingSummary.range || item.batchCrushingRange,
+      item.id, item.name, item.shortCode, item.source, item.updatedAt || "", ranges.join("，"), crushingSummary.text || item.batchCrushingValue, crushingSummary.range || item.batchCrushingRange,
       crushingRows.map((row) => row.text).join("；"),
       crushingRows.map((row) => `${row.range}:${row.tests[0] || "-"}`).join("；"),
       crushingRows.map((row) => `${row.range}:${row.tests[1] || "-"}`).join("；"),
@@ -6976,7 +6976,8 @@ function createBlocksExportWorkbook(content, blocks) {
   });
 
   const mixRows = [[
-    "配合比ID", "试块组ID", "配合比名称", "胶凝材料合计g", "煤矸石/骨料合计g", "水g", "水胶比", "骨灰比",
+    "配合比ID", "试块组ID", "配合比名称", "胶凝材料合计g", "总干料g", "煤矸石g", "煤矸石/骨料合计g", "水g", "水胶比", "煤矸石:胶凝", "骨灰比",
+    "外加剂掺量", "速凝剂掺量", "硫酸钠掺量",
     "硅酸盐水泥g", "粉煤灰g", "生石灰g", "煤矸石g", "硫酸钠g", "速凝剂g", "称量模板", "备注"
   ]];
   normalized.forEach(({ block, record, recipeMaterials }) => {
@@ -6987,30 +6988,34 @@ function createBlocksExportWorkbook(content, blocks) {
       return id ? values[id] || "" : "";
     };
     mixRows.push([
-      `${block.id}-mix`, block.id, record.mixName, ratios.binderTotal || "", ratios.aggregateTotal || "", ratios.waterTotal || "",
-      ratioText(ratios.waterBinderRatio), ratioText(ratios.aggregateBinderRatio),
+      `${block.id}-mix`, block.id, record.mixName, ratios.binderTotal || "", ratios.dryTotal || "", ratios.gangueTotal || "", ratios.aggregateTotal || "", ratios.waterTotal || "",
+      ratioText(ratios.waterBinderRatio), ratioText(ratios.gangueBinderRatio), ratioText(ratios.aggregateBinderRatio),
+      percentText(ratios.admixtureBinderPercent), percentText(ratios.acceleratorBinderPercent), percentText(ratios.sodiumSulfateBinderPercent),
       valueFor("硅酸盐水泥"), valueFor("粉煤灰"), valueFor("生石灰"), valueFor("煤矸石"), valueFor("硫酸钠"), valueFor("速凝剂"),
       WEIGHING_TEMPLATES[normalizeWeighingTemplate(record.weighingTemplate, block.blockCategory)]?.label || "", record.recipeNote
     ]);
   });
 
   const blockRows = [[
-    "试块组ID", "试块组名称", "煤矸石ID", "煤矸石名称", "试块类型", "数量", "强度等级", "成型日期",
+    "试块组ID", "试块组名称", "推荐编号", "煤矸石ID", "煤矸石名称", "试块类型", "数量", "强度等级", "成型日期",
     "3d日期", "7d日期", "28d日期", "全部龄期", "级配模板", "配合比模板", "状态", "备注"
   ]];
   normalized.forEach(({ block, record }) => {
     const resultItems = blockResultDueItemsV22([block]);
     const filled = resultItems.filter((item) => item.filled).length;
     const status = filled >= resultItems.length && resultItems.length ? "全部完成" : filled ? `已录 ${filled}/${resultItems.length}` : "未录结果";
+    const gangue = relatedGangues.find((item) => item.id === record.gangueAggregateId);
     blockRows.push([
-      block.id, block.name, record.gangueAggregateId, record.gangueAggregateName, blockCategoryLabelV3(block.blockCategory), block.quantity, block.strength, block.madeDate,
+      block.id, block.name, suggestBlockCodeV24(content, gangue || { name: record.gangueAggregateName }, block.blockCategory, block.madeDate, record.gradationTemplate, record.gradationCoefficient),
+      record.gangueAggregateId, record.gangueAggregateName, blockCategoryLabelV3(block.blockCategory), block.quantity, block.strength, block.madeDate,
       block.ages.includes(3) ? addDays(block.madeDate, 3) : "", block.ages.includes(7) ? addDays(block.madeDate, 7) : "", block.ages.includes(28) ? addDays(block.madeDate, 28) : "",
       block.ages.join("，"), gradationSchemeForCategory(block.blockCategory).templates[normalizeGradationTemplate(record.gradationTemplate)]?.label || "",
       WEIGHING_TEMPLATES[normalizeWeighingTemplate(record.weighingTemplate, block.blockCategory)]?.label || "", status, block.note
     ]);
   });
 
-  const resultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "样本值MPa", "试件明细(kN/mm2/MPa)", "均值", "均值来源", "标准差", "CV%", "破坏形态", "备注"]];
+  const rawResultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "试件序号", "压力kN", "受压面积mm2", "强度MPa", "破坏形态", "备注", "值来源"]];
+  const statResultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "均值", "标准差", "CV%", "最小值", "最大值", "n", "均值来源", "备注"]];
   normalized.forEach(({ block, record, metrics }) => {
     const results = normalizeAgeResults(record, block.ages, metrics);
     block.ages.forEach((age) => {
@@ -7021,31 +7026,54 @@ function createBlocksExportWorkbook(content, blocks) {
           metric: metric.id,
           dueDate: addDays(block.madeDate, age)
         });
-        const specimenText = (entry.sampleMeasurements || []).map((sample, index) => {
-          const parts = [
-            `试件${index + 1}`,
-            sample.pressureKn ? `压力${sample.pressureKn}kN` : "",
-            sample.areaMm2 ? `面积${sample.areaMm2}mm2` : "",
-            sample.strengthMpa ? `强度${sample.strengthMpa}MPa` : "",
-            sample.failureMode ? `破坏${sample.failureMode}` : "",
-            sample.remark ? `备注${sample.remark}` : ""
-          ].filter(Boolean);
-          return parts.join("/");
-        }).join("；");
-        resultRows.push([
+        const measurements = (entry.sampleMeasurements || []).filter((sample) => (
+          sample.pressureKn || sample.areaMm2 || sample.strengthMpa || sample.failureMode || sample.remark
+        ));
+        if (measurements.length) {
+          measurements.forEach((sample, index) => rawResultRows.push([
+            block.id, record.gangueAggregateId, block.name, age, metric.label, addDays(block.madeDate, age), row.testDate || "",
+            index + 1, sample.pressureKn, sample.areaMm2, sample.strengthMpa, sample.failureMode, sample.remark, entry.meanSource
+          ]));
+        } else if (entry.manualMean) {
+          rawResultRows.push([
+            block.id, record.gangueAggregateId, block.name, age, metric.label, addDays(block.madeDate, age), row.testDate || "",
+            "", "", "", entry.manualMean, entry.failureMode, entry.remark || row.resultNote || "", entry.meanSource
+          ]);
+        }
+        statResultRows.push([
           block.id, record.gangueAggregateId, block.name, age, metric.label, addDays(block.madeDate, age), row.testDate || "",
-          entry.sampleValues.join(", "), specimenText, entry.mean, entry.meanSource, entry.std, entry.cv, entry.failureMode, entry.remark || row.resultNote || ""
+          entry.mean, entry.std, entry.cv, entry.min, entry.max, entry.n, entry.meanSource, entry.remark || row.resultNote || ""
         ]);
       });
     });
   });
 
+  const imageRows = [["图片路径", "图片类型", "旧类型", "目标类型", "试块组ID", "试块组名称", "煤矸石ID", "煤矸石名称", "标题", "说明", "上传时间"]];
+  normalized.forEach(({ block, record }) => {
+    const gangue = relatedGangues.find((item) => item.id === record.gangueAggregateId);
+    normalizeLabImages(block.images, { targetType: "block", blockId: block.id, gangueBatchId: record.gangueAggregateId }).forEach((image) => imageRows.push([
+      image.src, image.imageType, image.legacyKind, image.targetType, image.blockId || block.id, block.name,
+      image.gangueBatchId || record.gangueAggregateId, gangue?.name || record.gangueAggregateName, image.title, image.caption, image.createdAt
+    ]));
+  });
+  relatedGangues.forEach((gangue) => normalizeLabImages(gangue.images, { targetType: "gangue", gangueBatchId: gangue.id }).forEach((image) => imageRows.push([
+    image.src, image.imageType, image.legacyKind, image.targetType, image.blockId, "", image.gangueBatchId || gangue.id, gangue.name, image.title, image.caption, image.createdAt
+  ])));
+
+  const healthRows = [["检查项", "记录", "定位"]];
+  dataHealthItemsV23({ ...content, testBlocks: blocks, coalGangueDb: relatedGangues }).forEach((group) => {
+    group.items.forEach((item) => healthRows.push([group.title, item.label, item.href]));
+  });
+
   return makeWorkbook([
-    { name: "煤矸石档案", rows: gangueRows, widths: [22, 24, 22, 12, 34, 12, 16, 82, 42, 42, 42, 42, 14, 14, 16, 16, 36, 32, 36, 20] },
-    { name: "级配方案", rows: gradationRows, widths: [24, 22, 22, 38, 18, 10, 12, 70, 28] },
-    { name: "配合比方案", rows: mixRows, widths: [22, 22, 22, 14, 16, 10, 10, 10, 12, 12, 12, 12, 12, 12, 16, 32] },
-    { name: "试块记录", rows: blockRows, widths: [22, 26, 22, 22, 12, 8, 10, 12, 12, 12, 12, 16, 16, 16, 14, 34] },
-    { name: "强度结果", rows: resultRows, widths: [22, 22, 26, 10, 18, 12, 12, 24, 48, 12, 12, 12, 10, 18, 34] }
+    { name: "试块组总表", rows: blockRows, widths: [22, 26, 32, 22, 22, 12, 8, 10, 12, 12, 12, 12, 16, 16, 16, 14, 34] },
+    { name: "配合比表", rows: mixRows, widths: [22, 22, 22, 14, 14, 12, 16, 10, 10, 12, 10, 12, 12, 12, 12, 12, 12, 12, 16, 32] },
+    { name: "级配表", rows: gradationRows, widths: [24, 22, 22, 38, 18, 10, 12, 70, 28] },
+    { name: "强度原始值", rows: rawResultRows, widths: [22, 22, 26, 10, 18, 12, 12, 10, 12, 14, 12, 18, 34, 14] },
+    { name: "强度统计值", rows: statResultRows, widths: [22, 22, 26, 10, 18, 12, 12, 12, 12, 10, 12, 12, 8, 14, 34] },
+    { name: "煤矸石批次表", rows: gangueRows, widths: [22, 24, 14, 22, 12, 34, 12, 16, 82, 42, 42, 42, 42, 14, 14, 16, 16, 36, 32, 36, 20] },
+    { name: "图片索引表", rows: imageRows, widths: [42, 18, 16, 12, 22, 26, 22, 24, 24, 34, 22] },
+    { name: "数据健康检查表", rows: healthRows, widths: [18, 48, 36] }
   ]);
 }
 
