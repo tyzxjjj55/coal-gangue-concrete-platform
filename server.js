@@ -2832,6 +2832,63 @@ function renderStrengthTrendPanelV22(content) {
     </section>`;
 }
 
+function dataHealthItemsV23(content) {
+  const blocks = getTestBlocks(content);
+  const gangues = getCoalGangueDb(content);
+  const blockHasStrength = (block) => blockResultDueItemsV22([block]).some((item) => item.metric.id === "compressionStrength" && item.filled);
+  const groups = [
+    {
+      key: "strength",
+      title: "缺强度",
+      items: blocks.filter((block) => !blockHasStrength(block)).map((block) => ({ label: block.name, href: `#record-${block.id}` }))
+    },
+    {
+      key: "date",
+      title: "缺到期日期",
+      items: blocks.filter((block) => !block.madeDate || !normalizeAges(block.ages).length).map((block) => ({ label: block.name, href: `#record-${block.id}` }))
+    },
+    {
+      key: "crushing",
+      title: "缺压碎值",
+      items: gangues.filter((item) => !item.batchCrushingValue).map((item) => ({ label: item.name, href: `#gangue-${item.id}` }))
+    },
+    {
+      key: "waterAbsorption",
+      title: "缺吸水率",
+      items: gangues.filter((item) => !item.coarseWaterAbsorption && !item.fineWaterAbsorption).map((item) => ({ label: item.name, href: `#gangue-${item.id}` }))
+    },
+    {
+      key: "density",
+      title: "缺表观密度",
+      items: gangues.filter((item) => !item.coarseApparentDensity && !item.fineApparentDensity).map((item) => ({ label: item.name, href: `#gangue-${item.id}` }))
+    },
+    {
+      key: "images",
+      title: "缺图片",
+      items: [
+        ...gangues.filter((item) => !normalizeLabImages(item.images).length).map((item) => ({ label: item.name, href: `#gangue-${item.id}` })),
+        ...blocks.filter((block) => !normalizeLabImages(block.images).length).map((block) => ({ label: block.name, href: `#record-${block.id}` }))
+      ]
+    }
+  ];
+  return groups.map((group) => ({ ...group, count: group.items.length }));
+}
+
+function renderDataHealthPanelV23(content) {
+  const groups = dataHealthItemsV23(content);
+  const total = groups.reduce((sum, group) => sum + group.count, 0);
+  return `<section class="dashboard-card-v22 data-health-v23" id="data-health">
+      <div class="section-head-v22"><div><p class="eyebrow">Data Health</p><h2>数据健康检查</h2><p>快速找出论文整理前必须补齐的强度、日期、煤矸石指标和图片。</p></div><strong>${total} 项待补</strong></div>
+      <div class="health-grid-v23">
+        ${groups.map((group) => `<article class="health-card-v23 ${group.count ? "todo" : "ok"}">
+          <span>${html(group.title)}</span>
+          <b>${group.count}</b>
+          ${group.count ? `<div>${group.items.slice(0, 4).map((item) => `<a href="${attr(item.href)}" ${item.href.startsWith("#record-") ? `data-open-record="${attr(item.href.replace("#record-", ""))}" data-record-tab-target="results"` : ""}>${html(item.label)}</a>`).join("")}${group.count > 4 ? `<small>还有 ${group.count - 4} 项</small>` : ""}</div>` : `<em>完整</em>`}
+        </article>`).join("")}
+      </div>
+    </section>`;
+}
+
 function renderAnomalyPanelV22(content) {
   const items = abnormalItemsV22(content);
   return `<section class="dashboard-card-v22" id="anomalies">
@@ -3122,6 +3179,7 @@ function renderWorkspaceV3(content, message = "") {
             ${renderStrengthTrendPanelV22(content)}
           </div>
           ${renderTwentyEightDayChartV23(content)}
+          ${renderDataHealthPanelV23(content)}
           <div class="overview-grid-v22 compact">
             ${renderAnomalyPanelV22(content)}
             ${renderGangueOverviewV22(content)}
@@ -3500,6 +3558,18 @@ function workspaceStylesV3() {
     .bar-chart-28d-v23 .bar-group-v23 { grid-template-rows:170px auto; }
     .bar-chart-28d-v23 .bar-columns-v23 { height:170px; }
     .bar-group-v23.single .column-v23 { width:34px; }
+    .data-health-v23 { margin-bottom:16px; }
+    .data-health-v23 .section-head-v22 > strong { min-height:34px; display:inline-flex; align-items:center; padding:0 10px; border-radius:999px; background:#fff8f4; color:#a8422d; font-size:13px; }
+    .health-grid-v23 { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; }
+    .health-card-v23 { min-height:126px; display:grid; gap:6px; align-content:start; padding:12px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; }
+    .health-card-v23.todo { border-color:#efd6ad; background:#fffaf0; }
+    .health-card-v23.ok { border-color:#c7e5d8; background:#f2faf6; }
+    .health-card-v23 span { color:var(--muted); font-size:12px; font-weight:900; }
+    .health-card-v23 b { color:var(--ink); font-size:26px; line-height:1; }
+    .health-card-v23.todo b { color:#a8422d; }
+    .health-card-v23 em { color:#337861; font-style:normal; font-weight:900; }
+    .health-card-v23 div { display:grid; gap:4px; }
+    .health-card-v23 a, .health-card-v23 small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--green); font-size:11px; font-weight:900; }
     .anomaly-list-v22 { display:grid; gap:9px; }
     .anomaly-form-v22 { display:grid; gap:10px; }
     .anomaly-hint-v22 { color:var(--muted); font-size:13px; font-weight:800; }
@@ -3587,8 +3657,8 @@ function workspaceStylesV3() {
     .lab-lightbox-actions-v22 a, .lab-lightbox-actions-v22 button { min-height:40px; display:inline-flex; align-items:center; padding:0 12px; border:1px solid rgba(255,255,255,.28); border-radius:8px; background:#fff; color:#10211e; font-weight:900; box-shadow:none; }
     #material-library .panel { margin-bottom:0; }
     @media (max-width:1180px) { .app-shell-v22 { grid-template-columns:1fr; } .sidebar-v22 { position:static; height:auto; flex-direction:row; align-items:center; overflow:auto; } .sidebar-v22 nav { display:flex; flex-wrap:wrap; } .side-foot-v22 { margin-left:auto; margin-top:0; display:flex; } .topbar-v22 { grid-template-columns:1fr; } .top-actions-v22 { justify-content:flex-start; } .metric-grid-v22 { grid-template-columns:repeat(3,minmax(0,1fr)); } .overview-grid-v22, .overview-grid-v22.compact { grid-template-columns:1fr; } }
-    @media (max-width:980px) { .lab-overview { grid-template-columns:1fr; } .visual-map-grid-v22 { grid-template-columns:1fr; } .result-grid, .metric-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .material-groups, .library-list { grid-template-columns:1fr; } .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:repeat(2,minmax(0,1fr)); } .task-row-v22 { grid-template-columns:1fr 1fr; } .task-row-v22.head { display:none; } }
-    @media (max-width:640px) { .work-main-v22 { padding:14px; } .sidebar-v22 { padding:12px; } .topbar-v22 { padding:12px 14px; } .metric-grid-v22, .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:1fr; } .workspace-hero { min-height:auto; } .progress-matrix-head-v22 { display:none; } .progress-row-v22 { grid-template-columns:1fr 1fr; align-items:start; } .progress-row-v22 strong, .matrix-meter-v22 { grid-column:1/-1; } .coverage-row-v22 { grid-template-columns:38px minmax(0,1fr) 48px; } .coverage-row-v22 em { grid-column:2/-1; text-align:left; } .gangue-folder-head, .block-toolbar, .custom-material-row, .lab-upload-grid { grid-template-columns:1fr; } .calendar-agenda-head { flex-direction:column; } .calendar-legend { justify-content:flex-start; } .folder-badges, .archive-actions, .block-actions { justify-content:stretch; } .folder-badges span, .archive-actions .chip-button, .block-actions .export-check, .block-actions button { flex:1; justify-content:center; } .viz-row { grid-template-columns:1fr; gap:5px; } .result-row-title, .gangue-card summary { align-items:flex-start; flex-direction:column; } .record-details summary { grid-template-columns:1fr; align-items:start; } .record-toggle { justify-content:center; } .record-summary-main em { white-space:normal; } .result-grid, .metric-options, .library-list, .material-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid { grid-template-columns:1fr; } .material-library-item { grid-template-columns:1fr; } .side-brand-v22 strong { white-space:nowrap; } }
+    @media (max-width:980px) { .lab-overview { grid-template-columns:1fr; } .visual-map-grid-v22 { grid-template-columns:1fr; } .result-grid, .metric-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:repeat(2,minmax(0,1fr)); } .material-groups, .library-list { grid-template-columns:1fr; } .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:repeat(2,minmax(0,1fr)); } .task-row-v22 { grid-template-columns:1fr 1fr; } .task-row-v22.head { display:none; } }
+    @media (max-width:640px) { .work-main-v22 { padding:14px; } .sidebar-v22 { padding:12px; } .topbar-v22 { padding:12px 14px; } .metric-grid-v22, .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:1fr; } .workspace-hero { min-height:auto; } .progress-matrix-head-v22 { display:none; } .progress-row-v22 { grid-template-columns:1fr 1fr; align-items:start; } .progress-row-v22 strong, .matrix-meter-v22 { grid-column:1/-1; } .coverage-row-v22 { grid-template-columns:38px minmax(0,1fr) 48px; } .coverage-row-v22 em { grid-column:2/-1; text-align:left; } .gangue-folder-head, .block-toolbar, .custom-material-row, .lab-upload-grid { grid-template-columns:1fr; } .calendar-agenda-head { flex-direction:column; } .calendar-legend { justify-content:flex-start; } .folder-badges, .archive-actions, .block-actions { justify-content:stretch; } .folder-badges span, .archive-actions .chip-button, .block-actions .export-check, .block-actions button { flex:1; justify-content:center; } .viz-row { grid-template-columns:1fr; gap:5px; } .result-row-title, .gangue-card summary { align-items:flex-start; flex-direction:column; } .record-details summary { grid-template-columns:1fr; align-items:start; } .record-toggle { justify-content:center; } .record-summary-main em { white-space:normal; } .result-grid, .metric-options, .library-list, .material-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:1fr; } .material-library-item { grid-template-columns:1fr; } .side-brand-v22 strong { white-space:nowrap; } }
   `;
 }
 
