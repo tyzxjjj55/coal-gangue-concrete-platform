@@ -2825,9 +2825,18 @@ function renderStrengthTrendPanelV22(content) {
             ${groups.map((item) => `<option value="${attr(item.id)}" ${item.id === trend.selectedId ? "selected" : ""}>${html(item.name)}</option>`).join("")}
           </select>
         </div>
-        <div data-chart-rows>${renderTrendRowsForGroupV22(trend.selectedGroup)}</div>
-      </div>
-      <script type="application/json" id="trend-chart-data-v22">${scriptJson({ groups })}</script>` : `<p class="empty-v22">还没有可绘制的抗压强度结果。</p>`}
+        ${groups.map((group) => `<section data-chart-group="${attr(group.id)}" ${group.id === trend.selectedId ? "" : "hidden"}>${renderTrendRowsForGroupV22(group)}</section>`).join("")}
+        <script>
+          (() => {
+            const stage = document.currentScript.closest("[data-chart-stage]");
+            const filter = stage?.querySelector("[data-chart-filter]");
+            const groups = Array.from(stage?.querySelectorAll("[data-chart-group]") || []);
+            const showGroup = () => groups.forEach((group) => { group.hidden = group.dataset.chartGroup !== filter?.value; });
+            filter?.addEventListener("change", showGroup);
+            showGroup();
+          })();
+        </script>
+      </div>` : `<p class="empty-v22">还没有可绘制的抗压强度结果。</p>`}
     </section>`;
 }
 
@@ -5577,39 +5586,6 @@ function renderWorkspaceScriptV3() {
       openRecordFromHash();
       window.addEventListener("hashchange", openRecordFromHash);
 
-      const chartData = (() => {
-        try {
-          return JSON.parse(document.getElementById("trend-chart-data-v22")?.textContent || "{\\"groups\\":[]}");
-        } catch {
-          return { groups: [] };
-        }
-      })();
-      const chartFilter = document.querySelector("[data-chart-filter]");
-      const chartStage = document.querySelector("[data-chart-stage]");
-      const chartRowsSlot = document.querySelector("[data-chart-rows]");
-      const chartCurrent = document.querySelector("[data-chart-current]");
-      const renderChartRow = (row, max) => {
-        const bars = (row.values || []).map((item) => {
-          const value = Number(item.number) || 0;
-          const height = value ? Math.max(8, Math.min(100, (value / Math.max(1, max)) * 100)) : 0;
-          return "<span class=\"column-v23 age-" + escapeAttr(item.age) + "\" style=\"--h:" + height + "%\" title=\"" + escapeAttr((row.blockName || "") + " " + (item.label || "")) + "\"><i></i><b>" + escapeAttr(item.mean || "") + "</b><em>" + escapeAttr(item.age) + "d</em></span>";
-        }).join("");
-        return "<article class=\"bar-group-v23\" data-chart-row><div class=\"bar-columns-v23\">" + bars + "</div><strong title=\"" + escapeAttr((row.gangueName || "") + "｜" + (row.blockName || "")) + "\"><span>" + escapeAttr(row.blockName || "") + "</span><small>" + escapeAttr(row.gangueName || "") + "</small></strong></article>";
-      };
-      const applyChartFilter = () => {
-        const selected = chartFilter?.value || "";
-        const group = (chartData.groups || []).find((item) => item.id === selected) || (chartData.groups || [])[0];
-        if (!group || !chartRowsSlot) return;
-        if (chartFilter && chartFilter.value !== group.id) chartFilter.value = group.id;
-        if (chartCurrent) chartCurrent.dataset.currentName = group.name || "未命名批次";
-        if (chartStage) chartStage.style.setProperty("--chart-max", group.max || 1);
-        chartRowsSlot.innerHTML = (group.rows || []).length
-          ? "<div class=\"bar-chart-v23\" data-chart-row>" + group.rows.map((row) => renderChartRow(row, group.max || 1)).join("") + "</div>"
-          : "<p class=\"empty-v22\" data-chart-empty>这个批次还没有可展示的抗压强度。</p>";
-      };
-      chartFilter?.addEventListener("change", applyChartFilter);
-      applyChartFilter();
-
       document.querySelectorAll("[data-swipe-dismiss]").forEach((card) => {
         let startX = 0;
         let startY = 0;
@@ -7445,4 +7421,3 @@ bootstrap().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-
