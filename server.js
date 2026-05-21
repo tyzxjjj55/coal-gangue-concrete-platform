@@ -2601,20 +2601,55 @@ function gangueProgressRowsV22(content, referenceDate = today()) {
   }).sort((a, b) => b.blocks.length - a.blocks.length || b.resultStats.percent - a.resultStats.percent || a.gangue.name.localeCompare(b.gangue.name, "zh-CN"));
 }
 
-function ageCoverageRowsV22(content, referenceDate = today()) {
-  const blocks = getTestBlocks(content);
-  const ages = Array.from(new Set(blocks.flatMap((block) => block.ages))).map(Number).filter(Number.isFinite).sort((a, b) => a - b);
-  return ages.map((age) => {
-    const selectedBlocks = blocks.filter((block) => block.ages.includes(age));
-    const total = selectedBlocks.length;
-    const filled = selectedBlocks.filter((block) => metricResultFilled(compressionResultByAgeV22(block, age))).length;
-    const due = selectedBlocks.filter((block) => !metricResultFilled(compressionResultByAgeV22(block, age)) && addDays(block.madeDate, age) <= referenceDate).length;
-    const future = selectedBlocks.filter((block) => {
-      const dueDate = addDays(block.madeDate, age);
-      return !metricResultFilled(compressionResultByAgeV22(block, age)) && dueDate > referenceDate && dueDate <= addDays(referenceDate, 7);
-    }).length;
-    return { age, total, filled, due, future, percent: total ? Math.round((filled / total) * 100) : 0 };
-  });
+function ageCoverageColumnsV23(content) {
+  const preferred = [3, 7, 28];
+  const allAges = Array.from(new Set(getTestBlocks(content).flatMap((block) => normalizeAges(block.ages))))
+    .map(Number)
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b);
+  return [...preferred, ...allAges.filter((age) => !preferred.includes(age))];
+}
+
+function ageCoverageCellV23(block, age, referenceDate = today()) {
+  if (!normalizeAges(block.ages).includes(age)) {
+    return { state: "unset", label: "未设置", detail: `${block.name} 未选择 ${age}d` };
+  }
+  const dueDate = addDays(block.madeDate, age);
+  const result = compressionResultByAgeV22(block, age);
+  if (metricResultFilled(result)) {
+    return { state: "done", label: "已录入", detail: `${age}d ${metricResultDisplay(result)}` };
+  }
+  if (dueDate <= referenceDate) {
+    return { state: "due", label: "到期未录", detail: `应测 ${formatDateCnV3(dueDate)}` };
+  }
+  return { state: "future", label: "未来待测", detail: `应测 ${formatDateCnV3(dueDate)}` };
+}
+
+function ageCoverageRowsV23(content, referenceDate = today()) {
+  return getTestBlocks(content)
+    .slice()
+    .sort((a, b) => b.madeDate.localeCompare(a.madeDate) || a.name.localeCompare(b.name, "zh-CN"))
+    .map((block) => {
+      const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+      return {
+        block,
+        gangueName: record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "未归属",
+        cells: ageCoverageColumnsV23(content).map((age) => ({ age, ...ageCoverageCellV23(block, age, referenceDate) }))
+      };
+    });
+}
+
+function renderAgeCoverageHeatmapV23(content) {
+  const columns = ageCoverageColumnsV23(content);
+  const rows = ageCoverageRowsV23(content);
+  return `<div class="age-heatmap-v23" style="--age-cols:${columns.length}">
+      <div class="heatmap-head-v23"><span>试块组</span>${columns.map((age) => `<b>${age}d</b>`).join("")}</div>
+      ${rows.length ? rows.map((row) => `<a class="heatmap-row-v23" href="#record-${attr(row.block.id)}" data-open-record="${attr(row.block.id)}" data-record-tab-target="results">
+          <strong><span>${html(row.block.name)}</span><small>${html(row.gangueName)} · 成型 ${html(formatDateCnV3(row.block.madeDate))}</small></strong>
+          ${row.cells.map((cell) => `<em class="heat-cell-v23 ${attr(cell.state)}" title="${attr(cell.detail)}"><span>${html(cell.label)}</span><small>${html(cell.detail)}</small></em>`).join("")}
+        </a>`).join("") : `<p class="empty-v22">还没有试块组，无法生成龄期热力图。</p>`}
+      <div class="heatmap-legend-v23"><span class="done">已录入</span><span class="due">到期未录</span><span class="future">未来待测</span><span class="unset">未设置</span></div>
+    </div>`;
 }
 
 function renderVisualInsightsV22(content) {
@@ -2639,13 +2674,8 @@ function renderVisualInsightsV22(content) {
   }).join("") : `<p class="empty-v22">还没有煤矸石批次。</p>`}
         </div>
         <div class="age-coverage-v22">
-          <h3>龄期结果覆盖率</h3>
-          ${ageRows.length ? ageRows.map((row) => `<div class="coverage-row-v22" style="--p:${row.percent}%">
-              <span>${row.age}d</span>
-              <i><b></b></i>
-              <strong>${row.filled}/${row.total}</strong>
-              <em>${row.due ? `到期 ${row.due}` : row.future ? `未来 ${row.future}` : "正常"}</em>
-            </div>`).join("") : `<p class="hint">还没有设置龄期。</p>`}
+          <h3>龄期覆盖热力图</h3>
+          ${renderAgeCoverageHeatmapV23(content)}
         </div>
       </div>
     </section>`;
@@ -3352,11 +3382,31 @@ function workspaceStylesV3() {
     .matrix-warn-v22 { color:#a8422d; }
     .age-coverage-v22 { display:grid; gap:10px; padding:14px; border:1px solid var(--line); border-radius:8px; background:#fff; }
     .age-coverage-v22 h3 { margin:0; color:var(--green); font-size:17px; }
-    .coverage-row-v22 { display:grid; grid-template-columns:42px minmax(0,1fr) 52px 76px; gap:8px; align-items:center; color:var(--muted); font-size:12px; font-weight:900; }
-    .coverage-row-v22 i { height:10px; overflow:hidden; border-radius:999px; background:#e7efec; }
-    .coverage-row-v22 i b { display:block; width:var(--p,0%); height:100%; border-radius:999px; background:linear-gradient(90deg,#337861,#88b6a8); }
-    .coverage-row-v22 strong { color:var(--ink); }
-    .coverage-row-v22 em { font-style:normal; text-align:right; color:#3d6f98; }
+    .age-heatmap-v23 { display:grid; gap:8px; overflow-x:auto; }
+    .heatmap-head-v23, .heatmap-row-v23 { min-width:calc(220px + var(--age-cols,3) * 106px); display:grid; grid-template-columns:220px repeat(var(--age-cols,3), minmax(96px,1fr)); gap:8px; align-items:stretch; }
+    .heatmap-head-v23 { color:var(--muted); font-size:12px; font-weight:900; }
+    .heatmap-head-v23 span, .heatmap-head-v23 b { min-height:28px; display:flex; align-items:center; }
+    .heatmap-row-v23 { text-decoration:none; color:inherit; }
+    .heatmap-row-v23 strong { min-width:0; display:grid; gap:3px; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; }
+    .heatmap-row-v23 strong span, .heatmap-row-v23 strong small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .heatmap-row-v23 strong span { color:var(--ink); font-size:13px; }
+    .heatmap-row-v23 strong small { color:var(--muted); font-size:11px; }
+    .heat-cell-v23 { min-height:48px; display:grid; align-content:center; gap:3px; padding:7px 8px; border:1px solid var(--line); border-radius:8px; background:#f7faf8; font-style:normal; }
+    .heat-cell-v23 span { color:var(--muted); font-size:12px; font-weight:900; }
+    .heat-cell-v23 small { color:var(--muted); font-size:10px; font-weight:800; }
+    .heat-cell-v23.done { border-color:#b8dfce; background:#edf9f3; }
+    .heat-cell-v23.done span { color:#337861; }
+    .heat-cell-v23.due { border-color:#f0c7ba; background:#fff3ed; }
+    .heat-cell-v23.due span { color:#a8422d; }
+    .heat-cell-v23.future { border-color:#c8dcef; background:#f1f7fc; }
+    .heat-cell-v23.future span { color:#3d6f98; }
+    .heat-cell-v23.unset { border-style:dashed; background:#f4f6f5; opacity:.78; }
+    .heatmap-legend-v23 { display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
+    .heatmap-legend-v23 span { min-height:26px; display:inline-flex; align-items:center; gap:6px; padding:0 8px; border-radius:999px; background:#f7faf8; color:var(--muted); font-size:12px; font-weight:900; }
+    .heatmap-legend-v23 span:before { content:""; width:8px; height:8px; border-radius:99px; background:#b8c8c3; }
+    .heatmap-legend-v23 .done:before { background:#337861; }
+    .heatmap-legend-v23 .due:before { background:#a8422d; }
+    .heatmap-legend-v23 .future:before { background:#3d6f98; }
     .overview-grid-v22 { display:grid; grid-template-columns:minmax(0,1.16fr) minmax(360px,.84fr); gap:16px; margin-bottom:16px; align-items:start; }
     .overview-grid-v22.compact { grid-template-columns:minmax(360px,.86fr) minmax(0,1.14fr); }
     .dashboard-card-v22 { padding:18px; border:1px solid rgba(204,218,214,.95); border-radius:8px; background:#fff; box-shadow:0 14px 38px rgba(20,38,35,.065); }
