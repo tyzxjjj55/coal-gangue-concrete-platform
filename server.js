@@ -3486,7 +3486,6 @@ function workspaceStylesV3() {
     .bar-chart-28d-v23 .bar-columns-v23 { height:170px; }
     .bar-group-v23.single .column-v23 { width:34px; }
     .anomaly-list-v22 { display:grid; gap:9px; }
-    .anomaly-list-v22 { display:grid; gap:9px; }
     .anomaly-form-v22 { display:grid; gap:10px; }
     .anomaly-hint-v22 { color:var(--muted); font-size:13px; font-weight:800; }
     .anomaly-v22 { position:relative; touch-action:pan-y; padding:11px 96px 11px 12px; border:1px solid var(--line); border-left-width:4px; border-radius:8px; background:#fbfdfc; transition:transform .16s ease, opacity .16s ease, background .16s ease; }
@@ -5485,9 +5484,9 @@ function renderWorkspaceScriptV3() {
         const bars = (row.values || []).map((item) => {
           const value = Number(item.number) || 0;
           const height = value ? Math.max(8, Math.min(100, (value / Math.max(1, max)) * 100)) : 0;
-          return "<span class="column-v23 age-" + escapeAttr(item.age) + "" style="--h:" + height + "%" title="" + escapeAttr((row.blockName || "") + " " + (item.label || "")) + ""><i></i><b>" + escapeAttr(item.mean || "") + "</b><em>" + escapeAttr(item.age) + "d</em></span>";
+          return "<span class=\"column-v23 age-" + escapeAttr(item.age) + "\" style=\"--h:" + height + "%\" title=\"" + escapeAttr((row.blockName || "") + " " + (item.label || "")) + "\"><i></i><b>" + escapeAttr(item.mean || "") + "</b><em>" + escapeAttr(item.age) + "d</em></span>";
         }).join("");
-        return "<article class="bar-group-v23" data-chart-row><div class="bar-columns-v23">" + bars + "</div><strong title="" + escapeAttr((row.gangueName || "") + "｜" + (row.blockName || "")) + ""><span>" + escapeAttr(row.blockName || "") + "</span><small>" + escapeAttr(row.gangueName || "") + "</small></strong></article>";
+        return "<article class=\"bar-group-v23\" data-chart-row><div class=\"bar-columns-v23\">" + bars + "</div><strong title=\"" + escapeAttr((row.gangueName || "") + "｜" + (row.blockName || "")) + "\"><span>" + escapeAttr(row.blockName || "") + "</span><small>" + escapeAttr(row.gangueName || "") + "</small></strong></article>";
       };
       const applyChartFilter = () => {
         const selected = chartFilter?.value || "";
@@ -5497,10 +5496,9 @@ function renderWorkspaceScriptV3() {
         if (chartCurrent) chartCurrent.dataset.currentName = group.name || "未命名批次";
         if (chartStage) chartStage.style.setProperty("--chart-max", group.max || 1);
         chartRowsSlot.innerHTML = (group.rows || []).length
-          ? "<div class="bar-chart-v23" data-chart-row>" + group.rows.map((row) => renderChartRow(row, group.max || 1)).join("") + "</div>"
-          : "<p class="empty-v22" data-chart-empty>这个批次还没有可展示的抗压强度。</p>";
+          ? "<div class=\"bar-chart-v23\" data-chart-row>" + group.rows.map((row) => renderChartRow(row, group.max || 1)).join("") + "</div>"
+          : "<p class=\"empty-v22\" data-chart-empty>这个批次还没有可展示的抗压强度。</p>";
       };
-      chartFilter?.addEventListener("change", applyChartFilter);
       chartFilter?.addEventListener("change", applyChartFilter);
       applyChartFilter();
 
