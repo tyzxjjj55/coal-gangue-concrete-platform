@@ -2654,7 +2654,6 @@ function renderAgeCoverageHeatmapV23(content) {
 
 function renderVisualInsightsV22(content) {
   const gangueRows = gangueProgressRowsV22(content);
-  const ageRows = ageCoverageRowsV22(content);
   return `<section class="dashboard-card-v22 visual-insights-v22" id="visual-map">
       <div class="section-head-v22">
         <div><p class="eyebrow">Visual Map</p><h2>实验进度图谱</h2><p>按煤矸石批次看结果完成率、任务压力、图片归档和关键指标完整度。</p></div>
