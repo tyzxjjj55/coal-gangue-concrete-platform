@@ -2981,8 +2981,10 @@ function renderResearchBlockCardV22(block, content, options = {}) {
       <div class="block-facts-v22">
         <span>水胶比：${html(record.waterBinderRatio || (ratios.waterBinderRatio ? formatRecipeNumber(ratios.waterBinderRatio) : "未填"))}</span>
         <span>骨灰比：${html(ratios.aggregateBinderRatio ? formatRecipeNumber(ratios.aggregateBinderRatio) : "未填")}</span>
+        <span>外加剂/胶凝：${html(ratios.admixtureBinderPercent ? `${formatRecipeNumber(ratios.admixtureBinderPercent * 100, 2)}%` : "未填")}</span>
         <span>最新强度：${latest ? `${html(latest.age)}d ${html(metricResultDisplay(latest.result))}` : "未录入"}</span>
       </div>
+      ${renderRecipeStackBarV23(record, true)}
       ${renderBlockStrengthBarsV22(block)}
       <div class="age-progress-v22">${progress}</div>
       <div class="card-actions-v22">
@@ -3310,6 +3312,19 @@ function workspaceStylesV3() {
     .ratio-grid b { color:var(--muted); font-size:12px; }
     .ratio-grid em { color:var(--ink); font-style:normal; font-size:16px; font-weight:900; }
     .ratio-line { margin:10px 0 0; color:var(--muted); font-size:13px; font-weight:800; }
+    .recipe-stack-v23 { display:grid; gap:8px; margin:0 0 12px; }
+    .recipe-stack-v23.compact { margin:0; gap:6px; }
+    .recipe-stack-track-v23 { height:16px; display:flex; overflow:hidden; border:1px solid #d8e6e0; border-radius:999px; background:#eef5f2; }
+    .recipe-stack-track-v23 span { width:var(--w,0%); min-width:4px; }
+    .recipe-stack-track-v23 .binder, .recipe-stack-legend-v23 .binder b { background:#337861; }
+    .recipe-stack-track-v23 .aggregate, .recipe-stack-legend-v23 .aggregate b { background:#8b6f47; }
+    .recipe-stack-track-v23 .water, .recipe-stack-legend-v23 .water b { background:#3d6f98; }
+    .recipe-stack-track-v23 .admixture, .recipe-stack-legend-v23 .admixture b { background:#d28b34; }
+    .recipe-stack-legend-v23 { display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:11px; font-weight:900; }
+    .recipe-stack-legend-v23 span { display:inline-flex; align-items:center; gap:5px; }
+    .recipe-stack-legend-v23 b { width:8px; height:8px; border-radius:99px; }
+    .research-block-v22 .recipe-stack-v23 { margin:0; }
+    .research-block-v22 .recipe-stack-track-v23 { height:10px; }
     .template-weight-panel { display:grid; gap:10px; padding:12px; border:1px solid var(--line); border-radius:8px; background:#fff; }
     .template-weight-panel strong { color:var(--green); }
     .template-weight-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
@@ -4689,6 +4704,29 @@ function calculateRecipeRatios(record) {
   };
 }
 
+function renderRecipeStackBarV23(record, compact = false) {
+  const ratios = calculateRecipeRatios(record);
+  const segments = [
+    { key: "binder", label: "胶凝材料", value: ratios.binderTotal },
+    { key: "aggregate", label: "煤矸石/骨料", value: ratios.aggregateTotal },
+    { key: "water", label: "水", value: ratios.waterTotal },
+    { key: "admixture", label: "外加剂", value: ratios.admixtureTotal }
+  ].filter((item) => item.value > 0);
+  const total = segments.reduce((sum, item) => sum + item.value, 0);
+  if (!total) return compact ? "" : `<p class="hint">材料 g 重不足，暂不能生成配合比堆叠条。</p>`;
+  return `<div class="recipe-stack-v23${compact ? " compact" : ""}">
+      <div class="recipe-stack-track-v23">
+        ${segments.map((item) => {
+    const percent = (item.value / total) * 100;
+    return `<span class="${attr(item.key)}" style="--w:${percent}%" title="${attr(`${item.label} ${formatRecipeWeight(item.value)} · ${formatRecipeNumber(percent, 1)}%`)}"></span>`;
+  }).join("")}
+      </div>
+      <div class="recipe-stack-legend-v23">
+        ${segments.map((item) => `<span class="${attr(item.key)}"><b></b>${html(item.label)} ${html(formatRecipeNumber((item.value / total) * 100, 1))}%</span>`).join("")}
+      </div>
+    </div>`;
+}
+
 function renderRecipeRatioPanelV3(record) {
   const ratios = calculateRecipeRatios(record);
   if (!ratios.binderTotal && !ratios.aggregateTotal && !ratios.waterTotal && !ratios.admixtureTotal) {
@@ -4709,6 +4747,7 @@ function renderRecipeRatioPanelV3(record) {
     : "胶凝材料还没有可计算的 g 重。";
   return `<div class="ratio-panel">
       <strong>自动比例</strong>
+      ${renderRecipeStackBarV23(record)}
       <div class="ratio-grid">
         ${ratioItems.map(([label, value]) => `<span><b>${html(label)}</b><em>${html(value)}</em></span>`).join("")}
       </div>
