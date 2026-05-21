@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Runtime secrets and local environment
+.env
+.env.*
+data/session-secret
+data/work-uploads/
+*.pem
+*.key
+
+# Generated backups
+data/backups/
+server.js.bak*
+data/content.json.bak*
+*.bak
+
+# Logs and temporary files
+*.log
+*.tmp
+*.tgz
+*.tar
+*.tar.gz
+*.zip
+*.swp
+*~
+
+# Local GitHub deploy keys, if ever stored near the project by mistake
+.ssh/

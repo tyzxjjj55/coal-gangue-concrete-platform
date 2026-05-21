@@ -1,0 +1,4153 @@
+{
+  "siteTitle": "xx520 小站",
+  "brandName": "xx520 小站",
+  "eyebrow": "Quiet notes, tiny tools, daily traces",
+  "heroTitle": "把零散的想法，慢慢整理成一个小站。",
+  "lead": "这里会放一些日常笔记、折腾记录和小项目想法。先把空间搭起来，内容再一点点长出来。",
+  "aboutKicker": "关于这里",
+  "aboutTitle": "一个轻量、安静、可持续维护的个人主页。",
+  "aboutBody": "小站先保持简单：不追求复杂功能，只留下能长期更新的结构。以后可以继续加文章、项目记录、书签和状态页。",
+  "notes": [
+    {
+      "date": "2024-07-02",
+      "title": "文献 1｜The mastery of details in the workflow of materials machine learning",
+      "body": "期刊：npj Computational Materials，10(1)\n\n发表日期：2024-07-02\n\n作者：Yingying Ma; Pengcheng Xu; Minjie Li 等\n\nDOI：https://doi.org/10.1038/s41524-024-01331-5\n\n官网：https://www.nature.com/articles/s41524-024-01331-5\n\nPDF：https://www.nature.com/articles/s41524-024-01331-5.pdf\n\nZotero：已导入本机 Zotero，key=DRTQQAB3\n\n备注：材料机器学习 / 科学图像分析 / 材料性能预测文献清单"
+    },
+    {
+      "date": "2026-04-24",
+      "title": "文献 2｜In context learning foundation models for materials property prediction with small datasets",
+      "body": "期刊：npj Computational Materials\n\n发表日期：2026-04-24\n\n作者：Qinyang Li; Rongzhi Dong; Nicholas Miklaucic 等\n\nDOI：https://doi.org/10.1038/s41524-026-02089-8\n\n官网：https://www.nature.com/articles/s41524-026-02089-8\n\nPDF：https://www.nature.com/articles/s41524-026-02089-8.pdf\n\nZotero：已导入本机 Zotero，key=LQQ5W2D2\n\n备注：材料机器学习 / 科学图像分析 / 材料性能预测文献清单"
+    },
+    {
+      "date": "2026-04-21",
+      "title": "文献 3｜Vision language models for scientific image analysis: an evaluation highlighting opportunities and challenges",
+      "body": "期刊：npj Computational Materials\n\n发表日期：2026-04-21\n\n作者：Prateek Verma; Minh-Hao Van; Xintao Wu\n\nDOI：https://doi.org/10.1038/s41524-026-02069-y\n\n官网：https://www.nature.com/articles/s41524-026-02069-y\n\nPDF：https://www.nature.com/articles/s41524-026-02069-y.pdf\n\nZotero：已导入本机 Zotero，key=RAW2Z8LD\n\n备注：材料机器学习 / 科学图像分析 / 材料性能预测文献清单"
+    },
+    {
+      "date": "2025-10-29",
+      "title": "文献 4｜Generalizable image segmentation for microstructure characterization through integrated SEM and EBSD analysis",
+      "body": "期刊：npj Computational Materials，11(1)\n\n发表日期：2025-10-29\n\n作者：M. F. N. Taufique; Julia Nguyen; Julian D. Escobar 等\n\nDOI：https://doi.org/10.1038/s41524-025-01801-4\n\n官网：https://www.nature.com/articles/s41524-025-01801-4\n\nPDF：https://www.nature.com/articles/s41524-025-01801-4.pdf\n\nZotero：已导入本机 Zotero，key=AX692TJJ\n\n备注：材料机器学习 / 科学图像分析 / 材料性能预测文献清单"
+    },
+    {
+      "date": "2024-10-18",
+      "title": "文献 5｜MD-HIT: Machine learning for material property prediction with dataset redundancy control",
+      "body": "期刊：npj Computational Materials，10(1)\n\n发表日期：2024-10-18\n\n作者：Qin Li; Nihang Fu; Sadman Sadeed Omee 等\n\nDOI：https://doi.org/10.1038/s41524-024-01426-z\n\n官网：https://www.nature.com/articles/s41524-024-01426-z\n\nPDF：https://www.nature.com/articles/s41524-024-01426-z.pdf\n\nZotero：已导入本机 Zotero，key=2CBNTMFS\n\n备注：材料机器学习 / 科学图像分析 / 材料性能预测文献清单"
+    },
+    {
+      "date": "2024-07-04",
+      "title": "文献 6｜Structure-based out-of-distribution (OOD) materials property prediction: a benchmark study",
+      "body": "期刊：npj Computational Materials，10(1)\n\n发表日期：2024-07-04\n\n作者：Sadman Sadeed Omee; Nihang Fu; Rongzhi Dong 等\n\nDOI：https://doi.org/10.1038/s41524-024-01316-4\n\n官网：https://www.nature.com/articles/s41524-024-01316-4\n\nPDF：https://www.nature.com/articles/s41524-024-01316-4.pdf\n\nZotero：已导入本机 Zotero，key=TIGGAT4C\n\n备注：材料机器学习 / 科学图像分析 / 材料性能预测文献清单"
+    },
+    {
+      "date": "2025-10-23",
+      "title": "文献 7｜Explainable machine learning-enabled dual-objective design of γ' phase characteristic parameters in γ'-strengthened Co-based superalloys",
+      "body": "期刊：npj Computational Materials，11(1)\n\n发表日期：2025-10-23\n\n作者：Linlin Sun; Qingshuang Ma; Chenghao Pei 等\n\nDOI：https://doi.org/10.1038/s41524-025-01797-x\n\n官网：https://www.nature.com/articles/s41524-025-01797-x\n\nPDF：https://www.nature.com/articles/s41524-025-01797-x.pdf\n\nZotero：已导入本机 Zotero，key=7HNQZPK8\n\n备注：材料机器学习 / 科学图像分析 / 材料性能预测文献清单"
+    },
+    {
+      "date": "2024-03-21",
+      "title": "文献 8｜MLMD: a programming-free AI platform to predict and design materials",
+      "body": "期刊：npj Computational Materials，10(1)\n\n发表日期：2024-03-21\n\n作者：Jiaxuan Ma; Bin Cao; Shuya Dong 等\n\nDOI：https://doi.org/10.1038/s41524-024-01243-4\n\n官网：https://www.nature.com/articles/s41524-024-01243-4\n\nPDF：https://www.nature.com/articles/s41524-024-01243-4.pdf\n\nZotero：已导入本机 Zotero，key=52Z4TXBN\n\n备注：材料机器学习 / 科学图像分析 / 材料性能预测文献清单"
+    },
+    {
+      "date": "2026-05-08",
+      "title": "小站上线记录",
+      "body": "从一个干净的静态页面开始，先把入口、版式和更新节奏定下来。"
+    },
+    {
+      "date": "待更新",
+      "title": "服务器折腾笔记",
+      "body": "记录服务部署、备份、监控和一些踩坑经验。"
+    },
+    {
+      "date": "待更新",
+      "title": "日常工具清单",
+      "body": "整理真正用得上的工具和自动化流程。"
+    }
+  ],
+  "ideas": [
+    {
+      "tag": "Automation",
+      "title": "定时任务中心",
+      "body": "把重复的小事交给服务器，让每天少一点手动操作。"
+    },
+    {
+      "tag": "Notes",
+      "title": "公开笔记",
+      "body": "写一些短记录，方便回看，也方便之后扩展成博客。"
+    },
+    {
+      "tag": "Status",
+      "title": "服务观察",
+      "body": "后续可以加监控页，看小站和个人服务是否在线。"
+    }
+  ],
+  "gallery": [
+    {
+      "src": "/private-uploads/1778254615107-0744239f-20260402_224513.jpg",
+      "thumb": "/private-thumbs/1778254615107-0744239f-20260402_224513.jpg",
+      "title": "20260402_224513",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/private-uploads/1778254572101-d7cdede3-20260402_224436.jpg",
+      "thumb": "/private-thumbs/1778254572101-d7cdede3-20260402_224436.jpg",
+      "title": "20260402_224436",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/private-uploads/1778254568380-f015f91f-20260402_224653.jpg",
+      "thumb": "/private-thumbs/1778254568380-f015f91f-20260402_224653.jpg",
+      "title": "20260402_224653",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/private-uploads/1778254564863-591ec92f-20260402_224624.jpg",
+      "thumb": "/private-thumbs/1778254564863-591ec92f-20260402_224624.jpg",
+      "title": "20260402_224624",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/private-uploads/1778254560694-779e29ec-20260402_224723.jpg",
+      "thumb": "/private-thumbs/1778254560694-779e29ec-20260402_224723.jpg",
+      "title": "20260402_224723",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/private-uploads/1778254554855-5dea4f21-20260402_224548.jpg",
+      "thumb": "/private-thumbs/1778254554855-5dea4f21-20260402_224548.jpg",
+      "title": "20260402_224548",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/private-uploads/1778254550230-1f8422d5-mmexport1775198170246.jpg",
+      "thumb": "/private-thumbs/1778254550230-1f8422d5-mmexport1775198170246.jpg",
+      "title": "mmexport1775198170246",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/private-uploads/1778254549037-33c8ae19-mmexport1775198174007.jpg",
+      "thumb": "/private-thumbs/1778254549037-33c8ae19-mmexport1775198174007.jpg",
+      "title": "mmexport1775198174007",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/private-uploads/1778254548069-9025b1f0-mmexport1775198177305.jpg",
+      "thumb": "/private-thumbs/1778254548069-9025b1f0-mmexport1775198177305.jpg",
+      "title": "mmexport1775198177305",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/private-uploads/1778254546158-91531c1e-mmexport1775198180803.jpg",
+      "thumb": "/private-thumbs/1778254546158-91531c1e-mmexport1775198180803.jpg",
+      "title": "mmexport1775198180803",
+      "caption": "",
+      "album": "嘻嘻",
+      "private": true
+    },
+    {
+      "src": "/uploads/1778213212917-96f5bbf8-20260501_102506.jpg",
+      "thumb": "/thumbs/1778213212917-96f5bbf8-20260501_102506.jpg",
+      "title": "涝利海 1",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213212932-8291a38e-20260501_102501.jpg",
+      "thumb": "/thumbs/1778213212932-8291a38e-20260501_102501.jpg",
+      "title": "涝利海 2",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213212941-d329509a-20260501_102448.jpg",
+      "thumb": "/thumbs/1778213212941-d329509a-20260501_102448.jpg",
+      "title": "涝利海 3",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213212949-702c79e5-20260501_101715-0-.jpg",
+      "thumb": "/thumbs/1778213212949-702c79e5-20260501_101715-0-.jpg",
+      "title": "涝利海 4",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213212956-77e4f582-20260501_101715.jpg",
+      "thumb": "/thumbs/1778213212956-77e4f582-20260501_101715.jpg",
+      "title": "涝利海 5",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213212962-216ae124-20260501_101648.jpg",
+      "thumb": "/thumbs/1778213212962-216ae124-20260501_101648.jpg",
+      "title": "涝利海 6",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213009-3fed6903-20260501_101646.jpg",
+      "thumb": "/thumbs/1778213213009-3fed6903-20260501_101646.jpg",
+      "title": "涝利海 7",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213052-77318c3d-20260501_101642.jpg",
+      "thumb": "/thumbs/1778213213052-77318c3d-20260501_101642.jpg",
+      "title": "涝利海 8",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213100-cc812f58-20260501_101450.jpg",
+      "thumb": "/thumbs/1778213213100-cc812f58-20260501_101450.jpg",
+      "title": "涝利海 9",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213218-e0974d7b-20260501_101513.jpg",
+      "thumb": "/thumbs/1778213213218-e0974d7b-20260501_101513.jpg",
+      "title": "涝利海 10",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213240-2db57972-20260501_101510.jpg",
+      "thumb": "/thumbs/1778213213240-2db57972-20260501_101510.jpg",
+      "title": "涝利海 11",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213324-c6c9a6ac-20260501_101506.jpg",
+      "thumb": "/thumbs/1778213213324-c6c9a6ac-20260501_101506.jpg",
+      "title": "涝利海 12",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213333-1b9c7589-20260501_101502.jpg",
+      "thumb": "/thumbs/1778213213333-1b9c7589-20260501_101502.jpg",
+      "title": "涝利海 13",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213406-a097886e-20260501_101500.jpg",
+      "thumb": "/thumbs/1778213213406-a097886e-20260501_101500.jpg",
+      "title": "涝利海 14",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213414-ee33c6c9-20260501_101455.jpg",
+      "thumb": "/thumbs/1778213213414-ee33c6c9-20260501_101455.jpg",
+      "title": "涝利海 15",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    },
+    {
+      "src": "/uploads/1778213213571-0ef24653-20260501_101443.jpg",
+      "thumb": "/thumbs/1778213213571-0ef24653-20260501_101443.jpg",
+      "title": "涝利海 16",
+      "caption": "",
+      "album": "默认相册",
+      "private": false
+    }
+  ],
+  "recipeMaterialLibrary": [
+    {
+      "id": "material_00664c6e6c",
+      "label": "生石灰",
+      "category": "binder",
+      "placeholder": "填写用量或型号",
+      "custom": true
+    },
+    {
+      "id": "material_b5b0dca1da",
+      "label": "水渣",
+      "category": "binder",
+      "placeholder": "填写g重或型号",
+      "custom": true
+    },
+    {
+      "id": "material_0951d09d7e",
+      "label": "硫酸钠",
+      "category": "admixture",
+      "placeholder": "填写用量或型号",
+      "custom": true
+    },
+    {
+      "id": "material_75b0d45793",
+      "label": "煤矸石",
+      "category": "aggregate",
+      "placeholder": "填写用量或型号",
+      "custom": true
+    }
+  ],
+  "disabledRecipeMaterialIds": [
+    "mineralPowder",
+    "silicaFume",
+    "admixture",
+    "expansiveAgent",
+    "fiber",
+    "sand",
+    "stone"
+  ],
+  "dismissedAnomalies": [
+    "gangue-core:24ffa533-807d-4304-aeff-8b19dbc3123c",
+    "gangue-core:2de6d7e4-e954-491a-a4a5-9c1b2797ac78",
+    "gangue-core:c729cd21-d91d-4be9-8aa1-be3507190084",
+    "block-no-image:8729e744-ae9c-449d-a4b1-f27d1860f00a",
+    "block-compression-image:8729e744-ae9c-449d-a4b1-f27d1860f00a",
+    "block-no-image:14ee0b08-ba8f-4f75-a338-c10a7b967ad2",
+    "block-compression-image:14ee0b08-ba8f-4f75-a338-c10a7b967ad2",
+    "block-no-image:4024321a-5717-423e-bd4e-08f8c3f39233",
+    "block-compression-image:4024321a-5717-423e-bd4e-08f8c3f39233",
+    "block-empty:5f0e23b7-50ac-4002-9171-485f5adf8a7f",
+    "block-empty:14ea69c6-b2cd-4c9c-81e5-760264a442f9",
+    "block-empty:a1e67298-206b-49d5-8b87-11237379cef2",
+    "block-empty:cc752ede-ef87-4fb9-a5cc-c308f2647e73",
+    "block-empty:da4b001e-7e32-4f5c-b285-5f684c6bf090",
+    "block-no-image:a1e67298-206b-49d5-8b87-11237379cef2",
+    "block-compression-image:a1e67298-206b-49d5-8b87-11237379cef2",
+    "block-empty:d2d94b4c-81b9-40e6-9f2b-dd7cff1d1020",
+    "block-no-image:d2d94b4c-81b9-40e6-9f2b-dd7cff1d1020",
+    "block-compression-image:d2d94b4c-81b9-40e6-9f2b-dd7cff1d1020",
+    "block-no-image:da4b001e-7e32-4f5c-b285-5f684c6bf090",
+    "block-compression-image:da4b001e-7e32-4f5c-b285-5f684c6bf090",
+    "block-no-image:5f0e23b7-50ac-4002-9171-485f5adf8a7f",
+    "block-compression-image:14ea69c6-b2cd-4c9c-81e5-760264a442f9",
+    "block-no-image:14ea69c6-b2cd-4c9c-81e5-760264a442f9",
+    "block-compression-image:5f0e23b7-50ac-4002-9171-485f5adf8a7f",
+    "gangue-core:9bbe2a9b-3f63-422a-a885-a6dbd78da488",
+    "block-empty:f13bdc1e-8cec-4c31-b773-adf4124aaebb",
+    "block-empty:d7bdf65e-94b9-46bc-be09-f66ca0026267",
+    "block-empty:903dded7-ad51-4fac-8b9a-6129723f203f",
+    "block-empty:a46bf218-e99b-4845-8e0a-e51b8eb33fd6"
+  ],
+  "coalGangueDb": [
+    {
+      "id": "9bbe2a9b-3f63-422a-a885-a6dbd78da488",
+      "name": "5.8 陕煤 第一批",
+      "source": "",
+      "particleRanges": [
+        "0.3-0.6",
+        "0.6-1.18",
+        "1.18-2.36",
+        "2.36-4.75",
+        "4.75-9.5",
+        "9.5-16"
+      ],
+      "crushingValues": {
+        "0.3-0.6": "",
+        "0.6-1.18": "",
+        "1.18-2.36": "",
+        "2.36-4.75": "",
+        "4.75-9.5": "",
+        "9.5-16": ""
+      },
+      "crushingTests": {
+        "0.3-0.6": [
+          "",
+          "",
+          ""
+        ],
+        "0.6-1.18": [
+          "",
+          "",
+          ""
+        ],
+        "1.18-2.36": [
+          "",
+          "",
+          ""
+        ],
+        "2.36-4.75": [
+          "",
+          "",
+          ""
+        ],
+        "4.75-9.5": [
+          "",
+          "",
+          ""
+        ],
+        "9.5-16": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "batchCrushingRange": "",
+      "batchCrushingValue": "",
+      "flakinessValues": {
+        "0.3-0.6": "",
+        "0.6-1.18": "",
+        "1.18-2.36": "",
+        "2.36-4.75": "",
+        "4.75-9.5": "",
+        "9.5-16": ""
+      },
+      "coarseWaterAbsorption": "",
+      "fineWaterAbsorption": "",
+      "coarseApparentDensity": "",
+      "fineApparentDensity": "",
+      "gradations": [],
+      "images": [],
+      "otherInfo": "",
+      "updatedAt": "2026-05-19"
+    },
+    {
+      "id": "24ffa533-807d-4304-aeff-8b19dbc3123c",
+      "name": "龙湾",
+      "source": "王晋峰",
+      "particleRanges": [
+        "0.3-0.6",
+        "0.6-1.18",
+        "1.18-2.36",
+        "2.36-4.75"
+      ],
+      "crushingValues": {
+        "0.3-0.6": "20.18%",
+        "0.6-1.18": "25.19%",
+        "1.18-2.36": "25.8%",
+        "2.36-4.75": "18.37%"
+      },
+      "crushingTests": {
+        "0.3-0.6": [
+          "19.06%",
+          "19.88%",
+          "21.61%"
+        ],
+        "0.6-1.18": [
+          "25.3%",
+          "25.12%",
+          "25.15%"
+        ],
+        "1.18-2.36": [
+          "26.33%",
+          "25.91%",
+          "25.15%"
+        ],
+        "2.36-4.75": [
+          "19.55%",
+          "18.91%",
+          "16.64%"
+        ]
+      },
+      "batchCrushingRange": "1.18-2.36",
+      "batchCrushingValue": "25.8%",
+      "flakinessValues": {
+        "0.3-0.6": "",
+        "0.6-1.18": "",
+        "1.18-2.36": "",
+        "2.36-4.75": ""
+      },
+      "coarseWaterAbsorption": "",
+      "fineWaterAbsorption": "",
+      "coarseApparentDensity": "",
+      "fineApparentDensity": "",
+      "gradations": [],
+      "images": [],
+      "otherInfo": "",
+      "updatedAt": "2026-05-12"
+    },
+    {
+      "id": "2de6d7e4-e954-491a-a4a5-9c1b2797ac78",
+      "name": "明珠",
+      "source": "4.10",
+      "particleRanges": [
+        "0.3-0.6",
+        "0.6-1.18",
+        "1.18-2.36",
+        "2.36-4.75",
+        "4.75-9.5",
+        "9.5-16"
+      ],
+      "crushingValues": {
+        "0.3-0.6": "16.33%",
+        "0.6-1.18": "21.55%",
+        "1.18-2.36": "23.21%",
+        "2.36-4.75": "27%",
+        "4.75-9.5": "",
+        "9.5-16": ""
+      },
+      "crushingTests": {
+        "0.3-0.6": [
+          "15.39%",
+          "16.45%",
+          "17.15%"
+        ],
+        "0.6-1.18": [
+          "20.88%",
+          "24.33%",
+          "19.45%"
+        ],
+        "1.18-2.36": [
+          "26.42%",
+          "20.48%",
+          "22.73%"
+        ],
+        "2.36-4.75": [
+          "28.03%",
+          "21.94%",
+          "31.03%"
+        ],
+        "4.75-9.5": [
+          "",
+          "",
+          ""
+        ],
+        "9.5-16": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "batchCrushingRange": "2.36-4.75",
+      "batchCrushingValue": "27%",
+      "flakinessValues": {
+        "0.3-0.6": "",
+        "0.6-1.18": "",
+        "1.18-2.36": "",
+        "2.36-4.75": "",
+        "4.75-9.5": "",
+        "9.5-16": ""
+      },
+      "coarseWaterAbsorption": "",
+      "fineWaterAbsorption": "",
+      "coarseApparentDensity": "",
+      "fineApparentDensity": "",
+      "gradations": [],
+      "images": [],
+      "otherInfo": "",
+      "updatedAt": "2026-05-13"
+    },
+    {
+      "id": "c729cd21-d91d-4be9-8aa1-be3507190084",
+      "name": "朔州",
+      "source": "胡胜友 4.25",
+      "particleRanges": [
+        "0-5",
+        "5-10",
+        "10-20",
+        "20-31.5"
+      ],
+      "crushingValues": {
+        "0-5": "",
+        "5-10": "",
+        "10-20": "",
+        "20-31.5": ""
+      },
+      "crushingTests": {
+        "0-5": [
+          "",
+          "",
+          ""
+        ],
+        "5-10": [
+          "",
+          "",
+          ""
+        ],
+        "10-20": [
+          "",
+          "",
+          ""
+        ],
+        "20-31.5": [
+          "",
+          "",
+          ""
+        ]
+      },
+      "batchCrushingRange": "",
+      "batchCrushingValue": "",
+      "flakinessValues": {
+        "0-5": "",
+        "5-10": "",
+        "10-20": "",
+        "20-31.5": ""
+      },
+      "coarseWaterAbsorption": "",
+      "fineWaterAbsorption": "",
+      "coarseApparentDensity": "",
+      "fineApparentDensity": "",
+      "gradations": [],
+      "images": [],
+      "otherInfo": "",
+      "updatedAt": "2026-05-12"
+    }
+  ],
+  "testBlocks": [
+    {
+      "id": "903dded7-ad51-4fac-8b9a-6129723f203f",
+      "name": "5.20 陕煤 fa 喷浆 0.5",
+      "blockCategory": "spray",
+      "madeDate": "2026-05-20",
+      "quantity": 3,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "accelerator",
+          "label": "速凝剂",
+          "category": "admixture",
+          "placeholder": "例：4g",
+          "custom": false
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-21",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": false,
+          "7": false,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1485",
+        "water": "825",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "435.6",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "0.5",
+        "weighingTemplate": "withAccelerator",
+        "totalWithoutWater": "6098.4",
+        "gradationTemplate": "n05",
+        "gradationWeights": {
+          "0.15-0.30": "354",
+          "0.30-0.60": "501",
+          "0.60-1.18": "689",
+          "1.18-2.36": "994",
+          "2.36-4.75": "1422"
+        },
+        "gangueAggregateId": "9bbe2a9b-3f63-422a-a885-a6dbd78da488",
+        "gangueAggregateName": "5.8 陕煤 第一批",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "accelerator",
+            "label": "速凝剂",
+            "category": "admixture",
+            "placeholder": "例：4g",
+            "custom": false
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "435.6",
+          "cement": "1485",
+          "material_00664c6e6c": "59.4",
+          "material_0951d09d7e": "59.4",
+          "accelerator": "99.0",
+          "material_75b0d45793": "3960",
+          "water": "825"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "",
+            "dueDate": "2026-05-23",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-23",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "",
+            "dueDate": "2026-05-27",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-27",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-06-17",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-06-17",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "a46bf218-e99b-4845-8e0a-e51b8eb33fd6",
+      "name": "5.20 陕煤 fa 道路 0.5",
+      "blockCategory": "road",
+      "madeDate": "2026-05-20",
+      "quantity": 3,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "accelerator",
+          "label": "速凝剂",
+          "category": "admixture",
+          "placeholder": "例：4g",
+          "custom": false
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-21",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": false,
+          "7": false,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1485",
+        "water": "825",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "435.6",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "0.5",
+        "weighingTemplate": "withoutAccelerator",
+        "totalWithoutWater": "5999.4",
+        "gradationTemplate": "n05",
+        "gradationWeights": {
+          "0.15-0.30": "176",
+          "0.30-0.60": "249",
+          "0.60-1.18": "342",
+          "1.18-2.36": "493",
+          "2.36-4.75": "705",
+          "4.75-9.5": "990",
+          "9.5-16": "1005"
+        },
+        "gangueAggregateId": "9bbe2a9b-3f63-422a-a885-a6dbd78da488",
+        "gangueAggregateName": "5.8 陕煤 第一批",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "accelerator",
+            "label": "速凝剂",
+            "category": "admixture",
+            "placeholder": "例：4g",
+            "custom": false
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "435.6",
+          "cement": "1485",
+          "material_00664c6e6c": "59.4",
+          "material_0951d09d7e": "59.4",
+          "accelerator": "",
+          "material_75b0d45793": "3960",
+          "water": "825"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "",
+            "dueDate": "2026-05-23",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-23",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "",
+            "dueDate": "2026-05-27",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-27",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-06-17",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-06-17",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "f13bdc1e-8cec-4c31-b773-adf4124aaebb",
+      "name": "5.19 陕煤 喷浆 水渣 0.5",
+      "blockCategory": "spray",
+      "madeDate": "2026-05-19",
+      "quantity": 3,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_b5b0dca1da",
+          "label": "水渣",
+          "category": "binder",
+          "placeholder": "填写g重或型号",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "accelerator",
+          "label": "速凝剂",
+          "category": "admixture",
+          "placeholder": "例：4g",
+          "custom": false
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-20",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": false,
+          "7": false,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1485",
+        "water": "825",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "435.6",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "0.5",
+        "weighingTemplate": "withAccelerator",
+        "totalWithoutWater": "6098.4",
+        "gradationTemplate": "n05",
+        "gradationWeights": {
+          "0.15-0.30": "354",
+          "0.30-0.60": "501",
+          "0.60-1.18": "689",
+          "1.18-2.36": "994",
+          "2.36-4.75": "1422"
+        },
+        "gangueAggregateId": "9bbe2a9b-3f63-422a-a885-a6dbd78da488",
+        "gangueAggregateName": "5.8 陕煤 第一批",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_b5b0dca1da",
+            "label": "水渣",
+            "category": "binder",
+            "placeholder": "填写g重或型号",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "accelerator",
+            "label": "速凝剂",
+            "category": "admixture",
+            "placeholder": "例：4g",
+            "custom": false
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "435.6",
+          "cement": "1485",
+          "material_00664c6e6c": "59.4",
+          "material_b5b0dca1da": "",
+          "material_0951d09d7e": "59.4",
+          "accelerator": "99.0",
+          "material_75b0d45793": "3960",
+          "water": "825"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "",
+            "dueDate": "",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "",
+            "dueDate": "",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "d7bdf65e-94b9-46bc-be09-f66ca0026267",
+      "name": "5.19 陕煤 水渣 道路 0.5",
+      "blockCategory": "road",
+      "madeDate": "2026-05-19",
+      "quantity": 6,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_b5b0dca1da",
+          "label": "水渣",
+          "category": "binder",
+          "placeholder": "填写g重或型号",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "accelerator",
+          "label": "速凝剂",
+          "category": "admixture",
+          "placeholder": "例：4g",
+          "custom": false
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-20",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": false,
+          "7": false,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1485",
+        "water": "950",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "435.6",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "0.5",
+        "weighingTemplate": "withoutAccelerator",
+        "totalWithoutWater": "5999.4",
+        "gradationTemplate": "n05",
+        "gradationWeights": {
+          "0.15-0.30": "176",
+          "0.30-0.60": "249",
+          "0.60-1.18": "342",
+          "1.18-2.36": "493",
+          "2.36-4.75": "705",
+          "4.75-9.5": "990",
+          "9.5-16": "1005"
+        },
+        "gangueAggregateId": "9bbe2a9b-3f63-422a-a885-a6dbd78da488",
+        "gangueAggregateName": "5.8 陕煤 第一批",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_b5b0dca1da",
+            "label": "水渣",
+            "category": "binder",
+            "placeholder": "填写g重或型号",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "accelerator",
+            "label": "速凝剂",
+            "category": "admixture",
+            "placeholder": "例：4g",
+            "custom": false
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "435.6",
+          "cement": "1485",
+          "material_00664c6e6c": "59.4",
+          "material_b5b0dca1da": "",
+          "material_0951d09d7e": "59.4",
+          "accelerator": "",
+          "material_75b0d45793": "3960",
+          "water": "950"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "",
+            "dueDate": "2026-05-22",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-22",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "",
+            "dueDate": "2026-05-26",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-26",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-06-16",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-06-16",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "d2d94b4c-81b9-40e6-9f2b-dd7cff1d1020",
+      "name": "明珠 0.62 1;2",
+      "blockCategory": "road",
+      "madeDate": "2026-04-17",
+      "quantity": 3,
+      "ages": [
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "accelerator",
+          "label": "速凝剂",
+          "category": "admixture",
+          "placeholder": "例：4g",
+          "custom": false
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-04-18",
+      "completed": {
+        "demold": false,
+        "ages": {
+          "28": false
+        },
+        "deleted": {
+          "demold": true,
+          "ages": {
+            "28": true
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1485",
+        "water": "825",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "435.6",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "",
+        "weighingTemplate": "withAccelerator",
+        "totalWithoutWater": "6098.4",
+        "gradationTemplate": "raw",
+        "gradationWeights": {
+          "0.15-0.30": "",
+          "0.30-0.60": "",
+          "0.60-1.18": "",
+          "1.18-2.36": "",
+          "2.36-4.75": "",
+          "4.75-9.5": "",
+          "9.5-16": ""
+        },
+        "gangueAggregateId": "2de6d7e4-e954-491a-a4a5-9c1b2797ac78",
+        "gangueAggregateName": "明珠",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "accelerator",
+            "label": "速凝剂",
+            "category": "admixture",
+            "placeholder": "例：4g",
+            "custom": false
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "435.6",
+          "cement": "1485",
+          "material_00664c6e6c": "59.4",
+          "material_0951d09d7e": "59.4",
+          "accelerator": "99.0",
+          "material_75b0d45793": "3960",
+          "water": "825"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "28": {
+            "testDate": "2026-05-15",
+            "dueDate": "2026-05-15",
+            "compressionStrength": "36.7",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "36.7"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-15",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "36.7",
+                "mean": "36.7",
+                "std": "",
+                "cv": "",
+                "meanSource": "手动录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "5f0e23b7-50ac-4002-9171-485f5adf8a7f",
+      "name": "朔州 水渣 40%",
+      "blockCategory": "road",
+      "madeDate": "2026-05-12",
+      "quantity": 3,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_b5b0dca1da",
+          "label": "水渣",
+          "category": "binder",
+          "placeholder": "填写g重或型号",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-13",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": true,
+          "7": true,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1748",
+        "water": "845",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "raw",
+        "weighingTemplate": "withoutAccelerator",
+        "totalWithoutWater": "5999.4",
+        "gradationTemplate": "raw",
+        "gradationWeights": {
+          "0.15-0.30": "",
+          "0.30-0.60": "",
+          "0.60-1.18": "",
+          "1.18-2.36": "",
+          "2.36-4.75": "",
+          "4.75-9.5": "",
+          "9.5-16": ""
+        },
+        "gangueAggregateId": "c729cd21-d91d-4be9-8aa1-be3507190084",
+        "gangueAggregateName": "朔州",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_b5b0dca1da",
+            "label": "水渣",
+            "category": "binder",
+            "placeholder": "填写g重或型号",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "",
+          "cement": "1748",
+          "material_00664c6e6c": "70",
+          "material_b5b0dca1da": "513",
+          "material_0951d09d7e": "70",
+          "material_75b0d45793": "3600",
+          "water": "845"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "2026-05-15",
+            "dueDate": "2026-05-15",
+            "compressionStrength": "21.8",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "21.8"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-15",
+                "sampleValues": [
+                  "21.8"
+                ],
+                "sampleMeasurements": [
+                  {
+                    "pressureKn": "",
+                    "areaMm2": "",
+                    "strengthMpa": "21.8",
+                    "failureMode": "",
+                    "remark": ""
+                  }
+                ],
+                "manualMean": "",
+                "mean": "21.8",
+                "std": "",
+                "cv": "",
+                "meanSource": "单块计算",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "2026-05-19",
+            "dueDate": "2026-05-19",
+            "compressionStrength": "25.597",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "25.597"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-19",
+                "sampleValues": [
+                  "25.597"
+                ],
+                "sampleMeasurements": [
+                  {
+                    "pressureKn": "255.97",
+                    "areaMm2": "10000",
+                    "strengthMpa": "25.597",
+                    "failureMode": "",
+                    "remark": ""
+                  }
+                ],
+                "manualMean": "",
+                "mean": "25.597",
+                "std": "",
+                "cv": "",
+                "meanSource": "单块计算",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-06-09",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-06-09",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [
+        {
+          "src": "/work/files/1779172990882-513ad5ec-11711.jpg",
+          "title": "11711 1",
+          "caption": "",
+          "kind": "compressionFailure",
+          "createdAt": "2026-05-19T06:43:10.894Z"
+        },
+        {
+          "src": "/work/files/1779172990894-f7cbc037-11708.jpg",
+          "title": "11708 2",
+          "caption": "",
+          "kind": "compressionFailure",
+          "createdAt": "2026-05-19T06:43:10.909Z"
+        },
+        {
+          "src": "/work/files/1779172990909-f2a3d847-11704.jpg",
+          "title": "11704 3",
+          "caption": "",
+          "kind": "compressionFailure",
+          "createdAt": "2026-05-19T06:43:10.920Z"
+        },
+        {
+          "src": "/work/files/1779172990920-6b3105fa-11698.jpg",
+          "title": "11698 4",
+          "caption": "",
+          "kind": "compressionFailure",
+          "createdAt": "2026-05-19T06:43:10.932Z"
+        }
+      ],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "14ea69c6-b2cd-4c9c-81e5-760264a442f9",
+      "name": "水渣 王jf 0.5",
+      "blockCategory": "spray",
+      "madeDate": "2026-05-12",
+      "quantity": 3,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_b5b0dca1da",
+          "label": "水渣",
+          "category": "binder",
+          "placeholder": "填写g重或型号",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "accelerator",
+          "label": "速凝剂",
+          "category": "admixture",
+          "placeholder": "例：4g",
+          "custom": false
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-13",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": true,
+          "7": true,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1375",
+        "water": "825",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "0.5",
+        "weighingTemplate": "withAccelerator",
+        "totalWithoutWater": "6098.4",
+        "gradationTemplate": "raw",
+        "gradationWeights": {
+          "0.15-0.30": "",
+          "0.30-0.60": "",
+          "0.60-1.18": "",
+          "1.18-2.36": "",
+          "2.36-4.75": ""
+        },
+        "gangueAggregateId": "24ffa533-807d-4304-aeff-8b19dbc3123c",
+        "gangueAggregateName": "龙湾",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_b5b0dca1da",
+            "label": "水渣",
+            "category": "binder",
+            "placeholder": "填写g重或型号",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "accelerator",
+            "label": "速凝剂",
+            "category": "admixture",
+            "placeholder": "例：4g",
+            "custom": false
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "",
+          "cement": "1375",
+          "material_00664c6e6c": "55",
+          "material_b5b0dca1da": "403",
+          "material_0951d09d7e": "55",
+          "accelerator": "92",
+          "material_75b0d45793": "3960",
+          "water": "825"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "",
+            "dueDate": "2026-05-15",
+            "compressionStrength": "24.98",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "24.98"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-15",
+                "sampleValues": [
+                  "24.98"
+                ],
+                "sampleMeasurements": [
+                  {
+                    "pressureKn": "",
+                    "areaMm2": "",
+                    "strengthMpa": "24.98",
+                    "failureMode": "",
+                    "remark": ""
+                  }
+                ],
+                "manualMean": "",
+                "mean": "24.98",
+                "std": "",
+                "cv": "",
+                "meanSource": "单块计算",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "2026-05-19",
+            "dueDate": "2026-05-19",
+            "compressionStrength": "31.834",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "31.834"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-19",
+                "sampleValues": [
+                  "31.834"
+                ],
+                "sampleMeasurements": [
+                  {
+                    "pressureKn": "318.34",
+                    "areaMm2": "10000",
+                    "strengthMpa": "31.834",
+                    "failureMode": "",
+                    "remark": ""
+                  }
+                ],
+                "manualMean": "",
+                "mean": "31.834",
+                "std": "",
+                "cv": "",
+                "meanSource": "单块计算",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-06-09",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-06-09",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [
+        {
+          "src": "/work/files/1779172563828-56426756-11677.jpg",
+          "title": "11677 1",
+          "caption": "",
+          "kind": "compressionFailure",
+          "createdAt": "2026-05-19T06:36:03.838Z"
+        },
+        {
+          "src": "/work/files/1779172563838-78748d62-11674.jpg",
+          "title": "11674 2",
+          "caption": "",
+          "kind": "compressionFailure",
+          "createdAt": "2026-05-19T06:36:03.848Z"
+        },
+        {
+          "src": "/work/files/1779172563848-4ce6b065-11671.jpg",
+          "title": "11671 3",
+          "caption": "",
+          "kind": "compressionFailure",
+          "createdAt": "2026-05-19T06:36:03.859Z"
+        }
+      ],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "a1e67298-206b-49d5-8b87-11237379cef2",
+      "name": "水渣 朔州 无速凝剂",
+      "blockCategory": "road",
+      "madeDate": "2026-05-11",
+      "quantity": 3,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_b5b0dca1da",
+          "label": "水渣",
+          "category": "binder",
+          "placeholder": "填写g重或型号",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-12",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": true,
+          "7": true,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1418",
+        "water": "790",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "",
+        "weighingTemplate": "withoutAccelerator",
+        "totalWithoutWater": "5999.4",
+        "gradationTemplate": "raw",
+        "gradationWeights": {
+          "0.15-0.30": "",
+          "0.30-0.60": "",
+          "0.60-1.18": "",
+          "1.18-2.36": "",
+          "2.36-4.75": "",
+          "4.75-9.5": "",
+          "9.5-16": ""
+        },
+        "gangueAggregateId": "c729cd21-d91d-4be9-8aa1-be3507190084",
+        "gangueAggregateName": "朔州",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_b5b0dca1da",
+            "label": "水渣",
+            "category": "binder",
+            "placeholder": "填写g重或型号",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "",
+          "cement": "1418",
+          "material_00664c6e6c": "57",
+          "material_b5b0dca1da": "416",
+          "material_0951d09d7e": "57",
+          "material_75b0d45793": "3780",
+          "water": "790"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "2026-05-14",
+            "dueDate": "2026-05-14",
+            "compressionStrength": "19.3",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "19.3"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-14",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "19.3",
+                "mean": "19.3",
+                "std": "",
+                "cv": "",
+                "meanSource": "手动录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "",
+            "dueDate": "2026-05-18",
+            "compressionStrength": "23.4",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "23.4"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-18",
+                "sampleValues": [
+                  "23.4"
+                ],
+                "sampleMeasurements": [
+                  {
+                    "pressureKn": "",
+                    "areaMm2": "",
+                    "strengthMpa": "23.4",
+                    "failureMode": "",
+                    "remark": ""
+                  }
+                ],
+                "manualMean": "",
+                "mean": "23.4",
+                "std": "",
+                "cv": "",
+                "meanSource": "单块计算",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-06-08",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-06-08",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "8729e744-ae9c-449d-a4b1-f27d1860f00a",
+      "name": "5.9 wjf 喷射 0.5",
+      "blockCategory": "spray",
+      "madeDate": "2026-05-09",
+      "quantity": 3,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-10",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": true,
+          "7": true,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1375",
+        "water": "825",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "403",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "",
+        "weighingTemplate": "withoutAccelerator",
+        "totalWithoutWater": "5999.4",
+        "gradationTemplate": "raw",
+        "gradationWeights": {
+          "0.15-0.30": "",
+          "0.30-0.60": "",
+          "0.60-1.18": "",
+          "1.18-2.36": "",
+          "2.36-4.75": ""
+        },
+        "gangueAggregateId": "24ffa533-807d-4304-aeff-8b19dbc3123c",
+        "gangueAggregateName": "龙湾",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "403",
+          "cement": "1375",
+          "material_00664c6e6c": "55",
+          "material_0951d09d7e": "55",
+          "material_75b0d45793": "3960",
+          "water": "825"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "2026-05-12",
+            "dueDate": "2026-05-12",
+            "compressionStrength": "16.3",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "16.3"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-12",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "16.3",
+                "mean": "16.3",
+                "std": "",
+                "cv": "",
+                "meanSource": "手动录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "",
+            "dueDate": "2026-05-16",
+            "compressionStrength": "20.9",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "20.9"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-16",
+                "sampleValues": [
+                  "20.9"
+                ],
+                "sampleMeasurements": [
+                  {
+                    "pressureKn": "",
+                    "areaMm2": "",
+                    "strengthMpa": "20.9",
+                    "failureMode": "",
+                    "remark": ""
+                  }
+                ],
+                "manualMean": "",
+                "mean": "20.9",
+                "std": "",
+                "cv": "",
+                "meanSource": "单块计算",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-06-06",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-06-06",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "cc752ede-ef87-4fb9-a5cc-c308f2647e73",
+      "name": "4.30明珠 有速凝剂",
+      "blockCategory": "road",
+      "madeDate": "2026-04-30",
+      "quantity": 6,
+      "ages": [
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "accelerator",
+          "label": "速凝剂",
+          "category": "admixture",
+          "placeholder": "例：4g",
+          "custom": false
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-01",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1485",
+        "water": "825",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "435.6",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "0.62",
+        "weighingTemplate": "withAccelerator",
+        "totalWithoutWater": "6098.4",
+        "gradationTemplate": "raw",
+        "gradationWeights": {
+          "0.15-0.30": "",
+          "0.30-0.60": "",
+          "0.60-1.18": "",
+          "1.18-2.36": "",
+          "2.36-4.75": "",
+          "4.75-9.5": "",
+          "9.5-16": ""
+        },
+        "gangueAggregateId": "2de6d7e4-e954-491a-a4a5-9c1b2797ac78",
+        "gangueAggregateName": "明珠",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "accelerator",
+            "label": "速凝剂",
+            "category": "admixture",
+            "placeholder": "例：4g",
+            "custom": false
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "435.6",
+          "cement": "1485",
+          "material_00664c6e6c": "59.4",
+          "material_0951d09d7e": "59.4",
+          "accelerator": "99.0",
+          "material_75b0d45793": "3960",
+          "water": "825"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-05-28",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-28",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "da4b001e-7e32-4f5c-b285-5f684c6bf090",
+      "name": "明珠 40%级配 纯粗",
+      "blockCategory": "road",
+      "madeDate": "2026-04-17",
+      "quantity": 2,
+      "ages": [
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "admixture",
+          "label": "外加剂",
+          "category": "admixture",
+          "placeholder": "例：6.2g",
+          "custom": false
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "sand",
+          "label": "砂",
+          "category": "aggregate",
+          "placeholder": "例：760g",
+          "custom": false
+        },
+        {
+          "id": "stone",
+          "label": "石子",
+          "category": "aggregate",
+          "placeholder": "例：1080g",
+          "custom": false
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-04-18",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "28": true
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "",
+        "water": "",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "",
+        "weighingTemplate": "withoutAccelerator",
+        "totalWithoutWater": "5999.4",
+        "gradationTemplate": "raw",
+        "gradationWeights": {
+          "0.15-0.30": "",
+          "0.30-0.60": "",
+          "0.60-1.18": "",
+          "1.18-2.36": "",
+          "2.36-4.75": "",
+          "4.75-9.5": "",
+          "9.5-16": ""
+        },
+        "gangueAggregateId": "2de6d7e4-e954-491a-a4a5-9c1b2797ac78",
+        "gangueAggregateName": "明珠",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "admixture",
+            "label": "外加剂",
+            "category": "admixture",
+            "placeholder": "例：6.2g",
+            "custom": false
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "sand",
+            "label": "砂",
+            "category": "aggregate",
+            "placeholder": "例：760g",
+            "custom": false
+          },
+          {
+            "id": "stone",
+            "label": "石子",
+            "category": "aggregate",
+            "placeholder": "例：1080g",
+            "custom": false
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "",
+          "cement": "",
+          "material_00664c6e6c": "",
+          "material_0951d09d7e": "",
+          "admixture": "",
+          "material_75b0d45793": "",
+          "sand": "",
+          "stone": "",
+          "water": ""
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "28": {
+            "testDate": "2026-05-15",
+            "dueDate": "2026-05-15",
+            "compressionStrength": "30.4",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "30.4"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-15",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "30.4",
+                "mean": "30.4",
+                "std": "",
+                "cv": "",
+                "meanSource": "手动录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "c30+",
+      "note": ""
+    },
+    {
+      "id": "14ee0b08-ba8f-4f75-a338-c10a7b967ad2",
+      "name": "有速凝剂",
+      "blockCategory": "road",
+      "madeDate": "2026-05-07",
+      "quantity": 3,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "accelerator",
+          "label": "速凝剂",
+          "category": "admixture",
+          "placeholder": "例：4g",
+          "custom": false
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-08",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": true,
+          "7": true,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1485",
+        "water": "825",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "435.6",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "raw",
+        "weighingTemplate": "withAccelerator",
+        "totalWithoutWater": "6098.4",
+        "gradationTemplate": "raw",
+        "gradationWeights": {
+          "0.15-0.30": "",
+          "0.30-0.60": "",
+          "0.60-1.18": "",
+          "1.18-2.36": "",
+          "2.36-4.75": "",
+          "4.75-9.5": "",
+          "9.5-16": ""
+        },
+        "gangueAggregateId": "c729cd21-d91d-4be9-8aa1-be3507190084",
+        "gangueAggregateName": "朔州",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "accelerator",
+            "label": "速凝剂",
+            "category": "admixture",
+            "placeholder": "例：4g",
+            "custom": false
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "435.6",
+          "cement": "1485",
+          "material_00664c6e6c": "59.4",
+          "material_0951d09d7e": "59.4",
+          "accelerator": "99.0",
+          "material_75b0d45793": "3960",
+          "water": "825"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "2026-05-10",
+            "dueDate": "2026-05-10",
+            "compressionStrength": "18.6",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "18.6"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-10",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "18.6",
+                "mean": "18.6",
+                "std": "",
+                "cv": "",
+                "meanSource": "手动录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "2026-05-14",
+            "dueDate": "2026-05-14",
+            "compressionStrength": "19.2",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "19.2"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-14",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "19.2",
+                "mean": "19.2",
+                "std": "",
+                "cv": "",
+                "meanSource": "手动录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-06-04",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-06-04",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    },
+    {
+      "id": "4024321a-5717-423e-bd4e-08f8c3f39233",
+      "name": "无速凝剂",
+      "blockCategory": "road",
+      "madeDate": "2026-05-08",
+      "quantity": 3,
+      "ages": [
+        3,
+        7,
+        28
+      ],
+      "metrics": [
+        {
+          "id": "compressionStrength",
+          "label": "抗压强度",
+          "placeholder": "例：36.8MPa",
+          "custom": false
+        }
+      ],
+      "recipeMaterials": [
+        {
+          "id": "flyAsh",
+          "label": "粉煤灰",
+          "category": "binder",
+          "placeholder": "例：50g",
+          "custom": false
+        },
+        {
+          "id": "cement",
+          "label": "硅酸盐水泥",
+          "category": "binder",
+          "placeholder": "例：1485g",
+          "custom": false
+        },
+        {
+          "id": "material_00664c6e6c",
+          "label": "生石灰",
+          "category": "binder",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_0951d09d7e",
+          "label": "硫酸钠",
+          "category": "admixture",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "material_75b0d45793",
+          "label": "煤矸石",
+          "category": "aggregate",
+          "placeholder": "填写g重",
+          "custom": true
+        },
+        {
+          "id": "water",
+          "label": "水",
+          "category": "water",
+          "placeholder": "例：165g",
+          "custom": false
+        }
+      ],
+      "demoldDate": "2026-05-09",
+      "completed": {
+        "demold": true,
+        "ages": {
+          "3": true,
+          "7": true,
+          "28": false
+        },
+        "deleted": {
+          "demold": false,
+          "ages": {
+            "3": false,
+            "7": false,
+            "28": false
+          }
+        }
+      },
+      "record": {
+        "mixName": "",
+        "cement": "1418",
+        "water": "790",
+        "sand": "",
+        "stone": "",
+        "admixture": "",
+        "flyAsh": "416",
+        "mineralPowder": "",
+        "otherMaterials": "",
+        "waterBinderRatio": "",
+        "slump": "",
+        "gradationCoefficient": "",
+        "weighingTemplate": "withoutAccelerator",
+        "totalWithoutWater": "5999.4",
+        "gradationTemplate": "raw",
+        "gradationWeights": {
+          "0.15-0.30": "",
+          "0.30-0.60": "",
+          "0.60-1.18": "",
+          "1.18-2.36": "",
+          "2.36-4.75": "",
+          "4.75-9.5": "",
+          "9.5-16": ""
+        },
+        "gangueAggregateId": "c729cd21-d91d-4be9-8aa1-be3507190084",
+        "gangueAggregateName": "朔州",
+        "recipeNote": "",
+        "compressionStrength": "",
+        "flexuralStrength": "",
+        "testDate": "",
+        "resultNote": "",
+        "recipeMaterials": [
+          {
+            "id": "flyAsh",
+            "label": "粉煤灰",
+            "category": "binder",
+            "placeholder": "例：50g",
+            "custom": false
+          },
+          {
+            "id": "cement",
+            "label": "硅酸盐水泥",
+            "category": "binder",
+            "placeholder": "例：1485g",
+            "custom": false
+          },
+          {
+            "id": "material_00664c6e6c",
+            "label": "生石灰",
+            "category": "binder",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_0951d09d7e",
+            "label": "硫酸钠",
+            "category": "admixture",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "material_75b0d45793",
+            "label": "煤矸石",
+            "category": "aggregate",
+            "placeholder": "填写g重",
+            "custom": true
+          },
+          {
+            "id": "water",
+            "label": "水",
+            "category": "water",
+            "placeholder": "例：165g",
+            "custom": false
+          }
+        ],
+        "recipeValues": {
+          "flyAsh": "416",
+          "cement": "1418",
+          "material_00664c6e6c": "57",
+          "material_0951d09d7e": "57",
+          "material_75b0d45793": "3780",
+          "water": "790"
+        },
+        "metrics": [
+          {
+            "id": "compressionStrength",
+            "label": "抗压强度",
+            "placeholder": "例：36.8MPa",
+            "custom": false
+          }
+        ],
+        "results": {
+          "3": {
+            "testDate": "2026-05-11",
+            "dueDate": "2026-05-11",
+            "compressionStrength": "16.5",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "16.5"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "3",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-11",
+                "sampleValues": [
+                  "16.5"
+                ],
+                "sampleMeasurements": [
+                  {
+                    "pressureKn": "",
+                    "areaMm2": "",
+                    "strengthMpa": "16.5",
+                    "failureMode": "",
+                    "remark": ""
+                  }
+                ],
+                "manualMean": "",
+                "mean": "16.5",
+                "std": "",
+                "cv": "",
+                "meanSource": "单块计算",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "7": {
+            "testDate": "2026-05-15",
+            "dueDate": "2026-05-15",
+            "compressionStrength": "23.7",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": "23.7"
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "7",
+                "metric": "compressionStrength",
+                "dueDate": "2026-05-15",
+                "sampleValues": [
+                  "23.7"
+                ],
+                "sampleMeasurements": [
+                  {
+                    "pressureKn": "",
+                    "areaMm2": "",
+                    "strengthMpa": "23.7",
+                    "failureMode": "",
+                    "remark": ""
+                  }
+                ],
+                "manualMean": "",
+                "mean": "23.7",
+                "std": "",
+                "cv": "",
+                "meanSource": "单块计算",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          },
+          "28": {
+            "testDate": "",
+            "dueDate": "2026-06-05",
+            "compressionStrength": "",
+            "flexuralStrength": "",
+            "resultNote": "",
+            "metrics": {
+              "compressionStrength": ""
+            },
+            "metricResults": {
+              "compressionStrength": {
+                "age": "28",
+                "metric": "compressionStrength",
+                "dueDate": "2026-06-05",
+                "sampleValues": [],
+                "sampleMeasurements": [],
+                "manualMean": "",
+                "mean": "",
+                "std": "",
+                "cv": "",
+                "meanSource": "未录入",
+                "failureMode": "",
+                "remark": ""
+              }
+            }
+          }
+        }
+      },
+      "images": [],
+      "strength": "",
+      "note": ""
+    }
+  ],
+  "footerName": "xx520 小站",
+  "updatedAt": "2026-05-21"
+}
