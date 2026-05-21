@@ -2718,6 +2718,21 @@ function renderTaskTableV22(content) {
     </section>`;
 }
 
+function compressionChartValuesV23(block) {
+  return [3, 7, 28].map((age) => {
+    if (!normalizeAges(block.ages).includes(age)) return null;
+    const result = compressionResultByAgeV22(block, age);
+    const number = metricResultNumber(result);
+    if (number === null) return null;
+    return {
+      age,
+      number,
+      mean: formatMpaValue(number),
+      label: `${age}d ${formatMpaValue(number)}`
+    };
+  }).filter(Boolean);
+}
+
 function trendGroupsV22(content) {
   const gangues = getCoalGangueDb(content);
   const blocks = getTestBlocks(content);
@@ -2725,23 +2740,9 @@ function trendGroupsV22(content) {
   const groupMap = new Map(gangues.map((item) => [item.id, { id: item.id, name: item.name, rows: [], max: 1 }]));
   blocks
     .slice()
-    .sort((a, b) => b.madeDate.localeCompare(a.madeDate))
+    .sort((a, b) => b.madeDate.localeCompare(a.madeDate) || a.name.localeCompare(b.name, "zh-CN"))
     .forEach((block) => {
-      const selectedAges = new Set(normalizeAges(block.ages).map(String));
-      const values = [3, 7, 28].map((age) => {
-        if (!selectedAges.has(String(age))) return null;
-        const result = compressionResultByAgeV22(block, age);
-        const number = metricResultNumber(result);
-        const dueDate = addDays(block.madeDate, age);
-        const isDue = dueDate <= today();
-        const meanText = formatMpaValue(result.mean || result.manualMean);
-        return {
-          age,
-          number,
-          mean: number ? meanText : (isDue ? "待录" : `应测 ${formatDateCnV3(dueDate)}`),
-          label: number ? `${age}d ${meanText}` : `${age}d ${isDue ? "待录" : `应测 ${formatDateCnV3(dueDate)}`}`
-        };
-      }).filter(Boolean);
+      const values = compressionChartValuesV23(block);
       const rawGangueId = blockGangueIdV3(block);
       const gangueId = rawGangueId && validGangueIds.has(rawGangueId) ? rawGangueId : "__unassigned__";
       const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
@@ -2749,12 +2750,9 @@ function trendGroupsV22(content) {
         ? (record.gangueAggregateName || "未归属煤矸石")
         : (coalGangueNameById(content, gangueId) || record.gangueAggregateName || "未归属煤矸石");
       if (!groupMap.has(gangueId)) groupMap.set(gangueId, { id: gangueId, name: gangueName, rows: [], max: 1 });
-      groupMap.get(gangueId).rows.push({
-        id: block.id,
-        blockName: block.name,
-        gangueName,
-        values
-      });
+      if (values.length) {
+        groupMap.get(gangueId).rows.push({ id: block.id, blockName: block.name, gangueName, values });
+      }
     });
   const groups = Array.from(groupMap.values()).map((group) => ({
     ...group,
@@ -2767,18 +2765,51 @@ function trendGroupsV22(content) {
 }
 
 function renderTrendRowsForGroupV22(group) {
-  if (!group || !group.rows.length) return `<p class="empty-v22" data-chart-empty>这个批次还没有可展示的试块强度。</p>`;
-  return group.rows.map((row) => `<article class="trend-row-v22" data-chart-row>
-          <strong title="${attr(`${row.gangueName}｜${row.blockName}`)}"><span>${html(row.blockName)}</span><small>${html(row.gangueName)}</small></strong>
-          <div class="trend-bars-v22">
-            ${row.values.map((item) => {
-    const width = item.number ? Math.max(4, Math.min(100, (item.number / group.max) * 100)) : 0;
-    return `<span class="trend-bar-v22 age-${item.age}${item.number ? " filled" : ""}" title="${attr(item.label)}">
-              <i style="--w:${width}%" data-chart-bar data-chart-value="${attr(item.number || "")}"></i><b>${item.age}d</b><em>${html(item.mean || "")}</em>
-            </span>`;
+  if (!group || !group.rows.length) return `<p class="empty-v22" data-chart-empty>这个批次还没有可展示的抗压强度。</p>`;
+  return `<div class="bar-chart-v23" data-chart-row>
+      ${group.rows.map((row) => `<article class="bar-group-v23">
+        <div class="bar-columns-v23">
+          ${row.values.map((item) => {
+    const height = Math.max(8, Math.min(100, (item.number / group.max) * 100));
+    return `<span class="column-v23 age-${item.age}" style="--h:${height}%" title="${attr(`${row.blockName} ${item.label}`)}"><i></i><b>${html(item.mean)}</b><em>${item.age}d</em></span>`;
   }).join("")}
-          </div>
-        </article>`).join("");
+        </div>
+        <strong title="${attr(`${row.gangueName}｜${row.blockName}`)}"><span>${html(row.blockName)}</span><small>${html(row.gangueName)}</small></strong>
+      </article>`).join("")}
+    </div>`;
+}
+
+function twentyEightDayRowsV23(content) {
+  return getTestBlocks(content).map((block) => {
+    if (!normalizeAges(block.ages).includes(28)) return null;
+    const result = compressionResultByAgeV22(block, 28);
+    const number = metricResultNumber(result);
+    if (number === null) return null;
+    const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+    const gangueName = record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "未归属";
+    const category = normalizeBlockCategory(block.blockCategory);
+    const scheme = gradationSchemeForCategory(category);
+    const gradation = scheme.templates[normalizeGradationTemplate(record.gradationTemplate)]?.label || "原始级配";
+    return { block, number, result, gangueName, gradation, mixName: record.mixName || "未填配方" };
+  }).filter(Boolean).sort((a, b) => b.number - a.number || a.block.name.localeCompare(b.block.name, "zh-CN"));
+}
+
+function renderTwentyEightDayChartV23(content) {
+  const rows = twentyEightDayRowsV23(content);
+  if (!rows.length) return `<section class="dashboard-card-v22"><div class="section-head-v22"><div><p class="eyebrow">28d</p><h2>28d 强度对比</h2></div></div><p class="empty-v22">还没有 28d 抗压结果。</p></section>`;
+  const max = Math.max(1, ...rows.map((row) => row.number));
+  return `<section class="dashboard-card-v22 strength-28d-v23">
+      <div class="section-head-v22"><div><p class="eyebrow">28d Compare</p><h2>28d 强度对比柱状图</h2><p>只统计已有 28d 抗压结果的试块组，用于比较不同级配、配方和煤矸石批次。</p></div></div>
+      <div class="bar-chart-v23 bar-chart-28d-v23">
+        ${rows.slice(0, 12).map((row) => {
+    const height = Math.max(8, Math.min(100, (row.number / max) * 100));
+    return `<article class="bar-group-v23 single">
+          <div class="bar-columns-v23"><span class="column-v23 age-28" style="--h:${height}%" title="${attr(`${row.block.name} 28d ${formatMpaValue(row.number)}`)}"><i></i><b>${html(formatMpaValue(row.number))}</b><em>28d</em></span></div>
+          <strong title="${attr(`${row.gangueName}｜${row.gradation}｜${row.mixName}`)}"><span>${html(row.block.name)}</span><small>${html(row.gangueName)} · ${html(row.gradation)}</small></strong>
+        </article>`;
+  }).join("")}
+      </div>
+    </section>`;
 }
 
 function renderStrengthTrendPanelV22(content) {
@@ -2786,7 +2817,7 @@ function renderStrengthTrendPanelV22(content) {
   const groups = trend.groups;
   return `<section class="dashboard-card-v22" id="analysis">
       <div class="section-head-v22">
-        <div><p class="eyebrow">Analysis</p><h2>强度趋势图</h2><p>只显示当前选择的煤矸石批次；换批次后，下方试块组会同步切换。</p></div>
+        <div><p class="eyebrow">Analysis</p><h2>抗压强度分组柱状图</h2><p>X 轴为试块组，Y 轴为 MPa；每组只显示已录入的 3d / 7d / 28d 抗压结果，缺失龄期不按 0 处理。</p></div>
       </div>
       ${groups.length ? `<div class="trend-chart-v22" data-chart-stage style="--chart-max:${trend.selectedGroup.max}">
         <div class="chart-current-v22" data-chart-current>
@@ -3088,6 +3119,7 @@ function renderWorkspaceV3(content, message = "") {
             ${renderTaskTableV22(content)}
             ${renderStrengthTrendPanelV22(content)}
           </div>
+          ${renderTwentyEightDayChartV23(content)}
           <div class="overview-grid-v22 compact">
             ${renderAnomalyPanelV22(content)}
             ${renderGangueOverviewV22(content)}
@@ -3438,18 +3470,22 @@ function workspaceStylesV3() {
     .trend-chart-v22 { display:grid; gap:11px; }
     .chart-current-v22 { margin:0; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border:1px solid #d7e6e0; border-radius:8px; background:#f8fbfa; color:var(--green); font-size:13px; font-weight:900; }
     .chart-current-v22 select { min-height:34px; min-width:160px; padding:0 34px 0 10px; border:1px solid #cbded7; border-radius:8px; background:#fff; color:var(--ink); font:inherit; font-size:13px; }
-    .trend-row-v22 { display:grid; grid-template-columns:128px minmax(0,1fr); gap:12px; align-items:center; }
-    .trend-row-v22 > strong { min-width:0; display:grid; gap:2px; color:var(--ink); font-size:13px; }
-    .trend-row-v22 > strong span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .trend-row-v22 > strong small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:11px; font-weight:900; }
-    .trend-bars-v22 { display:grid; gap:6px; }
-    .trend-bar-v22 { display:grid; grid-template-columns:36px minmax(0,1fr) 46px; gap:8px; align-items:center; color:var(--muted); font-size:12px; font-weight:900; }
-    .trend-bar-v22 i { display:block; height:12px; overflow:hidden; border-radius:999px; background:#e8efed; }
-    .trend-bar-v22 i:before { content:""; display:block; width:var(--w,0%); height:100%; border-radius:999px; background:#337861; }
-    .trend-bar-v22.age-7 i:before { background:#3d6f98; }
-    .trend-bar-v22.age-28 i:before { background:#d28b34; }
-    .trend-bar-v22:not(.filled) i:before { background:#8eb7d6; }
-    .trend-bar-v22:not(.filled) em { color:#3d6f98; }
+    .bar-chart-v23 { min-height:248px; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(104px,1fr); gap:12px; align-items:end; overflow-x:auto; padding:8px 4px 2px; }
+    .bar-group-v23 { min-width:104px; display:grid; grid-template-rows:180px auto; gap:9px; }
+    .bar-columns-v23 { height:180px; display:flex; align-items:end; justify-content:center; gap:8px; padding:8px 8px 0; border-bottom:1px solid #d8e6e0; background:linear-gradient(180deg,#fbfdfc,#fff); border-radius:8px 8px 0 0; }
+    .column-v23 { width:28px; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; color:var(--muted); font-style:normal; font-size:10px; font-weight:900; }
+    .column-v23 i { width:100%; height:var(--h,0%); min-height:8px; border-radius:8px 8px 4px 4px; background:#337861; box-shadow:0 8px 16px rgba(51,120,97,.16); }
+    .column-v23.age-7 i { background:#3d6f98; box-shadow:0 8px 16px rgba(61,111,152,.16); }
+    .column-v23.age-28 i { background:#d28b34; box-shadow:0 8px 16px rgba(210,139,52,.16); }
+    .column-v23 b { writing-mode:vertical-rl; transform:rotate(180deg); color:#172624; font-size:11px; }
+    .column-v23 em { font-style:normal; color:var(--muted); }
+    .bar-group-v23 > strong { min-width:0; display:grid; gap:2px; color:var(--ink); font-size:12px; text-align:center; }
+    .bar-group-v23 > strong span, .bar-group-v23 > strong small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .bar-group-v23 > strong small { color:var(--muted); font-size:10px; font-weight:900; }
+    .bar-chart-28d-v23 .bar-group-v23 { grid-template-rows:170px auto; }
+    .bar-chart-28d-v23 .bar-columns-v23 { height:170px; }
+    .bar-group-v23.single .column-v23 { width:34px; }
+    .anomaly-list-v22 { display:grid; gap:9px; }
     .anomaly-list-v22 { display:grid; gap:9px; }
     .anomaly-form-v22 { display:grid; gap:10px; }
     .anomaly-hint-v22 { color:var(--muted); font-size:13px; font-weight:800; }
@@ -5448,10 +5484,10 @@ function renderWorkspaceScriptV3() {
       const renderChartRow = (row, max) => {
         const bars = (row.values || []).map((item) => {
           const value = Number(item.number) || 0;
-          const width = value ? Math.max(4, Math.min(100, (value / Math.max(1, max)) * 100)) : 0;
-          return "<span class=\\"trend-bar-v22 age-" + escapeAttr(item.age) + (value ? " filled" : "") + "\\" title=\\"" + escapeAttr(item.label || "") + "\\"><i style=\\"--w:" + width + "%\\" data-chart-bar data-chart-value=\\"" + escapeAttr(value || "") + "\\"></i><b>" + escapeAttr(item.age) + "d</b><em>" + escapeAttr(item.mean || "") + "</em></span>";
+          const height = value ? Math.max(8, Math.min(100, (value / Math.max(1, max)) * 100)) : 0;
+          return "<span class="column-v23 age-" + escapeAttr(item.age) + "" style="--h:" + height + "%" title="" + escapeAttr((row.blockName || "") + " " + (item.label || "")) + ""><i></i><b>" + escapeAttr(item.mean || "") + "</b><em>" + escapeAttr(item.age) + "d</em></span>";
         }).join("");
-        return "<article class=\\"trend-row-v22\\" data-chart-row><strong title=\\"" + escapeAttr((row.gangueName || "") + "｜" + (row.blockName || "")) + "\\"><span>" + escapeAttr(row.blockName || "") + "</span><small>" + escapeAttr(row.gangueName || "") + "</small></strong><div class=\\"trend-bars-v22\\">" + bars + "</div></article>";
+        return "<article class="bar-group-v23" data-chart-row><div class="bar-columns-v23">" + bars + "</div><strong title="" + escapeAttr((row.gangueName || "") + "｜" + (row.blockName || "")) + ""><span>" + escapeAttr(row.blockName || "") + "</span><small>" + escapeAttr(row.gangueName || "") + "</small></strong></article>";
       };
       const applyChartFilter = () => {
         const selected = chartFilter?.value || "";
@@ -5461,9 +5497,10 @@ function renderWorkspaceScriptV3() {
         if (chartCurrent) chartCurrent.dataset.currentName = group.name || "未命名批次";
         if (chartStage) chartStage.style.setProperty("--chart-max", group.max || 1);
         chartRowsSlot.innerHTML = (group.rows || []).length
-          ? group.rows.map((row) => renderChartRow(row, group.max || 1)).join("")
-          : "<p class=\\"empty-v22\\" data-chart-empty>这个批次还没有可展示的试块强度。</p>";
+          ? "<div class="bar-chart-v23" data-chart-row>" + group.rows.map((row) => renderChartRow(row, group.max || 1)).join("") + "</div>"
+          : "<p class="empty-v22" data-chart-empty>这个批次还没有可展示的抗压强度。</p>";
       };
+      chartFilter?.addEventListener("change", applyChartFilter);
       chartFilter?.addEventListener("change", applyChartFilter);
       applyChartFilter();
 
