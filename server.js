@@ -155,24 +155,33 @@ const RECIPE_MATERIAL_CATEGORIES = [
   { id: "water", label: "水" }
 ];
 const LAB_IMAGE_KINDS = [
-  { id: "gangueRaw", label: "矸石原始图" },
+  { id: "raw_gangue", label: "煤矸石原始图" },
   { id: "gradation", label: "级配/称重图" },
-  { id: "crushing", label: "压碎值试验图" },
-  { id: "density", label: "密度/吸水率图" },
-  { id: "flakiness", label: "针片状试验图" },
-  { id: "forming", label: "成型/拆模图" },
-  { id: "demold", label: "拆模图" },
+  { id: "mixing", label: "拌合过程图" },
+  { id: "specimen", label: "试块图" },
   { id: "curing", label: "养护过程图" },
-  { id: "pressureReading", label: "压力读数图" },
-  { id: "compressionFailure", label: "抗压破坏图" },
-  { id: "splitSection", label: "劈裂断面图" },
-  { id: "flexuralFailure", label: "抗折破坏图" },
-  { id: "block", label: "试块图片" },
-  { id: "split", label: "劈裂/破坏后" },
-  { id: "other", label: "其他实验图" }
+  { id: "compression_before", label: "抗压前图" },
+  { id: "compression_after", label: "抗压后图" },
+  { id: "splitting_section", label: "劈裂断面图" },
+  { id: "machine_screen", label: "设备读数图" }
 ];
-const GANGUE_LAB_IMAGE_KIND_IDS = ["gangueRaw", "gradation", "crushing", "density", "flakiness", "other"];
-const BLOCK_LAB_IMAGE_KIND_IDS = ["forming", "demold", "curing", "pressureReading", "compressionFailure", "splitSection", "flexuralFailure", "block", "split", "other"];
+const LAB_IMAGE_KIND_ALIASES = {
+  gangueRaw: "raw_gangue",
+  crushing: "gradation",
+  density: "raw_gangue",
+  flakiness: "raw_gangue",
+  forming: "specimen",
+  demold: "specimen",
+  pressureReading: "machine_screen",
+  compressionFailure: "compression_after",
+  splitSection: "splitting_section",
+  flexuralFailure: "specimen",
+  block: "specimen",
+  split: "splitting_section",
+  other: "specimen"
+};
+const GANGUE_LAB_IMAGE_KIND_IDS = ["raw_gangue", "gradation", "machine_screen"];
+const BLOCK_LAB_IMAGE_KIND_IDS = ["gradation", "mixing", "specimen", "curing", "compression_before", "compression_after", "splitting_section", "machine_screen"];
 
 let sessionSecret = "";
 
@@ -1107,7 +1116,8 @@ function imageSlug(item, index) {
 
 function normalizeLabImageKind(value) {
   const id = String(value || "").trim();
-  return LAB_IMAGE_KINDS.some((item) => item.id === id) ? id : "other";
+  const aliased = LAB_IMAGE_KIND_ALIASES[id] || id;
+  return LAB_IMAGE_KINDS.some((item) => item.id === aliased) ? aliased : "specimen";
 }
 
 function labImageKindLabel(value) {
@@ -1119,15 +1129,25 @@ function labImageKindsForTarget(targetType) {
   return ids.map((id) => LAB_IMAGE_KINDS.find((item) => item.id === id)).filter(Boolean);
 }
 
-function normalizeLabImages(value) {
+function normalizeLabImages(value, options = {}) {
   return (Array.isArray(value) ? value : [])
-    .map((item) => ({
-      src: String(item.src || "").trim(),
-      title: String(item.title || "").trim(),
-      caption: String(item.caption || "").trim(),
-      kind: normalizeLabImageKind(item.kind || item.type),
-      createdAt: String(item.createdAt || item.date || "").trim()
-    }))
+    .map((item) => {
+      const rawKind = String(item.imageType || item.kind || item.type || "").trim();
+      const imageType = normalizeLabImageKind(rawKind);
+      const targetType = String(item.targetType || options.targetType || "").trim();
+      return {
+        src: String(item.src || "").trim(),
+        title: String(item.title || "").trim(),
+        caption: String(item.caption || "").trim(),
+        kind: imageType,
+        imageType,
+        legacyKind: rawKind && rawKind !== imageType ? rawKind : String(item.legacyKind || "").trim(),
+        targetType,
+        blockId: String(item.blockId || options.blockId || "").trim(),
+        gangueBatchId: String(item.gangueBatchId || options.gangueBatchId || "").trim(),
+        createdAt: String(item.createdAt || item.date || "").trim()
+      };
+    })
     .filter((item) => item.src);
 }
 
@@ -1192,12 +1212,13 @@ function normalizeContent(input) {
   content.coalGangueDb = normalizeCoalGangueDb(content.coalGangueDb);
   content.testBlocks = Array.isArray(content.testBlocks)
     ? content.testBlocks.map((item) => {
+      const blockId = String(item.id || crypto.randomUUID());
       const ages = normalizeAges(item.ages).length ? normalizeAges(item.ages) : [28];
       const metrics = normalizeResultMetrics(item.metrics || (item.record && item.record.metrics), "", { fallbackToDefault: true });
       const recipeMaterials = normalizeRecipeMaterials(item.recipeMaterials || (item.record && item.record.recipeMaterials), "", { fallbackToDefault: true });
       const blockCategory = inferBlockCategoryV3({ ...item, ages, metrics, recipeMaterials });
       return {
-        id: String(item.id || crypto.randomUUID()),
+        id: blockId,
         name: String(item.name || item.part || "未命名试块").trim() || "未命名试块",
         blockCategory,
         madeDate: normalizeDateValue(item.madeDate || item.date),
@@ -1208,7 +1229,11 @@ function normalizeContent(input) {
         demoldDate: normalizeDateValue(item.demoldDate || addDays(item.madeDate || item.date, 1)),
         completed: normalizeCompleted(item.completed, ages),
         record: normalizeBlockRecord(item.record, ages, metrics, recipeMaterials),
-        images: normalizeLabImages(item.images || (item.record && item.record.images)),
+        images: normalizeLabImages(item.images || (item.record && item.record.images), {
+          targetType: "block",
+          blockId,
+          gangueBatchId: String(item.record?.gangueAggregateId || item.record?.coalGangueId || "").trim()
+        }),
         strength: String(item.strength || "").trim(),
         note: String(item.note || "").trim()
       };
@@ -1528,6 +1553,7 @@ function normalizeGangueGradations(value, ranges = []) {
 }
 
 function normalizeCoalGangueItem(item = {}) {
+  const id = String(item.id || crypto.randomUUID());
   const ranges = splitParticleRanges(item.particleRanges || item.ranges).length
     ? splitParticleRanges(item.particleRanges || item.ranges)
     : defaultParticleRanges();
@@ -1546,7 +1572,7 @@ function normalizeCoalGangueItem(item = {}) {
   });
   const summary = calculateGangueCrushingSummary({ particleRanges: ranges, crushingTests });
   return {
-    id: String(item.id || crypto.randomUUID()),
+    id,
     name: String(item.name || "未命名煤矸石").trim() || "未命名煤矸石",
     source: String(item.source || item.origin || "").trim(),
     shortCode: String(item.shortCode || item.batchCode || "").trim(),
@@ -1561,7 +1587,7 @@ function normalizeCoalGangueItem(item = {}) {
     coarseApparentDensity: String(item.coarseApparentDensity || "").trim(),
     fineApparentDensity: String(item.fineApparentDensity || "").trim(),
     gradations: normalizeGangueGradations(item.gradations, ranges),
-    images: normalizeLabImages(item.images),
+    images: normalizeLabImages(item.images, { targetType: "gangue", gangueBatchId: id }),
     otherInfo: String(item.otherInfo || item.note || "").trim(),
     updatedAt: String(item.updatedAt || today()).trim()
   };
@@ -4032,10 +4058,10 @@ function abnormalItemsV22(content, referenceDate = today()) {
     if (hasAnyResult && !images.length) {
       addItem({ id: `block-no-image:${block.id}`, level: "warning", title: "结果缺少图片", text: `${block.name} 已有结果，但还没有上传试验图片` });
     }
-    if (hasCompression && !images.some((image) => ["pressureReading", "compressionFailure"].includes(image.kind))) {
+    if (hasCompression && !images.some((image) => ["machine_screen", "compression_before", "compression_after"].includes(image.imageType || image.kind))) {
       addItem({ id: `block-compression-image:${block.id}`, level: "warning", title: "抗压图片未归档", text: `${block.name} 建议上传压力读数或抗压破坏图` });
     }
-    if (hasSplit && !images.some((image) => ["split", "splitSection"].includes(image.kind))) {
+    if (hasSplit && !images.some((image) => ["splitting_section"].includes(image.imageType || image.kind))) {
       addItem({ id: `block-split-image:${block.id}`, level: "warning", title: "劈裂图片未归档", text: `${block.name} 建议上传劈裂断面图` });
     }
     if (!hasAnyResult && !images.length) {
@@ -4157,7 +4183,7 @@ function renderGangueVisualizationV3(item, blocks) {
     </div>`;
 }
 
-function renderLabUploadFormV3(targetType, targetId, actionBase, defaultKind = "other") {
+function renderLabUploadFormV3(targetType, targetId, actionBase, defaultKind = "specimen") {
   const kinds = labImageKindsForTarget(targetType);
   const selectedKind = kinds.some((item) => item.id === defaultKind) ? defaultKind : (kinds[0]?.id || "other");
   const typeLabel = targetType === "gangue" ? "煤矸石批次图片类型" : "试块组图片类型";
@@ -4179,7 +4205,11 @@ function renderLabUploadFormV3(targetType, targetId, actionBase, defaultKind = "
 }
 
 function renderLabImageGalleryV3(images, targetType, targetId, actionBase) {
-  const normalized = normalizeLabImages(images);
+  const normalized = normalizeLabImages(images, {
+    targetType,
+    blockId: targetType === "block" ? targetId : "",
+    gangueBatchId: targetType === "gangue" ? targetId : ""
+  });
   if (!normalized.length) return `<p class="hint">还没有上传实验图片。</p>`;
   return `<div class="lab-gallery">
       ${normalized.map((image) => `<figure class="lab-photo">
@@ -4364,7 +4394,7 @@ function renderGangueExperimentFolderV3(item, content, actionBase = WORK_PATH) {
         <section class="folder-section">
           <h4>矸石图片 <small>原始图、称重图、级配图</small></h4>
           ${renderLabImageGalleryV3(item.images, "gangue", item.id, actionBase)}
-          ${renderLabUploadFormV3("gangue", item.id, actionBase, "gangueRaw")}
+          ${renderLabUploadFormV3("gangue", item.id, actionBase, "raw_gangue")}
         </section>
         <section class="folder-section">
           <h4>煤矸石数据和级配 <small>粒径、压碎值、针片状、级配克数/n 值</small></h4>
@@ -5161,7 +5191,7 @@ function renderBlockRecordV3(block, actionBase = WORK_PATH, materialLibrary = []
               <button type="button" class="active" data-record-tab="base">基础信息</button>
               <button type="button" data-record-tab="recipe">配方</button>
               <button type="button" data-record-tab="results">测试结果</button>
-              <button type="button" data-record-tab="images">图片</button>
+              <button type="button" data-record-tab="images">图片 ${normalizeLabImages(block.images, { targetType: "block", blockId: block.id }).length}</button>
               <button type="button" data-record-tab="tasks">提醒</button>
             </div>
             <form class="record-form" method="post" action="${actionBase}/update-block-record" data-record-form data-existing-result-labels="${attr(existingResultLabels.join("、"))}" data-original-ages="${attr(block.ages.join(","))}">
@@ -5222,9 +5252,9 @@ function renderBlockRecordV3(block, actionBase = WORK_PATH, materialLibrary = []
             </form>
             <section class="record-panel" data-record-panel="images" hidden>
               <section class="record-section">
-                <h4>试块图片 <small>成型、养护、破型、劈裂后都可以传</small></h4>
+                <h4>试块图片 <small>已绑定 ${normalizeLabImages(block.images, { targetType: "block", blockId: block.id }).length} 张；成型、养护、破型、劈裂后都可以传</small></h4>
                 ${renderLabImageGalleryV3(block.images, "block", block.id, actionBase)}
-                ${renderLabUploadFormV3("block", block.id, actionBase, "forming")}
+                ${renderLabUploadFormV3("block", block.id, actionBase, "specimen")}
               </section>
             </section>
             <section class="record-panel" data-record-panel="tasks" hidden>
@@ -6510,7 +6540,7 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
   const targetId = String(getText("targetId") || "").trim();
   const rawKind = normalizeLabImageKind(getText("imageKind"));
   const allowedKindIds = new Set((targetType === "gangue" ? GANGUE_LAB_IMAGE_KIND_IDS : BLOCK_LAB_IMAGE_KIND_IDS));
-  const kind = allowedKindIds.has(rawKind) ? rawKind : (targetType === "gangue" ? "gangueRaw" : "forming");
+  const kind = allowedKindIds.has(rawKind) ? rawKind : (targetType === "gangue" ? "raw_gangue" : "specimen");
   const title = getText("imageTitle");
   const caption = getText("imageCaption");
   const images = parts.filter((part) => part.name === "image" && part.filename && part.body.length);
@@ -6539,6 +6569,10 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
       title: images.length === 1 ? baseTitle : `${baseTitle} ${i + 1}`,
       caption,
       kind,
+      imageType: kind,
+      targetType,
+      blockId: targetType === "block" ? targetId : "",
+      gangueBatchId: targetType === "gangue" ? targetId : "",
       createdAt: new Date().toISOString()
     });
   }
@@ -6549,13 +6583,23 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
     content.coalGangueDb = getCoalGangueDb(content).map((item) => {
       if (item.id !== targetId) return item;
       found = true;
-      return normalizeCoalGangueItem({ ...item, images: [...uploaded, ...normalizeLabImages(item.images)] });
+      return normalizeCoalGangueItem({
+        ...item,
+        images: [...uploaded, ...normalizeLabImages(item.images, { targetType: "gangue", gangueBatchId: item.id })]
+      });
     });
   } else {
     content.testBlocks = getTestBlocks(content).map((block) => {
       if (block.id !== targetId) return block;
       found = true;
-      return { ...block, images: [...uploaded, ...normalizeLabImages(block.images)] };
+      const gangueBatchId = blockGangueIdV3(block);
+      return {
+        ...block,
+        images: [
+          ...uploaded.map((image) => ({ ...image, gangueBatchId })),
+          ...normalizeLabImages(block.images, { targetType: "block", blockId: block.id, gangueBatchId })
+        ]
+      };
     });
   }
   if (!found) throw Object.assign(new Error("image target not found"), { statusCode: 404 });
