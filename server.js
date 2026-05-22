@@ -3207,7 +3207,7 @@ function renderWorkspaceV3(content, message = "") {
     <aside class="sidebar-v22">
       <a class="side-brand-v22" href="${WORK_PATH}/"><span>CG</span><strong>煤矸石实验工作区</strong></a>
       <nav aria-label="工作区模块">
-        <a href="#overview" aria-current="page">总览</a>
+        <a href="#overview">总览</a>
         <a href="#gangue-archive">煤矸石档案</a>
         <a href="#block-management">试块管理</a>
         <a href="#analysis">数据分析</a>
@@ -3266,7 +3266,6 @@ function renderWorkspaceV3(content, message = "") {
 
 function workspaceStylesV3() {
   return `${workspaceStylesV2()}
-    body { background:linear-gradient(180deg,#edf4f7 0,#f6f8f6 340px); }
     header { background:rgba(246,248,246,.86); }
     .bar { min-height:78px; }
     nav a { background:rgba(255,255,255,.5); }
@@ -3503,11 +3502,12 @@ function workspaceStylesV3() {
     .side-foot-v22 { margin-top:auto; display:grid; gap:8px; }
     .side-foot-v22 a { min-height:36px; display:flex; align-items:center; padding:0 10px; border:1px solid rgba(255,255,255,.12); border-radius:8px; color:#dce8e3; }
     .workspace-v22 { min-width:0; }
-    .topbar-v22 { position:sticky; top:0; z-index:20; min-height:82px; display:grid; grid-template-columns:minmax(260px,1fr) minmax(230px,380px) auto; gap:16px; align-items:center; padding:14px 24px; border-bottom:1px solid rgba(204,218,214,.9); background:rgba(247,250,248,.92); backdrop-filter:blur(16px); }
+    .topbar-v22 { position:sticky; top:0; z-index:20; min-height:82px; display:grid; grid-template-columns:minmax(260px,1fr) minmax(180px,340px) auto; gap:16px; align-items:center; padding:14px 24px; border-bottom:1px solid rgba(204,218,214,.9); background:rgba(247,250,248,.92); backdrop-filter:blur(16px); }
     .topbar-v22 h1 { margin:3px 0 0; font-size:21px; line-height:1.2; }
-    .global-search-v22 { margin:0; display:grid; gap:5px; color:var(--muted); font-size:12px; font-weight:900; }
+    .global-search-v22 { min-width:0; margin:0; display:grid; gap:5px; color:var(--muted); font-size:12px; font-weight:900; }
     .global-search-v22 input { min-height:42px; border-radius:8px; background:#fff; }
-    .search-field-v22 { position:relative; display:grid; }
+    .search-field-v22 { position:relative; min-width:0; display:grid; }
+    .search-field-v22 input { min-width:0; }
     .search-field-v22 input { padding-right:46px; }
     .search-field-v22 button { position:absolute; right:5px; top:5px; width:32px; height:32px; padding:0; border-radius:8px; border:1px solid #cbded7; background:#eef6f2; color:var(--green); font-weight:900; }
     .top-actions-v22 { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
@@ -3695,9 +3695,11 @@ function workspaceStylesV3() {
     .calendar-inner-v22 { padding:0 18px 18px; }
     .create-panel-v22 { margin-bottom:14px; }
     .create-panel-v22 form { padding:0 18px 18px; }
-    .record-details[open] .record-drawer-body { position:fixed; z-index:60; top:0; right:0; bottom:0; width:min(760px, calc(100vw - 24px)); overflow:auto; border-left:1px solid var(--line); box-shadow:-28px 0 60px rgba(16,33,30,.22); }
-    .record-details[open]:before { content:""; position:fixed; z-index:55; inset:0; background:rgba(16,33,30,.34); }
-    .record-details[open] summary { position:relative; z-index:1; }
+    body.record-drawer-open { overflow:hidden; }
+    .record-details[open] { position:fixed; z-index:55; inset:0; pointer-events:none; }
+    .record-details[open] .record-drawer-body { position:absolute; z-index:2; top:0; right:0; bottom:0; width:min(760px, calc(100vw - 24px)); overflow:auto; pointer-events:auto; border-left:1px solid var(--line); box-shadow:-28px 0 60px rgba(16,33,30,.22); }
+    .record-details[open]:before { content:""; position:absolute; z-index:1; inset:0; pointer-events:auto; background:rgba(16,33,30,.34); }
+    .record-details[open] summary { display:none; }
     .drawer-top-v22 { position:sticky; top:0; z-index:3; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--line); background:#fff; }
     .drawer-top-v22 strong { color:var(--green); }
     .drawer-top-v22 button { min-height:34px; padding:0 10px; box-shadow:none; }
@@ -3721,9 +3723,10 @@ function workspaceStylesV3() {
     .lab-lightbox-actions-v22 { position:fixed; top:18px; right:18px; display:flex; gap:8px; }
     .lab-lightbox-actions-v22 a, .lab-lightbox-actions-v22 button { min-height:40px; display:inline-flex; align-items:center; padding:0 12px; border:1px solid rgba(255,255,255,.28); border-radius:8px; background:#fff; color:#10211e; font-weight:900; box-shadow:none; }
     #material-library .panel { margin-bottom:0; }
-    @media (max-width:1180px) { .app-shell-v22 { grid-template-columns:1fr; } .sidebar-v22 { position:static; height:auto; flex-direction:row; align-items:center; overflow:auto; } .sidebar-v22 nav { display:flex; flex-wrap:wrap; } .side-foot-v22 { margin-left:auto; margin-top:0; display:flex; } .topbar-v22 { grid-template-columns:1fr; } .top-actions-v22 { justify-content:flex-start; } .metric-grid-v22 { grid-template-columns:repeat(3,minmax(0,1fr)); } .overview-grid-v22, .overview-grid-v22.compact { grid-template-columns:1fr; } }
-    @media (max-width:980px) { .lab-overview { grid-template-columns:1fr; } .visual-map-grid-v22 { grid-template-columns:1fr; } .result-grid, .metric-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:repeat(2,minmax(0,1fr)); } .material-groups, .library-list { grid-template-columns:1fr; } .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:repeat(2,minmax(0,1fr)); } .task-row-v22 { grid-template-columns:1fr 1fr; } .task-row-v22.head { display:none; } }
-    @media (max-width:640px) { .work-main-v22 { padding:14px; } .sidebar-v22 { padding:12px; } .topbar-v22 { padding:12px 14px; } .metric-grid-v22, .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:1fr; } .workspace-hero { min-height:auto; } .progress-matrix-head-v22 { display:none; } .progress-row-v22 { grid-template-columns:1fr 1fr; align-items:start; } .progress-row-v22 strong, .matrix-meter-v22 { grid-column:1/-1; } .coverage-row-v22 { grid-template-columns:38px minmax(0,1fr) 48px; } .coverage-row-v22 em { grid-column:2/-1; text-align:left; } .gangue-folder-head, .block-toolbar, .custom-material-row, .lab-upload-grid { grid-template-columns:1fr; } .calendar-agenda-head { flex-direction:column; } .calendar-legend { justify-content:flex-start; } .folder-badges, .archive-actions, .block-actions { justify-content:stretch; } .folder-badges span, .archive-actions .chip-button, .block-actions .export-check, .block-actions button { flex:1; justify-content:center; } .viz-row { grid-template-columns:1fr; gap:5px; } .result-row-title, .gangue-card summary { align-items:flex-start; flex-direction:column; } .record-details summary { grid-template-columns:1fr; align-items:start; } .record-toggle { justify-content:center; } .record-summary-main em { white-space:normal; } .result-grid, .metric-options, .library-list, .material-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:1fr; } .material-library-item { grid-template-columns:1fr; } .side-brand-v22 strong { white-space:nowrap; } }
+    @media (max-width:1320px) { .topbar-v22 { grid-template-columns:minmax(260px,1fr) minmax(0,360px); } .top-actions-v22 { grid-column:1/-1; justify-content:flex-start; } .metric-grid-v22 { grid-template-columns:repeat(3,minmax(0,1fr)); } .overview-grid-v22, .overview-grid-v22.compact { grid-template-columns:1fr; } }
+    @media (max-width:980px) { .app-shell-v22 { grid-template-columns:1fr; } .sidebar-v22 { position:static; height:auto; flex-direction:row; align-items:center; overflow:auto; } .sidebar-v22 nav { display:flex; flex-wrap:wrap; } .side-foot-v22 { margin-left:auto; margin-top:0; display:flex; } .lab-overview { grid-template-columns:1fr; } .visual-map-grid-v22 { grid-template-columns:1fr; } .result-grid, .metric-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:repeat(2,minmax(0,1fr)); } .material-groups, .library-list { grid-template-columns:1fr; } .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:repeat(2,minmax(0,1fr)); } .task-row-v22 { grid-template-columns:1fr 1fr; } .task-row-v22.head { display:none; } }
+    @media (max-width:760px) { .topbar-v22 { grid-template-columns:1fr; } .top-actions-v22 { grid-column:auto; } }
+    @media (max-width:640px) { .work-main-v22 { padding:14px; } .sidebar-v22 { padding:12px; } .topbar-v22 { padding:12px 14px; } .record-details[open] .record-drawer-body { width:100%; border-left:0; } .metric-grid-v22, .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:1fr; } .workspace-hero { min-height:auto; } .progress-matrix-head-v22 { display:none; } .progress-row-v22 { grid-template-columns:1fr 1fr; align-items:start; } .progress-row-v22 strong, .matrix-meter-v22 { grid-column:1/-1; } .coverage-row-v22 { grid-template-columns:38px minmax(0,1fr) 48px; } .coverage-row-v22 em { grid-column:2/-1; text-align:left; } .gangue-folder-head, .block-toolbar, .custom-material-row, .lab-upload-grid { grid-template-columns:1fr; } .calendar-agenda-head { flex-direction:column; } .calendar-legend { justify-content:flex-start; } .folder-badges, .archive-actions, .block-actions { justify-content:stretch; } .folder-badges span, .archive-actions .chip-button, .block-actions .export-check, .block-actions button { flex:1; justify-content:center; } .viz-row { grid-template-columns:1fr; gap:5px; } .result-row-title, .gangue-card summary { align-items:flex-start; flex-direction:column; } .record-details summary { grid-template-columns:1fr; align-items:start; } .record-toggle { justify-content:center; } .record-summary-main em { white-space:normal; } .result-grid, .metric-options, .library-list, .material-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:1fr; } .material-library-item { grid-template-columns:1fr; } .side-brand-v22 strong { white-space:nowrap; } }
   `;
 }
 
@@ -5370,6 +5373,19 @@ function renderWorkspaceScriptV3() {
           else link.removeAttribute("aria-current");
         });
       };
+      const navSections = navLinks.map((link) => ({
+        hash: link.getAttribute("href") || "#overview",
+        section: document.querySelector(link.getAttribute("href") || "#overview")
+      })).filter((item) => item.section);
+      let navScrollFrame = 0;
+      const syncCurrentNavFromScroll = () => {
+        navScrollFrame = 0;
+        const topOffset = Math.min(220, Math.max(120, window.innerHeight * .24));
+        const visible = navSections.reduce((current, item) => (
+          item.section.getBoundingClientRect().top <= topOffset ? item : current
+        ), navSections[0]);
+        if (visible) setCurrentNav(visible.hash);
+      };
       let closeAllRecordsForNav = () => {};
       navLinks.forEach((link) => link.addEventListener("click", (event) => {
         const targetHash = link.getAttribute("href") || "#overview";
@@ -5387,6 +5403,10 @@ function renderWorkspaceScriptV3() {
       }));
       setCurrentNav(location.hash);
       window.addEventListener("hashchange", () => setCurrentNav(location.hash));
+      window.addEventListener("scroll", () => {
+        if (navScrollFrame) return;
+        navScrollFrame = window.requestAnimationFrame(syncCurrentNavFromScroll);
+      }, { passive: true });
       const setOptions = (select, entries, current) => {
         if (!select || !entries) return;
         select.innerHTML = Object.entries(entries).map(([key, item]) => (
@@ -5553,6 +5573,9 @@ function renderWorkspaceScriptV3() {
       });
 
       const recordDetails = Array.from(document.querySelectorAll("[data-record-details]"));
+      const syncRecordDrawerState = () => {
+        document.body.classList.toggle("record-drawer-open", recordDetails.some((details) => details.open));
+      };
       const clearRecordHash = () => {
         if (/^#record-/.test(location.hash || "")) {
           history.replaceState(null, "", location.pathname + location.search);
@@ -5561,10 +5584,12 @@ function renderWorkspaceScriptV3() {
       const closeRecord = (details) => {
         if (!details) return;
         details.open = false;
+        syncRecordDrawerState();
         clearRecordHash();
       };
       closeAllRecordsForNav = () => {
         recordDetails.forEach((details) => { details.open = false; });
+        syncRecordDrawerState();
         if (/^#record-/.test(location.hash || "")) {
           history.replaceState(null, "", location.pathname + location.search);
         }
@@ -5575,6 +5600,7 @@ function renderWorkspaceScriptV3() {
         const folder = details.closest(".gangue-folder");
         if (folder) folder.open = true;
         details.open = true;
+        syncRecordDrawerState();
         if (tab) details.querySelector("[data-record-tab='" + CSS.escape(tab) + "']")?.click();
         if (id && location.hash !== "#record-" + id) {
           history.replaceState(null, "", location.pathname + location.search + "#record-" + id);
@@ -5586,6 +5612,7 @@ function renderWorkspaceScriptV3() {
         summary?.setAttribute("aria-expanded", details.open ? "true" : "false");
         details.addEventListener("toggle", () => {
           summary?.setAttribute("aria-expanded", details.open ? "true" : "false");
+          syncRecordDrawerState();
           if (!details.open) return;
           const folder = details.closest(".gangue-folder");
           (folder ? Array.from(folder.querySelectorAll("[data-record-details]")) : recordDetails)
