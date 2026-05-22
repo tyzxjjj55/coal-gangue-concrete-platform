@@ -88,6 +88,8 @@ const BUILTIN_RESULT_METRICS = [
   { id: "failureMode", label: "破坏形态", placeholder: "例：正常破坏" }
 ];
 const DEFAULT_RESULT_METRIC_IDS = ["compressionStrength"];
+const DEFAULT_SPECIMEN_SIZE = "100mm x 100mm x 100mm";
+const DEFAULT_CUBE_AREA_MM2 = "10000";
 
 const BUILTIN_RECIPE_MATERIALS = [
   { id: "cement", label: "硅酸盐水泥", category: "binder", placeholder: "例：1485g" },
@@ -106,7 +108,8 @@ const DEFAULT_RECIPE_MATERIAL_IDS = ["cement", "flyAsh", "生石灰", "煤矸石
 const EXPERIMENT_MATERIAL_LABELS = ["硅酸盐水泥", "粉煤灰", "生石灰", "煤矸石", "硫酸钠", "速凝剂", "水"];
 const BLOCK_CATEGORIES = [
   { id: "spray", label: "喷浆", scheme: "A", note: "0.15-4.75mm，默认带速凝剂" },
-  { id: "road", label: "道路", scheme: "B", note: "0.15-16mm，可选速凝剂" }
+  { id: "road", label: "道路", scheme: "B", note: "0.15-16mm，可选速凝剂" },
+  { id: "other", label: "其他", scheme: "B", note: "保留级配和配合比归档" }
 ];
 const GRADATION_SCHEMES = {
   spray: {
@@ -214,6 +217,11 @@ const defaultContent = {
   dismissedAnomalies: [],
   coalGangueDb: [],
   testBlocks: [],
+  coalGangueBatches: [],
+  gradationPlans: [],
+  mixDesigns: [],
+  specimenGroups: [],
+  testResults: [],
   footerName: "xx520 小站",
   updatedAt: "2026-05-08"
 };
@@ -533,11 +541,26 @@ function strengthFromPressureArea(pressureKn, areaMm2) {
   return formatRecipeNumber((pressure * 1000) / area, 3);
 }
 
+function assertNonNegativeResultValueV25(value, label) {
+  const number = parseMeasurementNumber(value);
+  if (number !== null && number < 0) {
+    throw Object.assign(new Error(`${label} 不能为负数`), { statusCode: 400 });
+  }
+}
+
+function strengthDiffersFromComputedV25(value, computed) {
+  const entered = parseMeasurementNumber(value);
+  const calculated = parseMeasurementNumber(computed);
+  if (entered === null || calculated === null) return false;
+  return Math.abs(entered - calculated) > 0.0005;
+}
+
 function normalizeSampleMeasurements(value, fallbackValues = []) {
   const fallback = parseResultSamples(fallbackValues).map((strengthMpa) => ({
     pressureKn: "",
     areaMm2: "",
     strengthMpa,
+    manualOverride: false,
     failureMode: "",
     remark: ""
   }));
@@ -551,6 +574,7 @@ function normalizeSampleMeasurements(value, fallbackValues = []) {
           pressureKn,
           areaMm2,
           strengthMpa: String(item.strengthMpa ?? item.strength ?? item.value ?? computed ?? "").trim() || computed,
+          manualOverride: item.manualOverride === true || item.manualOverride === "true" || item.manualOverride === "1",
           failureMode: String(item.failureMode || "").trim(),
           remark: String(item.remark || item.note || "").trim()
         };
@@ -559,6 +583,7 @@ function normalizeSampleMeasurements(value, fallbackValues = []) {
         pressureKn: "",
         areaMm2: "",
         strengthMpa: String(item || "").trim(),
+        manualOverride: false,
         failureMode: "",
         remark: ""
       };
@@ -604,6 +629,8 @@ function normalizeMetricResultEntry(value, legacyValue = "", options = {}) {
     max: hasSamples ? sampleStats.max : "",
     n: hasSamples ? sampleStats.n : "",
     meanSource: sourceLabel,
+    manualOverride: source.manualOverride === true || source.manualOverride === "true" || source.manualOverride === "1"
+      || sampleMeasurements.some((item) => item.manualOverride),
     failureMode: String(source.failureMode || measurementFailureMode || "").trim(),
     remark: String(source.remark || source.resultNote || measurementRemark || "").trim()
   };
@@ -685,6 +712,24 @@ function normalizeBlockCategory(value, fallback = "road") {
   const id = String(value || "").trim();
   if (BLOCK_CATEGORIES.some((item) => item.id === id)) return id;
   return BLOCK_CATEGORIES.some((item) => item.id === fallback) ? fallback : "road";
+}
+
+function normalizeSpecimenSizeV25(value) {
+  return String(value || DEFAULT_SPECIMEN_SIZE).trim() || DEFAULT_SPECIMEN_SIZE;
+}
+
+function defaultBearingAreaMm2V25(specimenSize, metricId = "compressionStrength") {
+  if (String(metricId || "").trim() !== "compressionStrength") return "";
+  const size = normalizeSpecimenSizeV25(specimenSize).toLowerCase().replace(/\s+/g, "");
+  return /100(?:mm)?[x×*]100(?:mm)?[x×*]100(?:mm)?/.test(size) ? DEFAULT_CUBE_AREA_MM2 : "";
+}
+
+function stableExperimentIdV25(prefix, seed) {
+  return `${prefix}_${crypto.createHash("sha1").update(String(seed || prefix)).digest("hex").slice(0, 12)}`;
+}
+
+function blockPurposeV25(block) {
+  return normalizeBlockCategory(block && (block.purpose || block.blockCategory), "road");
 }
 
 function blockCategoryLabelV3(value) {
@@ -1036,6 +1081,7 @@ function normalizeAgeResults(record, ages = [], metrics = []) {
     results[key] = {
       testDate: optionalDateValue(item.testDate || (useLegacy ? source.testDate : "")),
       dueDate: optionalDateValue(item.dueDate || ""),
+      abnormalFlag: item.abnormalFlag === true || item.abnormalFlag === "true" || item.abnormalFlag === "1",
       compressionStrength: metricValues.compressionStrength || String(legacyValues.compressionStrength || "").trim(),
       flexuralStrength: metricValues.flexuralStrength || String(legacyValues.flexuralStrength || "").trim(),
       resultNote: String(item.resultNote || (useLegacy ? source.resultNote : "") || "").trim(),
@@ -1077,8 +1123,11 @@ function normalizeBlockRecord(value, ages = [], metrics = [], recipeMaterials = 
     totalWithoutWater: String(record.totalWithoutWater || "").trim(),
     gradationTemplate: normalizeGradationTemplate(record.gradationTemplate),
     gradationWeights: record.gradationWeights && typeof record.gradationWeights === "object" ? record.gradationWeights : {},
+    gradationPlanId: String(record.gradationPlanId || "").trim(),
+    mixDesignId: String(record.mixDesignId || "").trim(),
     gangueAggregateId: String(record.gangueAggregateId || record.coalGangueId || "").trim(),
     gangueAggregateName: String(record.gangueAggregateName || record.coalGangueName || "").trim(),
+    specimenSize: normalizeSpecimenSizeV25(record.specimenSize),
     recipeNote: String(record.recipeNote || "").trim(),
     compressionStrength: String(record.compressionStrength || "").trim(),
     flexuralStrength: String(record.flexuralStrength || "").trim(),
@@ -1089,6 +1138,271 @@ function normalizeBlockRecord(value, ages = [], metrics = [], recipeMaterials = 
     metrics: resultMetrics,
     results: normalizeAgeResults(record, ages, resultMetrics)
   };
+}
+
+function mergeDerivedModelRowsV25(current, derived, derivedSources = []) {
+  const rows = new Map();
+  (Array.isArray(current) ? current : [])
+    .filter((item) => item && typeof item === "object" && !derivedSources.includes(String(item.modelSource || "").trim()))
+    .forEach((item) => {
+      const id = String(item.id || "").trim();
+      if (id) rows.set(id, { ...item, id });
+    });
+  derived.forEach((item) => {
+    const id = String(item && item.id || "").trim();
+    if (id) rows.set(id, { ...(rows.get(id) || {}), ...item, id });
+  });
+  return Array.from(rows.values());
+}
+
+function specimenGroupIdForBlockV25(block) {
+  return String(block && (block.specimenGroupId || block.id) || "").trim();
+}
+
+function gradationPlanIdForBlockV25(block) {
+  const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+  return String(block.gradationPlanId || record.gradationPlanId || stableExperimentIdV25("gradation", block.id)).trim();
+}
+
+function mixDesignIdForBlockV25(block) {
+  const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+  return String(block.mixDesignId || record.mixDesignId || stableExperimentIdV25("mix", block.id)).trim();
+}
+
+function blockGangueBatchIdV25(block) {
+  const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+  return String(block.gangueBatchId || record.gangueAggregateId || "").trim();
+}
+
+function gradationPlanForBlockV25(block) {
+  const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+  const category = blockPurposeV25(block);
+  const scheme = gradationSchemeForCategory(category);
+  const templateKey = normalizeGradationTemplate(record.gradationTemplate);
+  const template = scheme.templates[templateKey] || scheme.templates.raw;
+  return {
+    id: gradationPlanIdForBlockV25(block),
+    specimenGroupId: specimenGroupIdForBlockV25(block),
+    coalGangueBatchId: blockGangueBatchIdV25(block),
+    name: `${block.name} 级配`,
+    category,
+    templateKey,
+    templateLabel: template.label,
+    coefficient: record.gradationCoefficient || template.nValue || "",
+    particleRanges: scheme.ranges,
+    particleWeights: normalizeBlockGradationWeights(record.gradationWeights, category, templateKey),
+    note: String(record.recipeNote || "").trim(),
+    modelSource: "testBlocks"
+  };
+}
+
+function gradationPlansForGangueV25(item) {
+  return normalizeCoalGangueItem(item).gradations.map((gradation, index) => ({
+    id: stableExperimentIdV25("gangue_gradation", `${item.id}:${index}:${gradation.name}:${gradation.nValue}`),
+    specimenGroupId: "",
+    coalGangueBatchId: item.id,
+    name: gradation.name || `级配 ${index + 1}`,
+    category: "",
+    templateKey: "",
+    templateLabel: "",
+    coefficient: gradation.nValue,
+    particleRanges: item.particleRanges,
+    particleWeights: gradation.particleWeights,
+    note: gradation.note,
+    looseBulkDensity: gradation.looseBulkDensity,
+    compactedBulkDensity: gradation.compactedBulkDensity,
+    modelSource: "coalGangueDb"
+  }));
+}
+
+function mixDesignForBlockV25(block) {
+  const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+  const materials = normalizeRecipeMaterials(block.recipeMaterials || record.recipeMaterials, "", { fallbackToDefault: false });
+  return {
+    id: mixDesignIdForBlockV25(block),
+    specimenGroupId: specimenGroupIdForBlockV25(block),
+    coalGangueBatchId: blockGangueBatchIdV25(block),
+    name: record.mixName || `${block.name} 配合比`,
+    weighingTemplate: record.weighingTemplate,
+    materials: materials.map((material) => ({
+      id: material.id,
+      label: material.label,
+      category: recipeMaterialCategory(material),
+      amount: String(record.recipeValues[material.id] || "").trim()
+    })),
+    waterBinderRatio: record.waterBinderRatio,
+    totalWithoutWater: record.totalWithoutWater,
+    note: record.recipeNote,
+    modelSource: "testBlocks"
+  };
+}
+
+function specimenGroupForBlockV25(block) {
+  const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+  return {
+    id: specimenGroupIdForBlockV25(block),
+    legacyBlockId: block.id,
+    name: block.name,
+    coalGangueBatchId: blockGangueBatchIdV25(block),
+    gradationPlanId: gradationPlanIdForBlockV25(block),
+    mixDesignId: mixDesignIdForBlockV25(block),
+    madeDate: block.madeDate,
+    quantity: Math.max(1, Number.parseInt(block.quantity, 10) || 1),
+    specimenSize: normalizeSpecimenSizeV25(block.specimenSize || record.specimenSize),
+    purpose: blockPurposeV25(block),
+    strength: String(block.strength || "").trim(),
+    ages: normalizeAges(block.ages),
+    note: String(block.note || "").trim(),
+    modelSource: "testBlocks"
+  };
+}
+
+function testResultKeyV25(item) {
+  return [
+    String(item.specimenGroupId || item.blockId || "").trim(),
+    String(item.age || "").trim(),
+    String(item.metric || "").trim()
+  ].join(":");
+}
+
+function testResultSamplesV25(entry) {
+  return normalizeSampleMeasurements(entry.sampleMeasurements).map((sample, index) => ({
+    specimenIndex: index + 1,
+    loadKN: sample.pressureKn,
+    areaMM2: sample.areaMm2,
+    strengthMPa: sample.strengthMpa,
+    manualOverride: sample.manualOverride === true,
+    failureMode: sample.failureMode,
+    note: sample.remark
+  }));
+}
+
+function testResultsForBlockV25(block) {
+  const metrics = normalizeResultMetrics(block.metrics || (block.record && block.record.metrics), "", { fallbackToDefault: true });
+  const record = normalizeBlockRecord(block.record, block.ages, metrics, block.recipeMaterials);
+  const results = normalizeAgeResults(record, block.ages, metrics);
+  return normalizeAges(block.ages).flatMap((age) => metrics.map((metric) => {
+    const row = results[String(age)] || {};
+    const entry = normalizeMetricResultEntry((row.metricResults || {})[metric.id], (row.metrics || {})[metric.id], {
+      age,
+      metric: metric.id,
+      dueDate: row.dueDate || addDays(block.madeDate, age)
+    });
+    const samples = testResultSamplesV25(entry);
+    if (!metricResultFilled(entry) && !row.testDate && !row.resultNote && !row.abnormalFlag) return null;
+    const first = samples[0] || {};
+    return {
+      id: stableExperimentIdV25("result", `${block.id}:${age}:${metric.id}`),
+      specimenGroupId: specimenGroupIdForBlockV25(block),
+      blockId: block.id,
+      age: String(age),
+      metric: metric.id,
+      metricLabel: metric.label,
+      loadKN: first.loadKN || "",
+      areaMM2: first.areaMM2 || "",
+      strengthMPa: entry.mean || entry.manualMean || first.strengthMPa || "",
+      samples,
+      testDate: row.testDate || "",
+      dueDate: row.dueDate || addDays(block.madeDate, age),
+      abnormalFlag: row.abnormalFlag === true,
+      manualOverride: entry.manualOverride === true || samples.some((sample) => sample.manualOverride) || Boolean(entry.manualMean && !entry.sampleValues.length),
+      note: String(entry.remark || row.resultNote || "").trim(),
+      meanSource: entry.meanSource,
+      modelSource: "testBlocks"
+    };
+  }).filter(Boolean));
+}
+
+function normalizeTopLevelTestResultV25(item = {}) {
+  const metric = normalizeResultMetrics([item.metric || item.metricLabel], "", { fallbackToDefault: false })[0];
+  const samples = normalizeSampleMeasurements(item.samples || item.sampleMeasurements || [{
+    pressureKn: item.loadKN || item.loadKn,
+    areaMm2: item.areaMM2 || item.areaMm2,
+    strengthMpa: item.strengthMPa || item.strengthMpa,
+    manualOverride: item.manualOverride,
+    failureMode: item.failureMode,
+    remark: item.note
+  }]).map((sample, index) => ({
+    specimenIndex: index + 1,
+    loadKN: sample.pressureKn,
+    areaMM2: sample.areaMm2,
+    strengthMPa: sample.strengthMpa,
+    manualOverride: sample.manualOverride === true,
+    failureMode: sample.failureMode,
+    note: sample.remark
+  }));
+  const first = samples[0] || {};
+  const specimenGroupId = String(item.specimenGroupId || item.blockId || "").trim();
+  const age = String(item.age || "").trim().replace(/d$/i, "");
+  const metricId = String(metric?.id || item.metric || "").trim();
+  return {
+    ...item,
+    id: String(item.id || stableExperimentIdV25("result", `${specimenGroupId}:${age}:${metricId}:${item.testDate || ""}`)).trim(),
+    specimenGroupId,
+    blockId: String(item.blockId || "").trim(),
+    age,
+    metric: metricId,
+    metricLabel: String(item.metricLabel || metric?.label || metricId).trim(),
+    loadKN: String(item.loadKN || item.loadKn || first.loadKN || "").trim(),
+    areaMM2: String(item.areaMM2 || item.areaMm2 || first.areaMM2 || "").trim(),
+    strengthMPa: String(item.strengthMPa || item.strengthMpa || first.strengthMPa || "").trim(),
+    samples,
+    testDate: optionalDateValue(item.testDate),
+    dueDate: optionalDateValue(item.dueDate),
+    abnormalFlag: item.abnormalFlag === true || item.abnormalFlag === "true" || item.abnormalFlag === "1",
+    manualOverride: item.manualOverride === true || item.manualOverride === "true" || item.manualOverride === "1" || samples.some((sample) => sample.manualOverride),
+    note: String(item.note || item.remark || "").trim(),
+    modelSource: String(item.modelSource || "").trim()
+  };
+}
+
+function syncExperimentDataModelV25(content) {
+  const blocks = getTestBlocks(content);
+  const gangues = getCoalGangueDb(content);
+  const batchRows = gangues.map((item) => ({
+    id: item.id,
+    name: item.name,
+    source: item.source,
+    shortCode: item.shortCode,
+    particleRanges: item.particleRanges,
+    note: item.otherInfo,
+    modelSource: "coalGangueDb"
+  }));
+  const blockGradationPlans = blocks.map(gradationPlanForBlockV25);
+  const gangueGradationPlans = gangues.flatMap(gradationPlansForGangueV25);
+  const blockTestResults = blocks.flatMap(testResultsForBlockV25);
+  content.coalGangueBatches = mergeDerivedModelRowsV25(content.coalGangueBatches, batchRows, ["coalGangueDb"]);
+  content.gradationPlans = mergeDerivedModelRowsV25(content.gradationPlans, [...gangueGradationPlans, ...blockGradationPlans], ["coalGangueDb", "testBlocks"]);
+  content.mixDesigns = mergeDerivedModelRowsV25(content.mixDesigns, blocks.map(mixDesignForBlockV25), ["testBlocks"]);
+  content.specimenGroups = mergeDerivedModelRowsV25(content.specimenGroups, blocks.map(specimenGroupForBlockV25), ["testBlocks"]);
+  content.testResults = [
+    ...(Array.isArray(content.testResults) ? content.testResults : [])
+      .filter((item) => item && typeof item === "object" && String(item.modelSource || "").trim() !== "testBlocks")
+      .map(normalizeTopLevelTestResultV25)
+      .filter((item) => item.specimenGroupId && item.age && item.metric),
+    ...blockTestResults
+  ];
+  return content;
+}
+
+function assertExperimentContentV25(content) {
+  const seenResults = new Set();
+  (Array.isArray(content.testResults) ? content.testResults : []).forEach((item) => {
+    const normalized = normalizeTopLevelTestResultV25(item);
+    const key = testResultKeyV25(normalized);
+    if (seenResults.has(key)) {
+      throw Object.assign(new Error("同一试块组的龄期和指标不能重复"), { statusCode: 400 });
+    }
+    seenResults.add(key);
+    assertNonNegativeResultValueV25(normalized.loadKN, "破坏荷载");
+    assertNonNegativeResultValueV25(normalized.areaMM2, "受压面积");
+    assertNonNegativeResultValueV25(normalized.strengthMPa, "强度");
+    normalized.samples.forEach((sample) => {
+      assertNonNegativeResultValueV25(sample.loadKN, "破坏荷载");
+      assertNonNegativeResultValueV25(sample.areaMM2, "受压面积");
+      assertNonNegativeResultValueV25(sample.strengthMPa, "强度");
+    });
+  });
 }
 
 function slugify(value, fallback) {
@@ -1217,18 +1531,27 @@ function normalizeContent(input) {
       const metrics = normalizeResultMetrics(item.metrics || (item.record && item.record.metrics), "", { fallbackToDefault: true });
       const recipeMaterials = normalizeRecipeMaterials(item.recipeMaterials || (item.record && item.record.recipeMaterials), "", { fallbackToDefault: true });
       const blockCategory = inferBlockCategoryV3({ ...item, ages, metrics, recipeMaterials });
+      const specimenGroupId = String(item.specimenGroupId || blockId).trim();
+      const gradationPlanId = String(item.gradationPlanId || item.record?.gradationPlanId || stableExperimentIdV25("gradation", blockId)).trim();
+      const mixDesignId = String(item.mixDesignId || item.record?.mixDesignId || stableExperimentIdV25("mix", blockId)).trim();
+      const specimenSize = normalizeSpecimenSizeV25(item.specimenSize || item.record?.specimenSize);
       return {
         id: blockId,
+        specimenGroupId,
+        gradationPlanId,
+        mixDesignId,
         name: String(item.name || item.part || "未命名试块").trim() || "未命名试块",
         blockCategory,
+        purpose: normalizeBlockCategory(item.purpose || blockCategory, blockCategory),
         madeDate: normalizeDateValue(item.madeDate || item.date),
         quantity: Math.max(1, Number.parseInt(item.quantity, 10) || 1),
+        specimenSize,
         ages,
         metrics,
         recipeMaterials,
         demoldDate: normalizeDateValue(item.demoldDate || addDays(item.madeDate || item.date, 1)),
         completed: normalizeCompleted(item.completed, ages),
-        record: normalizeBlockRecord(item.record, ages, metrics, recipeMaterials),
+        record: normalizeBlockRecord({ ...(item.record || {}), gradationPlanId, mixDesignId, specimenSize }, ages, metrics, recipeMaterials),
         images: normalizeLabImages(item.images || (item.record && item.record.images), {
           targetType: "block",
           blockId,
@@ -1239,7 +1562,7 @@ function normalizeContent(input) {
       };
     }).filter((item) => item.name && item.madeDate)
     : [];
-  return content;
+  return syncExperimentDataModelV25(content);
 }
 
 async function cleanupBackups(label) {
@@ -1376,6 +1699,7 @@ async function ensureThumbnails(content) {
 
 async function saveContent(content) {
   const normalized = normalizeContent(content);
+  assertExperimentContentV25(normalized);
   normalized.updatedAt = today();
   await ensureDirs();
   await ensureThumbnails(normalized);
@@ -2893,6 +3217,24 @@ function dataHealthItemsV23(content) {
         : null;
     }).filter(Boolean));
   });
+  const specimenGroups = Array.isArray(content.specimenGroups) ? content.specimenGroups : blocks.map(specimenGroupForBlockV25);
+  const testResults = Array.isArray(content.testResults) ? content.testResults.map(normalizeTopLevelTestResultV25) : blocks.flatMap(testResultsForBlockV25);
+  const resultHref = (item) => {
+    const group = specimenGroups.find((row) => row.id === item.specimenGroupId);
+    return `#record-${group?.legacyBlockId || item.blockId || item.specimenGroupId}`;
+  };
+  const resultByKey = new Map();
+  testResults.forEach((item) => {
+    const key = testResultKeyV25(item);
+    if (!key.replaceAll(":", "")) return;
+    resultByKey.set(key, [...(resultByKey.get(key) || []), item]);
+  });
+  const resultValueFor = (groupId, age, metric) => testResults.find((item) => (
+    item.specimenGroupId === groupId
+    && String(item.age) === String(age)
+    && item.metric === metric
+    && parseMeasurementNumber(item.strengthMPa) !== null
+  ));
   const groups = [
     {
       key: "strength",
@@ -2931,6 +3273,47 @@ function dataHealthItemsV23(content) {
       key: "cv",
       title: "CV 异常",
       items: cvAlerts
+    },
+    {
+      key: "gangueRelation",
+      title: "未关联煤矸石",
+      items: specimenGroups.filter((item) => !item.coalGangueBatchId).map((item) => ({ label: item.name, href: `#record-${item.legacyBlockId || item.id}` }))
+    },
+    {
+      key: "gradationRelation",
+      title: "未关联级配",
+      items: specimenGroups.filter((item) => !item.gradationPlanId).map((item) => ({ label: item.name, href: `#record-${item.legacyBlockId || item.id}` }))
+    },
+    {
+      key: "day28",
+      title: "无 28d 强度",
+      items: specimenGroups.filter((item) => !resultValueFor(item.id, 28, "compressionStrength")).map((item) => ({ label: item.name, href: `#record-${item.legacyBlockId || item.id}` }))
+    },
+    {
+      key: "coreAges",
+      title: "龄期数据缺失",
+      items: specimenGroups.flatMap((item) => [3, 7, 28]
+        .filter((age) => normalizeAges(item.ages).includes(age) && !resultValueFor(item.id, age, "compressionStrength"))
+        .map((age) => ({ label: `${item.name} ${age}d`, href: `#record-${item.legacyBlockId || item.id}` })))
+    },
+    {
+      key: "strengthRange",
+      title: "强度异常",
+      items: testResults.map((item) => ({ item, value: parseMeasurementNumber(item.strengthMPa) }))
+        .filter((row) => row.value !== null && (row.value <= 0 || row.value > 120))
+        .map((row) => ({ label: `${row.item.metricLabel || row.item.metric} ${row.item.age}d ${formatRecipeNumber(row.value, 3)}MPa`, href: resultHref(row.item) }))
+    },
+    {
+      key: "duplicateResults",
+      title: "重复测试结果",
+      items: Array.from(resultByKey.values()).filter((items) => items.length > 1)
+        .map((items) => ({ label: `${items[0].specimenGroupId} ${items[0].age}d ${items[0].metric}`, href: resultHref(items[0]) }))
+    },
+    {
+      key: "abnormalNotes",
+      title: "异常缺备注",
+      items: testResults.filter((item) => item.abnormalFlag && !String(item.note || "").trim())
+        .map((item) => ({ label: `${item.metricLabel || item.metric} ${item.age}d`, href: resultHref(item) }))
     }
   ];
   return groups.map((group) => ({ ...group, count: group.items.length }));
@@ -2940,7 +3323,7 @@ function renderDataHealthPanelV23(content) {
   const groups = dataHealthItemsV23(content);
   const total = groups.reduce((sum, group) => sum + group.count, 0);
   return `<section class="dashboard-card-v22 data-health-v23" id="data-health">
-      <div class="section-head-v22"><div><p class="eyebrow">Data Health</p><h2>数据健康检查</h2><p>快速找出论文整理前必须补齐的强度、日期、煤矸石指标和图片。</p></div><strong>${total} 项待补</strong></div>
+      <div class="section-head-v22"><div><p class="eyebrow">Data Health</p><h2>实验数据健康检查</h2><p>核对实验关系、龄期强度、异常备注、煤矸石指标和图片归档。</p></div><strong>${total} 项待补</strong></div>
       <div class="health-grid-v23">
         ${groups.map((group) => `<article class="health-card-v23 ${group.count ? "todo" : "ok"}">
           <span>${html(group.title)}</span>
@@ -3707,6 +4090,8 @@ function workspaceStylesV3() {
     .metric-result-head-v22 { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .metric-result-head-v22 strong { margin-right:auto; color:var(--green); }
     .source-pill-v22 { min-height:38px; display:flex; align-items:center; padding:0 10px; border:1px solid var(--line); border-radius:8px; background:#f8fbfa; color:var(--muted); font-weight:900; }
+    .result-flag-v25 { min-height:42px; display:flex; align-items:center; gap:8px; padding:0 11px; border:1px solid var(--line); border-radius:8px; background:#fffaf0; color:#8a5800; font-weight:900; }
+    .result-flag-v25 input { width:18px; min-height:18px; margin:0; accent-color:#d28b34; }
     .specimen-table-v22 { display:grid; gap:7px; overflow-x:auto; }
     .specimen-row-v22 { min-width:820px; display:grid; grid-template-columns:48px repeat(3,minmax(112px,1fr)) minmax(140px,1fr) minmax(160px,1.2fr); gap:8px; align-items:center; }
     .specimen-row-v22.head { color:var(--muted); font-size:12px; font-weight:900; }
@@ -3747,6 +4132,7 @@ function renderTestBlocksPanelV3(content, options = {}) {
             <label class="field wide"><span>试块名称/部位</span><input name="blockName" placeholder="例：1#楼三层梁板 C30" required></label>
             <label class="field"><span>制作日期</span><input name="madeDate" type="date" value="${today()}" required></label>
             <label class="field"><span>试块数量</span><input name="quantity" type="number" min="1" step="1" value="3" required></label>
+            <label class="field"><span>试块尺寸</span><input name="specimenSize" value="${attr(DEFAULT_SPECIMEN_SIZE)}" placeholder="${attr(DEFAULT_SPECIMEN_SIZE)}"></label>
             <label class="field"><span>强度等级</span><input name="strength" placeholder="例：C30"></label>
             <label class="field wide"><span>需要龄期</span><input id="ageInput" name="ages" value="7,28" placeholder="例：3,7,28">
               <div class="age-toolbar">
@@ -4286,6 +4672,7 @@ function renderGangueAddBlockFormV3(item, content, actionBase) {
           ${renderGradationTemplateSelectV3("road", "raw")}
           <label class="field"><span>制作日期</span><input name="madeDate" type="date" value="${today()}" required></label>
           <label class="field"><span>试块数量</span><input name="quantity" type="number" min="1" step="1" value="3" required></label>
+          <label class="field"><span>试块尺寸</span><input name="specimenSize" value="${attr(DEFAULT_SPECIMEN_SIZE)}" placeholder="${attr(DEFAULT_SPECIMEN_SIZE)}"></label>
           <label class="field"><span>强度等级</span><input name="strength" placeholder="例：C30"></label>
           <label class="field wide"><span>需要龄期</span><input id="${attr(ageId)}" name="ages" value="3,7,28" placeholder="例：3,7,28">
             <div class="age-toolbar">
@@ -5131,6 +5518,7 @@ function renderAgeResultsV3(block, record) {
           </div>
           <div class="record-grid result-grid">
             ${recordFieldV3(`resultTestDate_${key}`, "试验日期", item.testDate, { type: "date" })}
+            <label><span>异常标记</span><span class="result-flag-v25"><input name="resultAbnormal_${key}" type="checkbox" value="1" ${item.abnormalFlag ? "checked" : ""}>需人工核对</span></label>
             ${recordAreaV3(`resultNote_${key}`, "龄期备注", item.resultNote)}
           </div>
           ${metrics.map((metric) => {
@@ -5139,10 +5527,12 @@ function renderAgeResultsV3(block, record) {
       metric: metric.id,
       dueDate
     });
+    const defaultArea = defaultBearingAreaMm2V25(block.specimenSize || record.specimenSize, metric.id);
     const specimenRows = [0, 1, 2].map((index) => result.sampleMeasurements[index] || {
       pressureKn: "",
-      areaMm2: "",
+      areaMm2: defaultArea,
       strengthMpa: result.sampleValues[index] || "",
+      manualOverride: false,
       failureMode: "",
       remark: ""
     });
@@ -5166,7 +5556,7 @@ function renderAgeResultsV3(block, record) {
                 ${specimenRows.map((sample, index) => `<div class="specimen-row-v22" data-specimen-row>
                   <span>${index + 1}</span>
                   <input name="samplePressure_${key}_${attr(metric.id)}_${index}" value="${attr(sample.pressureKn)}" inputmode="decimal" data-pressure-kn placeholder="例：450">
-                  <input name="sampleArea_${key}_${attr(metric.id)}_${index}" value="${attr(sample.areaMm2)}" inputmode="decimal" data-area-mm2 placeholder="例：22500">
+                  <input name="sampleArea_${key}_${attr(metric.id)}_${index}" value="${attr(sample.areaMm2 || defaultArea)}" inputmode="decimal" data-area-mm2 placeholder="例：${attr(defaultArea || "22500")}">
                   <input name="sampleStrength_${key}_${attr(metric.id)}_${index}" value="${attr(formatMpaNumberInput(sample.strengthMpa))}" inputmode="decimal" data-strength-mpa placeholder="可手填 MPa">
                   <input name="sampleFailureMode_${key}_${attr(metric.id)}_${index}" value="${attr(sample.failureMode)}" placeholder="例：正常破坏">
                   <input name="sampleRemark_${key}_${attr(metric.id)}_${index}" value="${attr(sample.remark)}" placeholder="读数说明">
@@ -5224,6 +5614,7 @@ function renderBlockRecordV3(block, actionBase = WORK_PATH, materialLibrary = []
                     <label><span>成型日期</span><input name="madeDate" type="date" value="${attr(block.madeDate)}" required></label>
                     <label><span>数量</span><input name="quantity" type="number" min="1" step="1" value="${attr(block.quantity)}"></label>
                     <label><span>强度等级</span><input name="strength" value="${attr(block.strength)}" placeholder="例：C30"></label>
+                    <label><span>试块尺寸</span><input name="specimenSize" value="${attr(block.specimenSize || record.specimenSize)}" placeholder="${attr(DEFAULT_SPECIMEN_SIZE)}"></label>
                     <label><span>拆模日期</span><input name="demoldDate" type="date" value="${attr(block.demoldDate || addDays(block.madeDate, 1))}"></label>
                     <label><span>龄期</span><input name="ages" value="${attr(block.ages.join(","))}" placeholder="例：3,7,28"></label>
                     <label class="wide"><span>备注</span><input name="note" value="${attr(block.note)}" placeholder="成型方式、养护条件、编号说明"></label>
@@ -7262,12 +7653,20 @@ async function handleAddBlock(req, res, redirectBase = BASE_PATH) {
   const gradationWeights = blockGradationWeightsFromParams(params, blockCategory, gradationTemplate);
   const gradationCoefficient = gradationCoefficientForTemplate(blockCategory, gradationTemplate) || String(params.get("gradationCoefficient") || "").trim();
   const blockId = crypto.randomUUID();
+  const specimenSize = normalizeSpecimenSizeV25(params.get("specimenSize"));
+  const gradationPlanId = stableExperimentIdV25("gradation", blockId);
+  const mixDesignId = stableExperimentIdV25("mix", blockId);
   content.testBlocks = [{
     id: blockId,
+    specimenGroupId: blockId,
+    gradationPlanId,
+    mixDesignId,
     name,
     blockCategory,
+    purpose: blockCategory,
     madeDate,
     quantity: Math.max(1, Number.parseInt(params.get("quantity"), 10) || 1),
+    specimenSize,
     ages: blockAges,
     metrics: blockMetrics,
     recipeMaterials: blockRecipeMaterials,
@@ -7284,6 +7683,9 @@ async function handleAddBlock(req, res, redirectBase = BASE_PATH) {
       totalWithoutWater: params.get("totalWithoutWater") || WEIGHING_TEMPLATES[weighingTemplate].totalWithoutWater,
       gradationTemplate,
       gradationWeights,
+      gradationPlanId,
+      mixDesignId,
+      specimenSize,
       gangueAggregateId: selectedGangueId,
       gangueAggregateName: selectedGangueName
     }, blockAges, blockMetrics, blockRecipeMaterials),
@@ -7335,20 +7737,26 @@ async function handleUpdateRecipeMaterialLibrary(req, res, redirectBase = WORK_P
   redirect(res, "材料库已保存", redirectBase);
 }
 
-function sampleMeasurementsFromParams(params, ageKey, metricId) {
+function sampleMeasurementsFromParams(params, ageKey, metricId, specimenSize = DEFAULT_SPECIMEN_SIZE) {
   return [0, 1, 2].map((index) => {
     const pressureKn = String(params.get(`samplePressure_${ageKey}_${metricId}_${index}`) || "").trim();
-    const areaMm2 = String(params.get(`sampleArea_${ageKey}_${metricId}_${index}`) || "").trim();
+    const defaultArea = pressureKn ? defaultBearingAreaMm2V25(specimenSize, metricId) : "";
+    const areaMm2 = String(params.get(`sampleArea_${ageKey}_${metricId}_${index}`) || defaultArea || "").trim();
     const computed = strengthFromPressureArea(pressureKn, areaMm2);
-    const strengthMpa = computed || String(params.get(`sampleStrength_${ageKey}_${metricId}_${index}`) || "").trim();
+    const enteredStrength = String(params.get(`sampleStrength_${ageKey}_${metricId}_${index}`) || "").trim();
+    const strengthMpa = enteredStrength || computed;
+    assertNonNegativeResultValueV25(pressureKn, "破坏荷载");
+    assertNonNegativeResultValueV25(areaMm2, "受压面积");
+    assertNonNegativeResultValueV25(strengthMpa, "强度");
     return {
       pressureKn,
       areaMm2,
       strengthMpa,
+      manualOverride: Boolean(enteredStrength && computed && strengthDiffersFromComputedV25(enteredStrength, computed)),
       failureMode: String(params.get(`sampleFailureMode_${ageKey}_${metricId}_${index}`) || "").trim(),
       remark: String(params.get(`sampleRemark_${ageKey}_${metricId}_${index}`) || "").trim()
     };
-  }).filter((item) => item.pressureKn || item.areaMm2 || item.strengthMpa || item.failureMode || item.remark);
+  }).filter((item) => item.pressureKn || item.strengthMpa || item.failureMode || item.remark);
 }
 
 async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
@@ -7372,6 +7780,7 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
     totalWithoutWater: params.get("totalWithoutWater"),
     gradationTemplate: params.get("gradationTemplate"),
     gangueAggregateId: params.get("gangueAggregateId"),
+    specimenSize: params.get("specimenSize"),
     recipeNote: params.get("recipeNote"),
     compressionStrength: params.get("compressionStrength"),
     flexuralStrength: params.get("flexuralStrength"),
@@ -7391,6 +7800,7 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
     const nextMadeDate = normalizeDateValue(params.get("madeDate") || block.madeDate);
     const nextDemoldDate = optionalDateValue(params.get("demoldDate")) || addDays(nextMadeDate, 1);
     const nextCategory = normalizeBlockCategory(params.get("blockCategory"), block.blockCategory || "road");
+    const nextSpecimenSize = normalizeSpecimenSizeV25(params.get("specimenSize") || block.specimenSize || block.record?.specimenSize);
     const nextWeighingTemplate = normalizeWeighingTemplate(params.get("weighingTemplate"), nextCategory);
     const nextGradationTemplate = normalizeGradationTemplate(params.get("gradationTemplate"));
     const nextGradationCoefficient = gradationCoefficientForTemplate(nextCategory, nextGradationTemplate) || String(params.get("gradationCoefficient") || "").trim();
@@ -7415,9 +7825,10 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
           : metric.id === "flexuralStrength"
             ? `resultFlexural_${key}`
             : "";
-        const sampleMeasurements = sampleMeasurementsFromParams(params, key, metric.id);
+        const sampleMeasurements = sampleMeasurementsFromParams(params, key, metric.id, nextSpecimenSize);
         const sampleValues = sampleMeasurements.map((sample) => sample.strengthMpa).filter((value) => parseMeasurementNumber(value) !== null);
         const manualMean = sampleValues.length ? "" : (params.get(`manualMean_${key}_${metric.id}`) || params.get(`metric_${key}_${metric.id}`) || (legacyName ? params.get(legacyName) : ""));
+        assertNonNegativeResultValueV25(manualMean, "强度");
         const entry = normalizeMetricResultEntry({
           age,
           metric: metric.id,
@@ -7434,6 +7845,7 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
       results[key] = {
         dueDate: addDays(nextMadeDate, age),
         testDate: params.get(`resultTestDate_${key}`),
+        abnormalFlag: params.get(`resultAbnormal_${key}`) === "1",
         compressionStrength: metricValues.compressionStrength || "",
         flexuralStrength: metricValues.flexuralStrength || "",
         resultNote: params.get(`resultNote_${key}`),
@@ -7444,6 +7856,9 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
     const nextRecord = normalizeBlockRecord({
       ...baseRecord,
       gradationCoefficient: nextGradationCoefficient,
+      gradationPlanId: block.gradationPlanId || stableExperimentIdV25("gradation", block.id),
+      mixDesignId: block.mixDesignId || stableExperimentIdV25("mix", block.id),
+      specimenSize: nextSpecimenSize,
       gangueAggregateName: selectedGangueName,
       recipeMaterials: nextRecipeMaterials,
       recipeValues: finalRecipeValues,
@@ -7457,12 +7872,14 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
       name: String(params.get("blockName") || block.name || "").trim() || block.name,
       madeDate: nextMadeDate,
       quantity: Math.max(1, Number.parseInt(params.get("quantity"), 10) || block.quantity || 1),
+      specimenSize: nextSpecimenSize,
       ages: nextAges,
       demoldDate: nextDemoldDate,
       completed: normalizeCompleted(block.completed, nextAges),
       strength: String(params.get("strength") || "").trim(),
       note: String(params.get("note") || "").trim(),
       blockCategory: nextCategory,
+      purpose: nextCategory,
       metrics: nextMetrics,
       recipeMaterials: nextRecipeMaterials,
       record: nextRecord
@@ -7613,7 +8030,9 @@ async function route(req, res) {
 async function bootstrap() {
   await ensureDirs();
   await ensureSessionSecret();
-  await saveContent(await readContent());
+  const startupContent = await readContent();
+  await ensureThumbnails(startupContent);
+  await generateSite(startupContent);
   checkDailyReminder().catch((error) => console.error("daily reminder failed", error));
   setInterval(() => {
     checkDailyReminder().catch((error) => console.error("daily reminder failed", error));
