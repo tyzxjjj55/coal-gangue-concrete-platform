@@ -9,6 +9,7 @@
     "check": "node --check server.js"
   },
   "dependencies": {
+    "mssql": "^12.5.4",
     "nodemailer": "^6.9.16"
   },
   "engines": {

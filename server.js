@@ -5,10 +5,16 @@ const path = require("path");
 const crypto = require("crypto");
 const { execFile } = require("child_process");
 let nodemailer = null;
+let mssql = null;
 try {
   nodemailer = require("nodemailer");
 } catch {
   nodemailer = null;
+}
+try {
+  mssql = require("mssql");
+} catch {
+  mssql = null;
 }
 
 const PORT = Number(process.env.PORT || 5710);
@@ -61,6 +67,16 @@ const WEATHER_CONFIG = {
   latitude: Number(process.env.WEATHER_LAT || 37.85261),
   longitude: Number(process.env.WEATHER_LON || 112.51659),
   timezone: process.env.WEATHER_TIMEZONE || "Asia/Shanghai"
+};
+const AZURE_SQL_CONFIG = {
+  server: process.env.AZURE_SQL_SERVER || process.env.SQL_SERVER || "xx.database.windows.net",
+  database: process.env.AZURE_SQL_DATABASE || process.env.SQL_DATABASE || "",
+  user: process.env.AZURE_SQL_USER || process.env.SQL_USER || "",
+  password: process.env.AZURE_SQL_PASSWORD || process.env.SQL_PASSWORD || "",
+  encrypt: String(process.env.AZURE_SQL_ENCRYPT || "true") !== "false",
+  trustServerCertificate: String(process.env.AZURE_SQL_TRUST_SERVER_CERTIFICATE || "false") === "true",
+  connectionTimeout: Number(process.env.AZURE_SQL_CONNECTION_TIMEOUT || 30000),
+  requestTimeout: Number(process.env.AZURE_SQL_REQUEST_TIMEOUT || 30000)
 };
 
 function requiredEnv(name) {
@@ -1707,6 +1723,7 @@ async function saveContent(content) {
   await backupIfExists(path.join(SITE_DIR, "index.html"), "index");
   await writeAtomic(CONTENT_FILE, `${JSON.stringify(normalized, null, 2)}\n`);
   await generateSite(normalized);
+  syncAzureSqlMirror(normalized, "save").catch((error) => console.error("azure sql sync failed", error.message || error));
 }
 
 async function generateSite(content) {
@@ -1744,6 +1761,234 @@ async function generateSite(content) {
 
   await fsp.rm(path.join(SITE_DIR, PRIVATE_GALLERY_PATH.slice(1)), { recursive: true, force: true });
   await writeAtomic(path.join(SITE_DIR, PRIVATE_GALLERY_PATH.slice(1), "index.html"), renderPrivateGalleryPlaceholder(content));
+}
+
+let azureSqlPoolPromise = null;
+let azureSqlSchemaReady = false;
+let azureSqlSyncing = false;
+
+function azureSqlReady() {
+  return Boolean(
+    mssql
+    && AZURE_SQL_CONFIG.server
+    && AZURE_SQL_CONFIG.database
+    && AZURE_SQL_CONFIG.user
+    && AZURE_SQL_CONFIG.password
+  );
+}
+
+async function azureSqlPool() {
+  if (!azureSqlReady()) return null;
+  if (!azureSqlPoolPromise) {
+    azureSqlPoolPromise = mssql.connect({
+      server: AZURE_SQL_CONFIG.server,
+      database: AZURE_SQL_CONFIG.database,
+      user: AZURE_SQL_CONFIG.user,
+      password: AZURE_SQL_CONFIG.password,
+      options: {
+        encrypt: AZURE_SQL_CONFIG.encrypt,
+        trustServerCertificate: AZURE_SQL_CONFIG.trustServerCertificate
+      },
+      connectionTimeout: AZURE_SQL_CONFIG.connectionTimeout,
+      requestTimeout: AZURE_SQL_CONFIG.requestTimeout
+    }).catch((error) => {
+      azureSqlPoolPromise = null;
+      throw error;
+    });
+  }
+  return azureSqlPoolPromise;
+}
+
+async function ensureAzureSqlSchema(pool) {
+  if (azureSqlSchemaReady || !pool) return;
+  await pool.request().query(`
+    IF OBJECT_ID(N'dbo.xx520_content_snapshots', N'U') IS NULL
+      CREATE TABLE dbo.xx520_content_snapshots (
+        id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        saved_at DATETIME2(0) NOT NULL DEFAULT SYSUTCDATETIME(),
+        reason NVARCHAR(64) NOT NULL,
+        payload NVARCHAR(MAX) NOT NULL
+      );
+    IF OBJECT_ID(N'dbo.xx520_coal_gangue_batches', N'U') IS NULL
+      CREATE TABLE dbo.xx520_coal_gangue_batches (
+        id NVARCHAR(100) NOT NULL PRIMARY KEY,
+        name NVARCHAR(255) NULL,
+        source NVARCHAR(255) NULL,
+        short_code NVARCHAR(80) NULL,
+        payload NVARCHAR(MAX) NULL,
+        synced_at DATETIME2(0) NOT NULL DEFAULT SYSUTCDATETIME()
+      );
+    IF OBJECT_ID(N'dbo.xx520_specimen_groups', N'U') IS NULL
+      CREATE TABLE dbo.xx520_specimen_groups (
+        id NVARCHAR(100) NOT NULL PRIMARY KEY,
+        legacy_block_id NVARCHAR(100) NULL,
+        name NVARCHAR(255) NULL,
+        coal_gangue_batch_id NVARCHAR(100) NULL,
+        gradation_plan_id NVARCHAR(100) NULL,
+        mix_design_id NVARCHAR(100) NULL,
+        purpose NVARCHAR(60) NULL,
+        made_date NVARCHAR(20) NULL,
+        quantity INT NULL,
+        strength NVARCHAR(80) NULL,
+        specimen_size NVARCHAR(80) NULL,
+        payload NVARCHAR(MAX) NULL,
+        synced_at DATETIME2(0) NOT NULL DEFAULT SYSUTCDATETIME()
+      );
+    IF OBJECT_ID(N'dbo.xx520_test_results', N'U') IS NULL
+      CREATE TABLE dbo.xx520_test_results (
+        id NVARCHAR(160) NOT NULL PRIMARY KEY,
+        specimen_group_id NVARCHAR(100) NULL,
+        block_id NVARCHAR(100) NULL,
+        age INT NULL,
+        metric NVARCHAR(100) NULL,
+        metric_label NVARCHAR(120) NULL,
+        strength_mpa FLOAT NULL,
+        mean_source NVARCHAR(80) NULL,
+        test_date NVARCHAR(20) NULL,
+        due_date NVARCHAR(20) NULL,
+        abnormal_flag BIT NOT NULL DEFAULT 0,
+        manual_override BIT NOT NULL DEFAULT 0,
+        payload NVARCHAR(MAX) NULL,
+        synced_at DATETIME2(0) NOT NULL DEFAULT SYSUTCDATETIME()
+      );
+    IF OBJECT_ID(N'dbo.xx520_lab_images', N'U') IS NULL
+      CREATE TABLE dbo.xx520_lab_images (
+        id NVARCHAR(160) NOT NULL PRIMARY KEY,
+        target_type NVARCHAR(40) NULL,
+        block_id NVARCHAR(100) NULL,
+        gangue_batch_id NVARCHAR(100) NULL,
+        image_type NVARCHAR(80) NULL,
+        src NVARCHAR(500) NULL,
+        title NVARCHAR(255) NULL,
+        note NVARCHAR(500) NULL,
+        payload NVARCHAR(MAX) NULL,
+        synced_at DATETIME2(0) NOT NULL DEFAULT SYSUTCDATETIME()
+      );
+  `);
+  azureSqlSchemaReady = true;
+}
+
+function sqlText(value, limit = 4000) {
+  return String(value || "").trim().slice(0, limit);
+}
+
+function sqlNumber(value) {
+  const number = parseMeasurementNumber(value);
+  return number === null ? null : number;
+}
+
+function azureSqlImageRows(content) {
+  const rows = [];
+  getCoalGangueDb(content).forEach((gangue) => {
+    normalizeLabImages(gangue.images, { targetType: "gangue", gangueBatchId: gangue.id }).forEach((image, index) => {
+      rows.push({ id: image.id || stableExperimentIdV25("image", `gangue:${gangue.id}:${image.src}:${index}`), ...image });
+    });
+  });
+  getTestBlocks(content).forEach((block) => {
+    const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+    normalizeLabImages(block.images, { targetType: "block", blockId: block.id, gangueBatchId: record.gangueAggregateId }).forEach((image, index) => {
+      rows.push({ id: image.id || stableExperimentIdV25("image", `block:${block.id}:${image.src}:${index}`), ...image });
+    });
+  });
+  return rows;
+}
+
+async function syncAzureSqlMirror(content, reason = "sync") {
+  if (!azureSqlReady() || azureSqlSyncing) return false;
+  azureSqlSyncing = true;
+  try {
+    const pool = await azureSqlPool();
+    if (!pool) return false;
+    await ensureAzureSqlSchema(pool);
+    const normalized = normalizeContent(content);
+    const gangues = getCoalGangueDb(normalized);
+    const specimenGroups = Array.isArray(normalized.specimenGroups) ? normalized.specimenGroups : getTestBlocks(normalized).map(specimenGroupForBlockV25);
+    const testResults = Array.isArray(normalized.testResults) ? normalized.testResults.map(normalizeTopLevelTestResultV25) : getTestBlocks(normalized).flatMap(testResultsForBlockV25);
+    const images = azureSqlImageRows(normalized);
+    const tx = new mssql.Transaction(pool);
+    await tx.begin();
+    try {
+      await new mssql.Request(tx).query(`
+        DELETE FROM dbo.xx520_lab_images;
+        DELETE FROM dbo.xx520_test_results;
+        DELETE FROM dbo.xx520_specimen_groups;
+        DELETE FROM dbo.xx520_coal_gangue_batches;
+      `);
+      for (const gangue of gangues) {
+        await new mssql.Request(tx)
+          .input("id", mssql.NVarChar(100), sqlText(gangue.id, 100))
+          .input("name", mssql.NVarChar(255), sqlText(gangue.name, 255))
+          .input("source", mssql.NVarChar(255), sqlText(gangue.source, 255))
+          .input("shortCode", mssql.NVarChar(80), sqlText(gangue.shortCode, 80))
+          .input("payload", mssql.NVarChar(mssql.MAX), JSON.stringify(gangue))
+          .query("INSERT INTO dbo.xx520_coal_gangue_batches (id,name,source,short_code,payload) VALUES (@id,@name,@source,@shortCode,@payload)");
+      }
+      for (const group of specimenGroups) {
+        await new mssql.Request(tx)
+          .input("id", mssql.NVarChar(100), sqlText(group.id, 100))
+          .input("legacyBlockId", mssql.NVarChar(100), sqlText(group.legacyBlockId, 100))
+          .input("name", mssql.NVarChar(255), sqlText(group.name, 255))
+          .input("coalGangueBatchId", mssql.NVarChar(100), sqlText(group.coalGangueBatchId, 100))
+          .input("gradationPlanId", mssql.NVarChar(100), sqlText(group.gradationPlanId, 100))
+          .input("mixDesignId", mssql.NVarChar(100), sqlText(group.mixDesignId, 100))
+          .input("purpose", mssql.NVarChar(60), sqlText(group.purpose, 60))
+          .input("madeDate", mssql.NVarChar(20), sqlText(group.madeDate, 20))
+          .input("quantity", mssql.Int, Number.parseInt(group.quantity, 10) || null)
+          .input("strength", mssql.NVarChar(80), sqlText(group.strength, 80))
+          .input("specimenSize", mssql.NVarChar(80), sqlText(group.specimenSize, 80))
+          .input("payload", mssql.NVarChar(mssql.MAX), JSON.stringify(group))
+          .query(`INSERT INTO dbo.xx520_specimen_groups
+            (id,legacy_block_id,name,coal_gangue_batch_id,gradation_plan_id,mix_design_id,purpose,made_date,quantity,strength,specimen_size,payload)
+            VALUES (@id,@legacyBlockId,@name,@coalGangueBatchId,@gradationPlanId,@mixDesignId,@purpose,@madeDate,@quantity,@strength,@specimenSize,@payload)`);
+      }
+      for (const result of testResults) {
+        await new mssql.Request(tx)
+          .input("id", mssql.NVarChar(160), sqlText(result.id, 160))
+          .input("specimenGroupId", mssql.NVarChar(100), sqlText(result.specimenGroupId, 100))
+          .input("blockId", mssql.NVarChar(100), sqlText(result.blockId, 100))
+          .input("age", mssql.Int, Number.parseInt(result.age, 10) || null)
+          .input("metric", mssql.NVarChar(100), sqlText(result.metric, 100))
+          .input("metricLabel", mssql.NVarChar(120), sqlText(result.metricLabel, 120))
+          .input("strengthMPa", mssql.Float, sqlNumber(result.strengthMPa))
+          .input("meanSource", mssql.NVarChar(80), sqlText(result.meanSource, 80))
+          .input("testDate", mssql.NVarChar(20), sqlText(result.testDate, 20))
+          .input("dueDate", mssql.NVarChar(20), sqlText(result.dueDate, 20))
+          .input("abnormalFlag", mssql.Bit, result.abnormalFlag === true)
+          .input("manualOverride", mssql.Bit, result.manualOverride === true)
+          .input("payload", mssql.NVarChar(mssql.MAX), JSON.stringify(result))
+          .query(`INSERT INTO dbo.xx520_test_results
+            (id,specimen_group_id,block_id,age,metric,metric_label,strength_mpa,mean_source,test_date,due_date,abnormal_flag,manual_override,payload)
+            VALUES (@id,@specimenGroupId,@blockId,@age,@metric,@metricLabel,@strengthMPa,@meanSource,@testDate,@dueDate,@abnormalFlag,@manualOverride,@payload)`);
+      }
+      for (const image of images) {
+        await new mssql.Request(tx)
+          .input("id", mssql.NVarChar(160), sqlText(image.id, 160))
+          .input("targetType", mssql.NVarChar(40), sqlText(image.targetType, 40))
+          .input("blockId", mssql.NVarChar(100), sqlText(image.blockId, 100))
+          .input("gangueBatchId", mssql.NVarChar(100), sqlText(image.gangueBatchId, 100))
+          .input("imageType", mssql.NVarChar(80), sqlText(image.imageType || image.kind, 80))
+          .input("src", mssql.NVarChar(500), sqlText(image.src, 500))
+          .input("title", mssql.NVarChar(255), sqlText(image.title, 255))
+          .input("note", mssql.NVarChar(500), sqlText(image.note || image.caption, 500))
+          .input("payload", mssql.NVarChar(mssql.MAX), JSON.stringify(image))
+          .query(`INSERT INTO dbo.xx520_lab_images
+            (id,target_type,block_id,gangue_batch_id,image_type,src,title,note,payload)
+            VALUES (@id,@targetType,@blockId,@gangueBatchId,@imageType,@src,@title,@note,@payload)`);
+      }
+      await new mssql.Request(tx)
+        .input("reason", mssql.NVarChar(64), sqlText(reason, 64))
+        .input("payload", mssql.NVarChar(mssql.MAX), JSON.stringify(normalized))
+        .query("INSERT INTO dbo.xx520_content_snapshots (reason,payload) VALUES (@reason,@payload); DELETE FROM dbo.xx520_content_snapshots WHERE id NOT IN (SELECT TOP (50) id FROM dbo.xx520_content_snapshots ORDER BY id DESC);");
+      await tx.commit();
+      console.log(`azure sql sync ok: ${gangues.length} gangues, ${specimenGroups.length} groups, ${testResults.length} results, ${images.length} images`);
+      return true;
+    } catch (error) {
+      await tx.rollback().catch(() => {});
+      throw error;
+    }
+  } finally {
+    azureSqlSyncing = false;
+  }
 }
 
 function getNotes(content) {
@@ -8148,6 +8393,7 @@ async function bootstrap() {
   const startupContent = await readContent();
   await ensureThumbnails(startupContent);
   await generateSite(startupContent);
+  syncAzureSqlMirror(startupContent, "startup").catch((error) => console.error("azure sql sync failed", error.message || error));
   checkDailyReminder().catch((error) => console.error("daily reminder failed", error));
   setInterval(() => {
     checkDailyReminder().catch((error) => console.error("daily reminder failed", error));
