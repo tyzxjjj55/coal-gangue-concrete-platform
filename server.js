@@ -3876,6 +3876,9 @@ function workspaceStylesV3() {
     .ratio-line { margin:10px 0 0; color:var(--muted); font-size:13px; font-weight:800; }
     .recipe-stack-v23 { display:grid; gap:8px; margin:0 0 12px; }
     .recipe-stack-v23.compact { margin:0; gap:6px; }
+    .recipe-stack-title-v23, .recipe-stack-side-v23 { margin:0; color:var(--muted); font-size:11px; font-weight:900; }
+    .recipe-stack-title-v23 small { color:#8aa09a; font-weight:900; }
+    .recipe-stack-side-v23 { color:#3d6f98; }
     .recipe-stack-track-v23 { height:16px; display:flex; overflow:hidden; border:1px solid #d8e6e0; border-radius:999px; background:#eef5f2; }
     .recipe-stack-track-v23 span { width:var(--w,0%); min-width:4px; }
     .recipe-stack-track-v23 .binder, .recipe-stack-legend-v23 .binder b { background:#337861; }
@@ -5352,6 +5355,7 @@ function calculateRecipeRatios(record) {
   const acceleratorTotal = totalFor((item) => item.id === "accelerator" || /速凝剂/.test(item.label));
   const sodiumSulfateTotal = totalFor((item) => /硫酸钠/.test(item.label));
   const dryTotal = binderTotal + admixtureTotal + aggregateTotal;
+  const mainMaterialTotal = binderTotal + aggregateTotal;
   const binderParts = rows
     .filter((item) => item.category === "binder" && item.grams > 0)
     .map((item) => ({
@@ -5362,6 +5366,7 @@ function calculateRecipeRatios(record) {
   return {
     binderTotal,
     dryTotal,
+    mainMaterialTotal,
     admixtureTotal,
     aggregateTotal,
     waterTotal,
@@ -5384,13 +5389,16 @@ function renderRecipeStackBarV23(record, compact = false) {
   const ratios = calculateRecipeRatios(record);
   const segments = [
     { key: "binder", label: "胶凝材料", value: ratios.binderTotal },
-    { key: "aggregate", label: "煤矸石/骨料", value: ratios.aggregateTotal },
-    { key: "water", label: "水", value: ratios.waterTotal },
-    { key: "admixture", label: "外加剂", value: ratios.admixtureTotal }
+    { key: "aggregate", label: "煤矸石/骨料", value: ratios.aggregateTotal }
   ].filter((item) => item.value > 0);
   const total = segments.reduce((sum, item) => sum + item.value, 0);
-  if (!total) return compact ? "" : `<p class="hint">材料 g 重不足，暂不能生成配合比堆叠条。</p>`;
+  if (!total) return compact ? "" : `<p class="hint">胶凝材料和骨料 g 重不足，暂不能生成主体材料比例。</p>`;
+  const sideMetrics = [
+    ratios.waterTotal ? `水 ${formatRecipeWeight(ratios.waterTotal)}${ratios.waterBinderRatio ? ` · 水胶比 ${formatRecipeNumber(ratios.waterBinderRatio)}` : ""}` : "",
+    ratios.admixtureTotal ? `外加剂 ${formatRecipeWeight(ratios.admixtureTotal)}${ratios.admixtureBinderPercent ? ` · 掺量 ${formatRecipeNumber(ratios.admixtureBinderPercent * 100, 2)}%` : ""}` : ""
+  ].filter(Boolean);
   return `<div class="recipe-stack-v23${compact ? " compact" : ""}">
+      <p class="recipe-stack-title-v23">主体材料比例 <small>不含水和外加剂</small></p>
       <div class="recipe-stack-track-v23">
         ${segments.map((item) => {
     const percent = (item.value / total) * 100;
@@ -5400,6 +5408,7 @@ function renderRecipeStackBarV23(record, compact = false) {
       <div class="recipe-stack-legend-v23">
         ${segments.map((item) => `<span class="${attr(item.key)}"><b></b>${html(item.label)} ${html(formatRecipeNumber((item.value / total) * 100, 1))}%</span>`).join("")}
       </div>
+      ${sideMetrics.length ? `<p class="recipe-stack-side-v23">${html(sideMetrics.join("；"))}</p>` : ""}
     </div>`;
 }
 
