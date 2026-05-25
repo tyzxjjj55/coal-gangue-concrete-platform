@@ -3144,6 +3144,9 @@ function renderTrendRowsForGroupV22(group) {
   }).join("")}
             </div>
             <strong title="${attr(`${row.gangueName}｜${row.blockName}`)}"><span>${html(row.blockName)}</span><small>${html(row.gangueName)}</small></strong>
+            <div class="chart-values-v251" aria-label="${attr(`${row.blockName} 抗压强度数值`)}">
+              ${row.values.map((item) => `<span class="age-${item.age}"><b>${item.age}d</b><em>${html(item.mean)}</em></span>`).join("")}
+            </div>
           </article>`).join("")}
         </div>
       </div>
@@ -4054,7 +4057,7 @@ function workspaceStylesV3() {
     .chart-scale-v251 { height:248px; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end; padding:6px 0 22px; color:var(--muted); font-size:11px; font-weight:900; }
     .bar-chart-v23 { min-height:248px; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(132px,1fr); gap:12px; align-items:end; overflow-x:auto; padding:8px 4px 2px; }
     .chart-bars-v251 { background:linear-gradient(to bottom, transparent 0, transparent 24%, rgba(211,228,222,.75) 24.5%, transparent 25%, transparent 49%, rgba(211,228,222,.75) 49.5%, transparent 50%, transparent 74%, rgba(211,228,222,.75) 74.5%, transparent 75%); border-radius:8px; }
-    .bar-group-v23 { min-width:132px; display:grid; grid-template-rows:180px auto; gap:9px; }
+    .bar-group-v23 { min-width:132px; display:grid; grid-template-rows:180px auto auto; gap:9px; }
     .bar-columns-v23 { height:180px; display:flex; align-items:end; justify-content:center; gap:8px; padding:8px 8px 0; border-bottom:1px solid #d8e6e0; background:linear-gradient(180deg,#fbfdfc,#fff); border-radius:8px 8px 0 0; }
     .column-v23 { width:28px; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; color:var(--muted); font-style:normal; font-size:10px; font-weight:900; }
     .column-v23 i { width:100%; height:var(--h,0%); min-height:8px; border-radius:8px 8px 4px 4px; background:#337861; box-shadow:0 8px 16px rgba(51,120,97,.16); }
@@ -4066,6 +4069,11 @@ function workspaceStylesV3() {
     .bar-group-v23 > strong { min-width:0; display:grid; gap:2px; color:var(--ink); font-size:12px; text-align:center; }
     .bar-group-v23 > strong span, .bar-group-v23 > strong small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .bar-group-v23 > strong small { color:var(--muted); font-size:10px; font-weight:900; }
+    .chart-values-v251 { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; }
+    .chart-values-v251 span { min-height:24px; display:inline-flex; align-items:center; gap:4px; padding:0 6px; border-radius:999px; background:#e7f4ee; color:#337861; font-size:10px; font-weight:900; white-space:nowrap; }
+    .chart-values-v251 .age-7 { background:#edf4fb; color:#3d6f98; }
+    .chart-values-v251 .age-28 { background:#fff4df; color:#9d6618; }
+    .chart-values-v251 b, .chart-values-v251 em { font-style:normal; }
     .bar-chart-28d-v23 .bar-group-v23 { grid-template-rows:170px auto; }
     .bar-chart-28d-v23 .bar-columns-v23 { height:170px; }
     .bar-group-v23.single .column-v23 { width:34px; }
@@ -4079,10 +4087,12 @@ function workspaceStylesV3() {
     .chart-modal-v251 .chart-canvas-v251 { grid-template-columns:72px minmax(0,1fr); cursor:default; }
     .chart-modal-v251 .chart-scale-v251 { height:430px; }
     .chart-modal-v251 .bar-chart-v23 { min-height:430px; grid-auto-columns:minmax(168px,1fr); gap:18px; }
-    .chart-modal-v251 .bar-group-v23 { min-width:168px; grid-template-rows:340px auto; }
+    .chart-modal-v251 .bar-group-v23 { min-width:180px; grid-template-rows:340px auto auto; }
     .chart-modal-v251 .bar-columns-v23 { height:340px; gap:12px; }
     .chart-modal-v251 .column-v23 { width:38px; font-size:12px; }
-    .chart-modal-v251 .chart-bars-v251 .column-v23 b { display:block; max-width:74px; min-height:18px; font-size:12px; }
+    .chart-modal-v251 .chart-bars-v251 .column-v23 b { display:none; }
+    .chart-modal-v251 .chart-values-v251 { gap:6px; }
+    .chart-modal-v251 .chart-values-v251 span { min-height:30px; padding:0 9px; font-size:12px; }
     .data-health-v23 { margin-bottom:16px; }
     .data-health-v23 .section-head-v22 > strong { min-height:34px; display:inline-flex; align-items:center; padding:0 10px; border-radius:999px; background:#fff8f4; color:#a8422d; font-size:13px; }
     .health-grid-v23 { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; }
