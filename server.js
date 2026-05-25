@@ -87,6 +87,18 @@ const AZURE_SQL_CONFIG = {
   requestTimeout: Number(process.env.AZURE_SQL_REQUEST_TIMEOUT || 30000)
 };
 
+const REVIEW_PACKAGE_FILES = [
+  "server.js",
+  "assets/workspace.css",
+  "assets/workspace.js",
+  "package.json",
+  "package-lock.json",
+  "README.md",
+  ".gitignore",
+  "data/content.json",
+  "data/reminder-state.json"
+];
+
 function requiredEnv(name) {
   const value = process.env[name];
   if (!value) {
@@ -2831,6 +2843,19 @@ function renderPhotoPage(content, album, item, privateMode = false) {
 `;
 }
 
+function renderReviewPackagePanel() {
+  return `<section class="panel">
+      <h2>审查包</h2>
+      <p class="hint">生成完整数据但不含图片文件的审查包：包含代码、工作区静态资源、依赖清单、README、真实 content.json 和 reminder-state.json；排除密钥、SSH 私钥、session-secret、node_modules、备份和上传图片原图。</p>
+      <form class="compact-form" method="post" action="${BASE_PATH}/review-package">
+        <div class="actions">
+          <button type="submit">下载审查包 ZIP</button>
+        </div>
+        <p class="hint">仅后台登录后可下载。ZIP 响应头会包含 <code>X-Archive-SHA256</code> 校验值。</p>
+      </form>
+    </section>`;
+}
+
 function renderAdmin(content, message = "") {
   const albums = getAlbums(content);
   const privateAlbums = getAlbums(content, { private: true });
@@ -2909,6 +2934,7 @@ function renderAdmin(content, message = "") {
   </header>
   <main>
     ${message ? `<p class="message">${html(message)}</p>` : ""}
+    ${renderReviewPackagePanel()}
     <form method="post" action="${BASE_PATH}/save">
       <h2>首页内容</h2>
       <div class="grid">
@@ -6837,6 +6863,103 @@ function sendDownload(res, filename, buffer) {
   res.end(buffer);
 }
 
+function sendZipDownload(res, filename, buffer, archiveHash = "") {
+  res.writeHead(200, {
+    "Content-Type": "application/zip",
+    "Content-Length": buffer.length,
+    "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+    "X-Content-Type-Options": "nosniff",
+    "X-Archive-SHA256": archiveHash,
+    "Cache-Control": "private, no-store"
+  });
+  res.end(buffer);
+}
+
+function sha256Hex(data) {
+  return crypto.createHash("sha256").update(data).digest("hex");
+}
+
+async function gitText(args) {
+  try {
+    const { stdout } = await runFile("git", ["-C", __dirname, ...args]);
+    return String(stdout || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+async function buildReviewPackageArchive() {
+  const packageName = `xx520-admin-review-v2.8-full-data-no-images-${stamp()}`;
+  const files = [];
+
+  for (const relativePath of REVIEW_PACKAGE_FILES) {
+    const normalizedPath = relativePath.replaceAll("\\", "/");
+    const absolutePath = path.join(__dirname, normalizedPath);
+    const data = await fsp.readFile(absolutePath);
+    files.push({
+      name: `${packageName}/${normalizedPath}`,
+      data
+    });
+  }
+
+  const branch = await gitText(["branch", "--show-current"]);
+  const commit = await gitText(["log", "-1", "--oneline", "--decorate"]);
+  const status = await gitText(["status", "--short"]);
+  const fileHashes = files
+    .map((file) => `${sha256Hex(file.data)}  ${file.name.replace(`${packageName}/`, "")}`)
+    .sort();
+  const manifest = [
+    "xx520-admin review package",
+    `Generated: ${new Date().toISOString()}`,
+    "Source: /opt/xx520-admin",
+    `Branch: ${branch || "unknown"}`,
+    `Commit: ${commit || "unknown"}`,
+    "",
+    "Uncommitted status at package time:",
+    status || "clean",
+    "",
+    "Included files:",
+    ...files.map((file) => file.name.replace(`${packageName}/`, "")).sort(),
+    "REVIEW_MANIFEST.txt",
+    "",
+    "Excluded intentionally:",
+    ".git/",
+    ".ssh/",
+    "node_modules/",
+    ".env*",
+    "data/session-secret",
+    "data/backups/",
+    "server.js.bak*",
+    "data/content.json.bak*",
+    "/var/lib/xx520-admin/private-uploads/",
+    "/var/lib/xx520-admin/private-thumbs/",
+    "/var/lib/xx520-admin/work-uploads/",
+    "",
+    "Included file SHA256:",
+    ...fileHashes,
+    "",
+    "Package SHA256:",
+    "The archive hash is sent in the X-Archive-SHA256 response header."
+  ].join("\n");
+
+  files.push({
+    name: `${packageName}/REVIEW_MANIFEST.txt`,
+    data: `${manifest}\n`
+  });
+
+  const archive = createZip(files);
+  return {
+    filename: `${packageName}.zip`,
+    archive,
+    archiveHash: sha256Hex(archive)
+  };
+}
+
+async function handleReviewPackageDownload(req, res) {
+  const reviewPackage = await buildReviewPackageArchive();
+  sendZipDownload(res, reviewPackage.filename, reviewPackage.archive, reviewPackage.archiveHash);
+}
+
 async function handleExportBlocks(req, res, redirectBase = WORK_PATH) {
   const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
   const exportAll = params.get("exportAll") === "1";
@@ -7369,6 +7492,7 @@ async function route(req, res) {
   if (req.method === "POST" && url.pathname === `${BASE_PATH}/toggle-task`) return handleToggleTask(req, res, BASE_PATH);
   if (req.method === "POST" && url.pathname === `${BASE_PATH}/update-block-record`) return handleUpdateBlockRecord(req, res, BASE_PATH);
   if (req.method === "POST" && url.pathname === `${BASE_PATH}/export-blocks`) return handleExportBlocks(req, res, BASE_PATH);
+  if (req.method === "POST" && url.pathname === `${BASE_PATH}/review-package`) return handleReviewPackageDownload(req, res);
   return send(res, 404, "Not found", "text/plain; charset=utf-8");
 }
 
