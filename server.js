@@ -3010,31 +3010,35 @@ function renderAgeCoverageHeatmapV23(content) {
 }
 
 function renderVisualInsightsV22(content) {
-  const gangueRows = gangueProgressRowsV22(content);
-  return `<section class="dashboard-card-v22 visual-insights-v22" id="visual-map">
+  return `<section class="dashboard-card-v22 age-coverage-card-v251" id="age-coverage">
       <div class="section-head-v22">
-        <div><p class="eyebrow">Visual Map</p><h2>实验进度图谱</h2><p>按煤矸石批次看结果完成率、任务压力、图片归档和关键指标完整度。</p></div>
+        <div><p class="eyebrow">Age Coverage</p><h2>龄期覆盖热力图</h2><p>按试块组查看 3d / 7d / 28d 的已录入、到期未录、未来待测和未设置状态。</p></div>
       </div>
-      <div class="visual-map-grid-v22">
-        <div class="progress-matrix-v22">
-          <div class="progress-matrix-head-v22"><span>煤矸石批次</span><span>结果完成</span><span>任务</span><span>图片</span><span>档案</span></div>
-          ${gangueRows.length ? gangueRows.map((row) => {
-    const missing = row.keyStatus.checks.filter((item) => !item.done).map((item) => item.label).join("、") || "完整";
-    return `<a class="progress-row-v22" href="#gangue-${attr(row.gangue.id)}" style="--p:${row.resultStats.percent}%">
-            <strong>${html(row.gangue.name)}<small>${row.blocks.length} 组试块</small></strong>
-            <span class="matrix-meter-v22"><i></i><b>${row.resultStats.filled}/${row.resultStats.total || 0}</b></span>
-            <span class="${row.due ? "matrix-warn-v22" : ""}">到期 ${row.due} · 未来 ${row.future}</span>
-            <span>${row.imageCount} 张</span>
-            <span title="${attr(missing)}">${row.keyStatus.done}/${row.keyStatus.total}</span>
-          </a>`;
-  }).join("") : `<p class="empty-v22">还没有煤矸石批次。</p>`}
-        </div>
-        <div class="age-coverage-v22">
-          <h3>龄期覆盖热力图</h3>
-          ${renderAgeCoverageHeatmapV23(content)}
-        </div>
-      </div>
+      ${renderAgeCoverageHeatmapV23(content)}
     </section>`;
+}
+
+function renderMailReminderPanelV251(content) {
+  const state = content._reminderState || {};
+  const result = String(state.lastResult || "");
+  const todayKey = today();
+  const sentToday = state.lastDailyDate === todayKey && !result.startsWith("error-");
+  const failedToday = (state.lastErrorDate === todayKey || state.lastAttemptDate === todayKey || state.lastDailyDate === todayKey) && result.startsWith("error-");
+  const statusText = sentToday
+    ? "今日已自动发送"
+    : failedToday
+      ? "今日发送失败，可重试"
+      : "今日尚未发送";
+  const lastTime = state.lastSentAt || state.lastManualSentAt || state.lastErrorAt || "";
+  const detail = lastTime
+    ? `${lastTime}${result ? ` · ${result}` : ""}`
+    : "暂无发送记录";
+  return `<form class="mail-reminder-v251" method="post" action="${WORK_PATH}/send-reminder">
+        <strong><span>邮件提醒</span><b class="${failedToday ? "warn" : sentToday ? "ok" : ""}">${html(statusText)}</b></strong>
+        <p>每天 08:00 后自动发送虎峪校区天气、今日事项和逾期事项。失败后不会锁死当天，可继续自动重试或手动发送。</p>
+        <small>${html(detail)}</small>
+        <button class="secondary" type="submit">立即发送提醒邮件</button>
+      </form>`;
 }
 
 function renderTaskTableV22(content) {
@@ -3043,6 +3047,7 @@ function renderTaskTableV22(content) {
     return `<section class="dashboard-card-v22" id="today-tasks">
       <div class="section-head-v22"><div><p class="eyebrow">Tasks</p><h2>今日待处理</h2></div></div>
       <p class="empty-v22">今天没有逾期或到期的拆模、强度结果。未来待测看上方指标和日历。</p>
+      ${renderMailReminderPanelV251(content)}
     </section>`;
   }
   return `<section class="dashboard-card-v22" id="today-tasks">
@@ -3071,6 +3076,7 @@ function renderTaskTableV22(content) {
         </div>`;
   }).join("")}
       </div>
+      ${renderMailReminderPanelV251(content)}
     </section>`;
 }
 
@@ -3122,16 +3128,28 @@ function trendGroupsV22(content) {
 
 function renderTrendRowsForGroupV22(group) {
   if (!group || !group.rows.length) return `<p class="empty-v22" data-chart-empty>这个批次还没有可展示的抗压强度。</p>`;
-  return `<div class="bar-chart-v23" data-chart-row>
-      ${group.rows.map((row) => `<article class="bar-group-v23">
-        <div class="bar-columns-v23">
-          ${row.values.map((item) => {
-    const height = Math.max(8, Math.min(100, (item.number / group.max) * 100));
-    return `<span class="column-v23 age-${item.age}" style="--h:${height}%" title="${attr(`${row.blockName} ${item.label}`)}"><i></i><b>${html(item.mean)}</b><em>${item.age}d</em></span>`;
+  const defaultRows = group.rows.slice(0, 6);
+  const defaultIds = new Set(defaultRows.map((row) => row.id));
+  const defaultMax = Math.max(1, ...defaultRows.flatMap((row) => row.values.map((item) => item.number || 0)));
+  return `<div class="chart-compare-v251" data-chart-compare>
+      <div class="chart-pickers-v251" aria-label="选择试块组对比">
+        ${group.rows.map((row) => `<label title="${attr(row.blockName)}"><input type="checkbox" data-chart-picker value="${attr(row.id)}" ${defaultIds.has(row.id) ? "checked" : ""}><span>${html(row.blockName)}</span></label>`).join("")}
+      </div>
+      <div class="chart-canvas-v251" data-chart-canvas>
+        <div class="chart-scale-v251"><span data-y-max>${html(formatMpaValue(defaultMax))}</span><span data-y-mid>${html(formatMpaValue(defaultMax / 2))}</span><span>0 MPa</span></div>
+        <div class="bar-chart-v23 chart-bars-v251" data-chart-row>
+          ${group.rows.map((row) => `<article class="bar-group-v23" data-chart-block="${attr(row.id)}" ${defaultIds.has(row.id) ? "" : "hidden"}>
+            <div class="bar-columns-v23">
+              ${row.values.map((item) => {
+    const height = Math.max(8, Math.min(100, (item.number / defaultMax) * 100));
+    return `<span class="column-v23 age-${item.age}" data-chart-column data-number="${attr(item.number)}" style="--h:${height}%" title="${attr(`${row.blockName} ${item.label}`)}"><i></i><b>${html(item.mean)}</b><em>${item.age}d</em></span>`;
   }).join("")}
+            </div>
+            <strong title="${attr(`${row.gangueName}｜${row.blockName}`)}"><span>${html(row.blockName)}</span><small>${html(row.gangueName)}</small></strong>
+          </article>`).join("")}
         </div>
-        <strong title="${attr(`${row.gangueName}｜${row.blockName}`)}"><span>${html(row.blockName)}</span><small>${html(row.gangueName)}</small></strong>
-      </article>`).join("")}
+      </div>
+      <p class="empty-v22" data-chart-selection-empty hidden>先选择至少一个试块组。</p>
     </div>`;
 }
 
@@ -3173,7 +3191,7 @@ function renderStrengthTrendPanelV22(content) {
   const groups = trend.groups;
   return `<section class="dashboard-card-v22" id="analysis">
       <div class="section-head-v22">
-        <div><p class="eyebrow">Analysis</p><h2>抗压强度分组柱状图</h2><p>X 轴为试块组，Y 轴为 MPa；每组只显示已录入的 3d / 7d / 28d 抗压结果，缺失龄期不按 0 处理。</p></div>
+        <div><p class="eyebrow">Analysis</p><h2>抗压强度对比柱状图</h2><p>按煤矸石批次选择试块组对比，只显示已录入的 3d / 7d / 28d 抗压结果。</p></div>
       </div>
       ${groups.length ? `<div class="trend-chart-v22" data-chart-stage style="--chart-max:${trend.selectedGroup.max}">
         <div class="chart-current-v22" data-chart-current>
@@ -3188,7 +3206,45 @@ function renderStrengthTrendPanelV22(content) {
             const stage = document.currentScript.closest("[data-chart-stage]");
             const filter = stage?.querySelector("[data-chart-filter]");
             const groups = Array.from(stage?.querySelectorAll("[data-chart-group]") || []);
-            const showGroup = () => groups.forEach((group) => { group.hidden = group.dataset.chartGroup !== filter?.value; });
+            const formatMpa = (value) => {
+              if (!Number.isFinite(value)) return "0 MPa";
+              const rounded = Math.round(value * 100) / 100;
+              return String(rounded).replace(/\\.0+$/, "").replace(/(\\.\\d*?)0+$/, "$1") + " MPa";
+            };
+            const refreshGroup = (group) => {
+              const pickers = Array.from(group.querySelectorAll("[data-chart-picker]"));
+              const selected = new Set(pickers.filter((item) => item.checked).map((item) => item.value));
+              const blocks = Array.from(group.querySelectorAll("[data-chart-block]"));
+              const selectedBlocks = blocks.filter((block) => selected.has(block.dataset.chartBlock));
+              const values = selectedBlocks.flatMap((block) => Array.from(block.querySelectorAll("[data-chart-column]")).map((column) => Number(column.dataset.number || 0)).filter(Number.isFinite));
+              const max = Math.max(1, ...values);
+              blocks.forEach((block) => {
+                const visible = selected.has(block.dataset.chartBlock);
+                block.hidden = !visible;
+                if (!visible) return;
+                block.querySelectorAll("[data-chart-column]").forEach((column) => {
+                  const number = Number(column.dataset.number || 0);
+                  const height = Math.max(8, Math.min(100, (number / max) * 100));
+                  column.style.setProperty("--h", height + "%");
+                });
+              });
+              const empty = group.querySelector("[data-chart-selection-empty]");
+              if (empty) empty.hidden = selectedBlocks.length > 0;
+              const yMax = group.querySelector("[data-y-max]");
+              const yMid = group.querySelector("[data-y-mid]");
+              if (yMax) yMax.textContent = formatMpa(max);
+              if (yMid) yMid.textContent = formatMpa(max / 2);
+            };
+            const showGroup = () => {
+              groups.forEach((group) => {
+                const active = group.dataset.chartGroup === filter?.value;
+                group.hidden = !active;
+                if (active) refreshGroup(group);
+              });
+            };
+            groups.forEach((group) => group.addEventListener("change", (event) => {
+              if (event.target?.matches("[data-chart-picker]")) refreshGroup(group);
+            }));
             filter?.addEventListener("change", showGroup);
             showGroup();
           })();
@@ -3991,14 +4047,22 @@ function workspaceStylesV3() {
     .trend-chart-v22 { display:grid; gap:11px; }
     .chart-current-v22 { margin:0; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border:1px solid #d7e6e0; border-radius:8px; background:#f8fbfa; color:var(--green); font-size:13px; font-weight:900; }
     .chart-current-v22 select { min-height:34px; min-width:160px; padding:0 34px 0 10px; border:1px solid #cbded7; border-radius:8px; background:#fff; color:var(--ink); font:inherit; font-size:13px; }
-    .bar-chart-v23 { min-height:248px; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(104px,1fr); gap:12px; align-items:end; overflow-x:auto; padding:8px 4px 2px; }
+    .chart-compare-v251 { display:grid; gap:12px; }
+    .chart-pickers-v251 { display:flex; flex-wrap:wrap; gap:8px; padding:10px; border:1px solid #d7e6e0; border-radius:8px; background:#fbfdfc; }
+    .chart-pickers-v251 label { max-width:220px; min-height:32px; display:inline-flex; align-items:center; gap:7px; padding:0 10px; border:1px solid #d7e6e0; border-radius:999px; background:#fff; color:var(--ink); font-size:12px; font-weight:900; cursor:pointer; }
+    .chart-pickers-v251 input { accent-color:var(--green); }
+    .chart-pickers-v251 span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .chart-canvas-v251 { display:grid; grid-template-columns:58px minmax(0,1fr); gap:10px; align-items:stretch; }
+    .chart-scale-v251 { height:248px; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end; padding:6px 0 22px; color:var(--muted); font-size:11px; font-weight:900; }
+    .bar-chart-v23 { min-height:248px; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(112px,1fr); gap:12px; align-items:end; overflow-x:auto; padding:8px 4px 2px; }
+    .chart-bars-v251 { background:linear-gradient(to bottom, transparent 0, transparent 24%, rgba(211,228,222,.75) 24.5%, transparent 25%, transparent 49%, rgba(211,228,222,.75) 49.5%, transparent 50%, transparent 74%, rgba(211,228,222,.75) 74.5%, transparent 75%); border-radius:8px; }
     .bar-group-v23 { min-width:104px; display:grid; grid-template-rows:180px auto; gap:9px; }
     .bar-columns-v23 { height:180px; display:flex; align-items:end; justify-content:center; gap:8px; padding:8px 8px 0; border-bottom:1px solid #d8e6e0; background:linear-gradient(180deg,#fbfdfc,#fff); border-radius:8px 8px 0 0; }
     .column-v23 { width:28px; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; color:var(--muted); font-style:normal; font-size:10px; font-weight:900; }
     .column-v23 i { width:100%; height:var(--h,0%); min-height:8px; border-radius:8px 8px 4px 4px; background:#337861; box-shadow:0 8px 16px rgba(51,120,97,.16); }
     .column-v23.age-7 i { background:#3d6f98; box-shadow:0 8px 16px rgba(61,111,152,.16); }
     .column-v23.age-28 i { background:#d28b34; box-shadow:0 8px 16px rgba(210,139,52,.16); }
-    .column-v23 b { writing-mode:vertical-rl; transform:rotate(180deg); color:#172624; font-size:11px; }
+    .column-v23 b { max-width:48px; min-height:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#172624; font-size:10px; line-height:1.2; }
     .column-v23 em { font-style:normal; color:var(--muted); }
     .bar-group-v23 > strong { min-width:0; display:grid; gap:2px; color:var(--ink); font-size:12px; text-align:center; }
     .bar-group-v23 > strong span, .bar-group-v23 > strong small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -4018,6 +4082,13 @@ function workspaceStylesV3() {
     .health-card-v23 em { color:#337861; font-style:normal; font-weight:900; }
     .health-card-v23 div { display:grid; gap:4px; }
     .health-card-v23 a, .health-card-v23 small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--green); font-size:11px; font-weight:900; }
+    .mail-reminder-v251 { margin-top:14px; display:grid; gap:8px; padding:12px; border:1px solid #d7e6e0; border-radius:8px; background:#fbfdfc; }
+    .mail-reminder-v251 strong { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--ink); }
+    .mail-reminder-v251 b { padding:4px 8px; border-radius:999px; background:#edf4fb; color:#3d6f98; font-size:12px; }
+    .mail-reminder-v251 b.ok { background:#e7f4ee; color:#337861; }
+    .mail-reminder-v251 b.warn { background:#fff0cf; color:#8a5800; }
+    .mail-reminder-v251 p, .mail-reminder-v251 small { margin:0; color:var(--muted); font-size:12px; font-weight:850; }
+    .mail-reminder-v251 button { justify-self:start; }
     .anomaly-list-v22 { display:grid; gap:9px; }
     .anomaly-form-v22 { display:grid; gap:10px; }
     .anomaly-hint-v22 { color:var(--muted); font-size:13px; font-weight:800; }
@@ -4111,7 +4182,7 @@ function workspaceStylesV3() {
     @media (max-width:1320px) { .topbar-v22 { grid-template-columns:minmax(260px,1fr) minmax(0,360px); } .top-actions-v22 { grid-column:1/-1; justify-content:flex-start; } .metric-grid-v22 { grid-template-columns:repeat(3,minmax(0,1fr)); } .overview-grid-v22, .overview-grid-v22.compact { grid-template-columns:1fr; } }
     @media (max-width:980px) { .app-shell-v22 { grid-template-columns:1fr; } .sidebar-v22 { position:static; height:auto; flex-direction:row; align-items:center; overflow:auto; } .sidebar-v22 nav { display:flex; flex-wrap:wrap; } .side-foot-v22 { margin-left:auto; margin-top:0; display:flex; } .lab-overview { grid-template-columns:1fr; } .visual-map-grid-v22 { grid-template-columns:1fr; } .result-grid, .metric-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:repeat(2,minmax(0,1fr)); } .material-groups, .library-list { grid-template-columns:1fr; } .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:repeat(2,minmax(0,1fr)); } .task-row-v22 { grid-template-columns:1fr 1fr; } .task-row-v22.head { display:none; } }
     @media (max-width:760px) { .topbar-v22 { grid-template-columns:1fr; } .top-actions-v22 { grid-column:auto; } }
-    @media (max-width:640px) { .work-main-v22 { padding:14px; } .sidebar-v22 { padding:12px; } .topbar-v22 { padding:12px 14px; } .record-details[open] .record-drawer-body { width:100%; border-left:0; } .metric-grid-v22, .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:1fr; } .workspace-hero { min-height:auto; } .progress-matrix-head-v22 { display:none; } .progress-row-v22 { grid-template-columns:1fr 1fr; align-items:start; } .progress-row-v22 strong, .matrix-meter-v22 { grid-column:1/-1; } .coverage-row-v22 { grid-template-columns:38px minmax(0,1fr) 48px; } .coverage-row-v22 em { grid-column:2/-1; text-align:left; } .gangue-folder-head, .block-toolbar, .custom-material-row, .lab-upload-grid { grid-template-columns:1fr; } .calendar-agenda-head { flex-direction:column; } .calendar-legend { justify-content:flex-start; } .folder-badges, .archive-actions, .block-actions { justify-content:stretch; } .folder-badges span, .archive-actions .chip-button, .block-actions .export-check, .block-actions button { flex:1; justify-content:center; } .viz-row { grid-template-columns:1fr; gap:5px; } .result-row-title, .gangue-card summary { align-items:flex-start; flex-direction:column; } .record-details summary { grid-template-columns:1fr; align-items:start; } .record-toggle { justify-content:center; } .record-summary-main em { white-space:normal; } .result-grid, .metric-options, .library-list, .material-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:1fr; } .material-library-item { grid-template-columns:1fr; } .side-brand-v22 strong { white-space:nowrap; } }
+    @media (max-width:640px) { .work-main-v22 { padding:14px; } .sidebar-v22 { padding:12px; } .topbar-v22 { padding:12px 14px; } .record-details[open] .record-drawer-body { width:100%; border-left:0; } .metric-grid-v22, .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:1fr; } .workspace-hero { min-height:auto; } .progress-matrix-head-v22 { display:none; } .progress-row-v22 { grid-template-columns:1fr 1fr; align-items:start; } .progress-row-v22 strong, .matrix-meter-v22 { grid-column:1/-1; } .coverage-row-v22 { grid-template-columns:38px minmax(0,1fr) 48px; } .coverage-row-v22 em { grid-column:2/-1; text-align:left; } .gangue-folder-head, .block-toolbar, .custom-material-row, .lab-upload-grid { grid-template-columns:1fr; } .calendar-agenda-head { flex-direction:column; } .calendar-legend { justify-content:flex-start; } .folder-badges, .archive-actions, .block-actions { justify-content:stretch; } .folder-badges span, .archive-actions .chip-button, .block-actions .export-check, .block-actions button { flex:1; justify-content:center; } .viz-row { grid-template-columns:1fr; gap:5px; } .result-row-title, .gangue-card summary { align-items:flex-start; flex-direction:column; } .record-details summary { grid-template-columns:1fr; align-items:start; } .record-toggle { justify-content:center; } .record-summary-main em { white-space:normal; } .result-grid, .metric-options, .library-list, .material-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:1fr; } .material-library-item { grid-template-columns:1fr; } .chart-canvas-v251 { grid-template-columns:1fr; } .chart-scale-v251 { display:none; } .chart-pickers-v251 label { max-width:100%; } .side-brand-v22 strong { white-space:nowrap; } }
   `;
 }
 
@@ -6756,12 +6827,12 @@ function reminderBody(content, referenceDate, items, forced = false) {
   ];
   if (todayItems.length) {
     lines.push("今日事项：");
-    todayItems.forEach((item) => lines.push(`- ${formatCalendarItem(item)}`));
+    todayItems.forEach((item) => lines.push(`- ${formatCalendarItemV3(item)}`));
     lines.push("");
   }
   if (overdue.length) {
     lines.push("逾期事项：");
-    overdue.forEach((item) => lines.push(`- ${formatCalendarItem(item)}`));
+    overdue.forEach((item) => lines.push(`- ${formatCalendarItemV3(item)}`));
     lines.push("");
   }
   lines.push(`-- ${content.siteTitle}`);
@@ -6848,12 +6919,12 @@ function reminderBodyV2(content, referenceDate, items, forced = false, weather =
   }
   if (todayItems.length) {
     lines.push("今日事项：");
-    todayItems.forEach((item) => lines.push(`- ${formatCalendarItem(item)}`));
+    todayItems.forEach((item) => lines.push(`- ${formatCalendarItemV3(item)}`));
     lines.push("");
   }
   if (overdue.length) {
     lines.push("逾期事项：");
-    overdue.forEach((item) => lines.push(`- ${formatCalendarItem(item)}`));
+    overdue.forEach((item) => lines.push(`- ${formatCalendarItemV3(item)}`));
     lines.push("");
   }
   lines.push(`-- ${content.siteTitle}`);
@@ -6896,7 +6967,8 @@ async function checkDailyReminder() {
     const referenceDate = `${parts.year}-${parts.month}-${parts.day}`;
     if (parts.hour < REMINDER_HOUR) return;
     const state = await readReminderState();
-    if (state.lastDailyDate === referenceDate) return;
+    const lastResult = String(state.lastResult || "");
+    if (state.lastDailyDate === referenceDate && !lastResult.startsWith("error-")) return;
     const content = await readContent();
     const items = activeMailItems(content, referenceDate);
     try {
@@ -6904,7 +6976,8 @@ async function checkDailyReminder() {
       state.lastResult = `sent-${items.length}`;
       state.lastSentAt = new Date().toISOString();
     } catch (error) {
-      state.lastDailyDate = referenceDate;
+      state.lastAttemptDate = referenceDate;
+      state.lastErrorDate = referenceDate;
       state.lastResult = `error-${error.responseCode || error.code || "send"}`;
       state.lastErrorAt = new Date().toISOString();
       await saveReminderState(state);
@@ -7949,9 +8022,19 @@ async function handleDismissAnomalies(req, res, redirectBase = WORK_PATH) {
 async function handleSendReminder(req, res) {
   const content = await readContent();
   try {
-    await sendReminderEmail(content, { force: true });
+    const sentCount = await sendReminderEmail(content, { force: true });
+    const state = await readReminderState();
+    state.lastResult = `manual-sent-${sentCount}`;
+    state.lastManualSentAt = new Date().toISOString();
+    state.lastSentAt = state.lastManualSentAt;
+    await saveReminderState(state);
     redirect(res, "提醒邮件已发送", WORK_PATH);
   } catch (error) {
+    const state = await readReminderState();
+    state.lastResult = `error-${error.responseCode || error.code || "manual-send"}`;
+    state.lastErrorAt = new Date().toISOString();
+    state.lastErrorDate = today();
+    await saveReminderState(state);
     const reason = error.responseCode === 535 ? "QQ 邮箱认证失败，请重新确认 SMTP 授权码" : "邮件发送失败，请检查 SMTP 配置";
     redirect(res, reason, WORK_PATH);
   }
@@ -7979,6 +8062,7 @@ async function route(req, res) {
     }
     if ((req.method === "GET" || req.method === "HEAD") && url.pathname === `${WORK_PATH}/`) {
       const content = await readContent();
+      content._reminderState = await readReminderState();
       return sendProtectedHtml(req, res, 200, renderWorkspaceV3(content, url.searchParams.get("msg") || ""));
     }
     if (req.method === "POST" && !(await verifyCsrfRequest(req, res, url))) return;
