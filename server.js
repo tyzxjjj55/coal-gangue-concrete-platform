@@ -3681,7 +3681,6 @@ function renderWorkspaceV3(content, message = "") {
             ${renderTaskTableV22(content)}
             ${renderStrengthTrendPanelV22(content)}
           </div>
-          ${renderTwentyEightDayChartV23(content)}
           ${renderDataHealthPanelV23(content)}
           <div class="overview-grid-v22 compact">
             ${renderAnomalyPanelV22(content)}
