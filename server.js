@@ -22,15 +22,17 @@ const BASE_PATH = normalizeBase(process.env.BASE_PATH || "/edit");
 const WORK_PATH = normalizeBase(process.env.WORK_PATH || "/work");
 const SITE_DIR = process.env.SITE_DIR || "/var/www/xx520-site";
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
-const WORK_UPLOAD_DIR = process.env.WORK_UPLOAD_DIR || path.join(DATA_DIR, "work-uploads");
+const ASSETS_DIR = path.join(__dirname, "assets");
+const SITE_ASSETS_DIR = path.join(SITE_DIR, "assets");
+const WORK_UPLOAD_DIR = process.env.WORK_UPLOAD_DIR || "/var/lib/xx520-admin/work-uploads";
 const WORK_FILE_PATH = `${WORK_PATH}/files`;
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(SITE_DIR, "uploads");
 const PUBLIC_UPLOAD_PATH = "/uploads";
 const PUBLIC_THUMB_DIR = process.env.PUBLIC_THUMB_DIR || path.join(SITE_DIR, "thumbs");
 const PUBLIC_THUMB_PATH = "/thumbs";
-const PRIVATE_UPLOAD_DIR = process.env.PRIVATE_UPLOAD_DIR || path.join(SITE_DIR, "private-uploads");
+const PRIVATE_UPLOAD_DIR = process.env.PRIVATE_UPLOAD_DIR || "/var/lib/xx520-admin/private-uploads";
 const PRIVATE_UPLOAD_PATH = "/private-uploads";
-const PRIVATE_THUMB_DIR = process.env.PRIVATE_THUMB_DIR || path.join(SITE_DIR, "private-thumbs");
+const PRIVATE_THUMB_DIR = process.env.PRIVATE_THUMB_DIR || "/var/lib/xx520-admin/private-thumbs";
 const PRIVATE_THUMB_PATH = "/private-thumbs";
 const PRIVATE_GALLERY_PATH = "/private-gallery";
 const CONTENT_FILE = path.join(DATA_DIR, "content.json");
@@ -93,6 +95,40 @@ const allowedTypes = new Map([
   ["image/webp", ".webp"],
   ["image/gif", ".gif"]
 ]);
+
+function detectImageType(buffer) {
+  if (!Buffer.isBuffer(buffer)) return "";
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return "image/jpeg";
+  }
+  if (
+    buffer.length >= 8
+    && buffer[0] === 0x89
+    && buffer[1] === 0x50
+    && buffer[2] === 0x4e
+    && buffer[3] === 0x47
+    && buffer[4] === 0x0d
+    && buffer[5] === 0x0a
+    && buffer[6] === 0x1a
+    && buffer[7] === 0x0a
+  ) {
+    return "image/png";
+  }
+  if (
+    buffer.length >= 12
+    && buffer.subarray(0, 4).toString("ascii") === "RIFF"
+    && buffer.subarray(8, 12).toString("ascii") === "WEBP"
+  ) {
+    return "image/webp";
+  }
+  if (
+    buffer.length >= 6
+    && (buffer.subarray(0, 6).toString("ascii") === "GIF87a" || buffer.subarray(0, 6).toString("ascii") === "GIF89a")
+  ) {
+    return "image/gif";
+  }
+  return "";
+}
 
 const BUILTIN_RESULT_METRICS = [
   { id: "compressionStrength", label: "抗压强度", placeholder: "例：36.8MPa" },
@@ -1488,11 +1524,26 @@ function albumSlug(name) {
 async function ensureDirs() {
   await fsp.mkdir(DATA_DIR, { recursive: true });
   await fsp.mkdir(BACKUP_DIR, { recursive: true });
+  await fsp.mkdir(ASSETS_DIR, { recursive: true });
+  await fsp.mkdir(SITE_ASSETS_DIR, { recursive: true });
   await fsp.mkdir(WORK_UPLOAD_DIR, { recursive: true });
   await fsp.mkdir(UPLOAD_DIR, { recursive: true });
   await fsp.mkdir(PUBLIC_THUMB_DIR, { recursive: true });
   await fsp.mkdir(PRIVATE_UPLOAD_DIR, { recursive: true });
   await fsp.mkdir(PRIVATE_THUMB_DIR, { recursive: true });
+}
+
+async function ensureWorkspaceAssets() {
+  await fsp.mkdir(SITE_ASSETS_DIR, { recursive: true });
+  for (const fileName of ["workspace.css", "workspace.js"]) {
+    const source = path.join(ASSETS_DIR, fileName);
+    const target = path.join(SITE_ASSETS_DIR, fileName);
+    try {
+      await fsp.copyFile(source, target);
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
 }
 
 async function ensureSessionSecret() {
@@ -1512,14 +1563,28 @@ async function ensureSessionSecret() {
   return sessionSecret;
 }
 
-async function readContent() {
+let contentCache = null;
+let contentCacheMtimeMs = 0;
+
+async function readContent(options = {}) {
+  const { fresh = false } = options;
+  await ensureDirs();
+  const stat = await fsp.stat(CONTENT_FILE).catch(() => null);
+  if (!fresh && contentCache && stat && stat.mtimeMs === contentCacheMtimeMs) {
+    return structuredClone(contentCache);
+  }
+  let parsed = {};
   try {
     const raw = await fsp.readFile(CONTENT_FILE, "utf8");
-    return normalizeContent(JSON.parse(raw));
+    parsed = raw ? JSON.parse(raw) : {};
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
-    return structuredClone(defaultContent);
+    parsed = structuredClone(defaultContent);
   }
+  const normalized = normalizeContent(parsed);
+  contentCache = normalized;
+  contentCacheMtimeMs = stat ? stat.mtimeMs : Date.now();
+  return structuredClone(contentCache);
 }
 
 function normalizeContent(input) {
@@ -1713,17 +1778,26 @@ async function ensureThumbnails(content) {
   }
 }
 
-async function saveContent(content) {
+async function saveContent(content, options = {}) {
+  const { skipSite = false } = options;
   const normalized = normalizeContent(content);
   assertExperimentContentV25(normalized);
   normalized.updatedAt = today();
   await ensureDirs();
   await ensureThumbnails(normalized);
   await backupIfExists(CONTENT_FILE, "content");
-  await backupIfExists(path.join(SITE_DIR, "index.html"), "index");
+  if (!skipSite) {
+    await backupIfExists(path.join(SITE_DIR, "index.html"), "index");
+  }
   await writeAtomic(CONTENT_FILE, `${JSON.stringify(normalized, null, 2)}\n`);
-  await generateSite(normalized);
-  syncAzureSqlMirror(normalized, "save").catch((error) => console.error("azure sql sync failed", error.message || error));
+  contentCache = structuredClone(normalized);
+  const stat = await fsp.stat(CONTENT_FILE).catch(() => null);
+  contentCacheMtimeMs = stat ? stat.mtimeMs : Date.now();
+  if (!skipSite) {
+    await generateSite(normalized);
+  }
+  requestAzureSqlSync(normalized, "save").catch((error) => console.error("azure sql sync failed", error.message || error));
+  return normalized;
 }
 
 async function generateSite(content) {
@@ -1766,6 +1840,9 @@ async function generateSite(content) {
 let azureSqlPoolPromise = null;
 let azureSqlSchemaReady = false;
 let azureSqlSyncing = false;
+let azureSqlPending = false;
+let latestAzureSqlContent = null;
+let latestAzureSqlReason = "save";
 
 function azureSqlReady() {
   return Boolean(
@@ -1893,11 +1970,31 @@ function azureSqlImageRows(content) {
   return rows;
 }
 
-async function syncAzureSqlMirror(content, reason = "sync") {
-  if (!azureSqlReady() || azureSqlSyncing) return false;
+async function requestAzureSqlSync(content, reason = "save") {
+  if (!azureSqlReady()) return false;
+  latestAzureSqlContent = structuredClone(content);
+  latestAzureSqlReason = reason;
+  if (azureSqlSyncing) {
+    azureSqlPending = true;
+    return false;
+  }
   azureSqlSyncing = true;
   try {
-    const pool = await azureSqlPool();
+    do {
+      azureSqlPending = false;
+      const snapshot = structuredClone(latestAzureSqlContent);
+      const snapshotReason = latestAzureSqlReason;
+      await syncAzureSqlMirrorNow(snapshot, snapshotReason);
+    } while (azureSqlPending);
+  } finally {
+    azureSqlSyncing = false;
+  }
+  return true;
+}
+
+async function syncAzureSqlMirrorNow(content, reason = "sync") {
+  if (!azureSqlReady()) return false;
+  const pool = await azureSqlPool();
     if (!pool) return false;
     await ensureAzureSqlSchema(pool);
     const normalized = normalizeContent(content);
@@ -1986,9 +2083,6 @@ async function syncAzureSqlMirror(content, reason = "sync") {
       await tx.rollback().catch(() => {});
       throw error;
     }
-  } finally {
-    azureSqlSyncing = false;
-  }
 }
 
 function getNotes(content) {
@@ -3886,7 +3980,7 @@ function renderWorkspaceV3(content, message = "") {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>煤矸石实验工作区 - ${html(content.siteTitle)}</title>
-  <style>${workspaceStylesV3()}</style>
+  <link rel="stylesheet" href="/assets/workspace.css?v=26">
 </head>
 <body class="dashboard-shell-v22">
   <div class="app-shell-v22">
@@ -3944,7 +4038,7 @@ function renderWorkspaceV3(content, message = "") {
     </div>
   </div>
   ${renderTemplateDataScriptV3()}
-  ${renderWorkspaceScriptV3()}
+  <script defer src="/assets/workspace.js?v=26"></script>
 </body>
 </html>`;
 }
@@ -6766,11 +6860,14 @@ function safeReturnAnchor(value, fallback = "calendar") {
   return /^[A-Za-z0-9:_-]{1,96}$/.test(anchor) ? anchor : fallback;
 }
 
-function send(res, status, body, type = "text/html; charset=utf-8") {
+function send(res, status, body, type = "text/html; charset=utf-8", headers = {}) {
   res.writeHead(status, {
     "Content-Type": type,
     "X-Content-Type-Options": "nosniff",
-    "Cache-Control": "no-store"
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "same-origin",
+    "Cache-Control": "no-store",
+    ...headers
   });
   res.end(body);
 }
@@ -6797,7 +6894,7 @@ function mimeType(filePath) {
   }[extension] || "application/octet-stream";
 }
 
-async function serveStaticFromPrefix(req, res, urlPath, prefix, rootDir) {
+async function serveStaticFromPrefix(req, res, urlPath, prefix, rootDir, options = {}) {
   let relative = "";
   try {
     relative = decodeURIComponent(urlPath.slice(prefix.length)).replace(/^\/+/, "");
@@ -6821,7 +6918,9 @@ async function serveStaticFromPrefix(req, res, urlPath, prefix, rootDir) {
       "Content-Type": mimeType(target),
       "Content-Length": finalStat.size,
       "X-Content-Type-Options": "nosniff",
-      "Cache-Control": isAsset ? "private, max-age=86400" : "private, no-store"
+      "X-Frame-Options": "DENY",
+      "Referrer-Policy": "same-origin",
+      "Cache-Control": options.cacheControl || (isAsset ? "private, max-age=86400" : "private, no-store")
     });
     if (req.method === "HEAD") return res.end();
     fs.createReadStream(target).pipe(res);
@@ -6902,6 +7001,15 @@ function recordLoginFail(req, scope) {
 
 function clearLoginFail(req, scope) {
   loginAttempts.delete(loginAttemptKey(req, scope));
+}
+
+function cleanupLoginAttempts() {
+  const now = Date.now();
+  for (const [key, state] of loginAttempts.entries()) {
+    if (!state || now - state.firstAt > LOGIN_ATTEMPT_WINDOW_MS * 2) {
+      loginAttempts.delete(key);
+    }
+  }
 }
 
 function authProfile(scope) {
@@ -7276,7 +7384,7 @@ async function handleUpload(req, res) {
   if (images.some((image) => image.body.length > MAX_UPLOAD_BYTES)) {
     throw Object.assign(new Error("image too large"), { statusCode: 413 });
   }
-  if (images.some((image) => !allowedTypes.has(image.type))) {
+  if (images.some((image) => !allowedTypes.has(detectImageType(image.body)))) {
     throw Object.assign(new Error("unsupported image type"), { statusCode: 400 });
   }
 
@@ -7292,7 +7400,7 @@ async function handleUpload(req, res) {
 
   for (let i = 0; i < images.length; i += 1) {
     const image = images[i];
-    const extension = allowedTypes.get(image.type);
+    const extension = allowedTypes.get(detectImageType(image.body));
     const safeBase = path.basename(image.filename, path.extname(image.filename)).replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 42) || "image";
     const imageTitle = title || path.basename(image.filename, path.extname(image.filename)) || "相册图片";
     const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeBase}${extension}`;
@@ -7334,7 +7442,7 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
   if (images.some((image) => image.body.length > MAX_UPLOAD_BYTES)) {
     throw Object.assign(new Error("image too large"), { statusCode: 413 });
   }
-  if (images.some((image) => !allowedTypes.has(image.type))) {
+  if (images.some((image) => !allowedTypes.has(detectImageType(image.body)))) {
     throw Object.assign(new Error("unsupported image type"), { statusCode: 400 });
   }
 
@@ -7342,7 +7450,7 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
   const uploaded = [];
   for (let i = 0; i < images.length; i += 1) {
     const image = images[i];
-    const extension = allowedTypes.get(image.type);
+    const extension = allowedTypes.get(detectImageType(image.body));
     const safeBase = path.basename(image.filename, path.extname(image.filename)).replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 42) || "lab-image";
     const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeBase}${extension}`;
     await writeAtomic(path.join(WORK_UPLOAD_DIR, filename), image.body);
@@ -7386,7 +7494,7 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
     });
   }
   if (!found) throw Object.assign(new Error("image target not found"), { statusCode: 404 });
-  await saveContent(content);
+  await saveContent(content, { skipSite: true });
   if (wantsJson) {
     return send(res, 200, JSON.stringify({ ok: true, count: uploaded.length, photos: uploaded }), "application/json; charset=utf-8");
   }
@@ -7422,7 +7530,7 @@ async function handleDeleteLabImage(req, res, redirectBase = WORK_PATH) {
   if (removed && src.startsWith(`${WORK_FILE_PATH}/`)) {
     await fsp.rm(path.join(WORK_UPLOAD_DIR, path.basename(src)), { force: true });
   }
-  await saveContent(content);
+  await saveContent(content, { skipSite: true });
   if (targetType === "block") {
     return redirectTo(res, `${redirectBase}/?msg=${encodeURIComponent(removed ? "实验图片已删除" : "没有找到这张实验图片")}&openBlock=${encodeURIComponent(targetId)}&tab=images#record-${encodeURIComponent(targetId)}`);
   }
@@ -7953,7 +8061,7 @@ async function handleAddGangue(req, res, redirectBase = WORK_PATH) {
   const content = await readContent();
   const item = coalGangueFromParams(params, { id: crypto.randomUUID() });
   content.coalGangueDb = [item, ...getCoalGangueDb(content)];
-  await saveContent(content);
+  await saveContent(content, { skipSite: redirectBase === WORK_PATH });
   redirect(res, "煤矸石数据已新增", redirectBase, `gangue-${item.id}`);
 }
 
@@ -7969,7 +8077,7 @@ async function handleUpdateGangue(req, res, redirectBase = WORK_PATH) {
     return coalGangueFromParams(params, item);
   });
   if (!found) throw Object.assign(new Error("gangue not found"), { statusCode: 404 });
-  await saveContent(content);
+  await saveContent(content, { skipSite: redirectBase === WORK_PATH });
   redirect(res, "煤矸石数据已保存", redirectBase, `gangue-${id}`);
 }
 
@@ -7978,7 +8086,7 @@ async function handleDeleteGangue(req, res, redirectBase = WORK_PATH) {
   const id = String(params.get("id") || "").trim();
   const content = await readContent();
   content.coalGangueDb = getCoalGangueDb(content).filter((item) => item.id !== id);
-  await saveContent(content);
+  await saveContent(content, { skipSite: redirectBase === WORK_PATH });
   redirect(res, "煤矸石数据已删除", redirectBase);
 }
 
@@ -8041,7 +8149,7 @@ async function handleAddBlock(req, res, redirectBase = BASE_PATH) {
     strength: String(params.get("strength") || "").trim(),
     note: String(params.get("note") || "").trim()
   }, ...getTestBlocks(content)];
-  await saveContent(content);
+  await saveContent(content, { skipSite: redirectBase === WORK_PATH });
   redirect(res, "试块已登记，日历已更新", redirectBase, `block-${blockId}`);
 }
 
@@ -8050,7 +8158,7 @@ async function handleDeleteBlock(req, res, redirectBase = BASE_PATH) {
   const id = String(params.get("id") || "");
   const content = await readContent();
   content.testBlocks = getTestBlocks(content).filter((item) => item.id !== id);
-  await saveContent(content);
+  await saveContent(content, { skipSite: true });
   redirect(res, "试块记录已删除", redirectBase);
 }
 
@@ -8082,7 +8190,7 @@ async function handleUpdateRecipeMaterialLibrary(req, res, redirectBase = WORK_P
         - RECIPE_MATERIAL_CATEGORIES.findIndex((category) => category.id === recipeMaterialCategory(b));
       return byCategory || a.label.localeCompare(b.label, "zh-CN");
     });
-  await saveContent(content);
+  await saveContent(content, { skipSite: true });
   redirect(res, "材料库已保存", redirectBase);
 }
 
@@ -8235,7 +8343,7 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
     };
   });
   if (!found) throw Object.assign(new Error("block not found"), { statusCode: 404 });
-  await saveContent(content);
+  await saveContent(content, { skipSite: redirectBase === WORK_PATH });
   redirect(res, "试块档案已保存", redirectBase, `record-${id}`);
 }
 
@@ -8258,7 +8366,7 @@ async function handleToggleTask(req, res, redirectBase = WORK_PATH) {
     }
     return { ...block, completed };
   });
-  await saveContent(content);
+  await saveContent(content, { skipSite: redirectBase === WORK_PATH });
   redirect(res, done ? "任务已标记完成" : "任务已取消完成", redirectBase, returnAnchor);
 }
 
@@ -8280,7 +8388,7 @@ async function handleDeleteReminder(req, res, redirectBase = WORK_PATH) {
     return { ...block, completed };
   });
   if (!found) throw Object.assign(new Error("block not found"), { statusCode: 404 });
-  await saveContent(content);
+  await saveContent(content, { skipSite: redirectBase === WORK_PATH });
   redirect(res, "提醒已删除", redirectBase, returnAnchor);
 }
 
@@ -8291,7 +8399,7 @@ async function handleDismissAnomalies(req, res, redirectBase = WORK_PATH) {
   const content = await readContent();
   const merged = normalizeDismissedAnomalyIds([...(content.dismissedAnomalies || []), ...ids]);
   content.dismissedAnomalies = merged.slice(-500);
-  await saveContent(content);
+  await saveContent(content, { skipSite: true });
   redirect(res, `已删除 ${ids.length} 条异常提醒`, redirectBase, "anomalies");
 }
 
@@ -8319,6 +8427,9 @@ async function handleSendReminder(req, res) {
 async function route(req, res) {
   const url = new URL(req.url, "http://localhost");
   if (url.pathname === "/health") return send(res, 200, "ok", "text/plain; charset=utf-8");
+  if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === "/assets" || url.pathname.startsWith("/assets/"))) {
+    return serveStaticFromPrefix(req, res, url.pathname, "/assets", ASSETS_DIR, { cacheControl: "public, max-age=604800, immutable" });
+  }
   if (isPrivatePath(url.pathname)) return handlePrivateGallery(req, res, url);
   if (url.pathname === BASE_PATH) {
     res.writeHead(308, { Location: `${BASE_PATH}/` });
@@ -8389,15 +8500,17 @@ async function route(req, res) {
 
 async function bootstrap() {
   await ensureDirs();
+  await ensureWorkspaceAssets();
   await ensureSessionSecret();
   const startupContent = await readContent();
   await ensureThumbnails(startupContent);
   await generateSite(startupContent);
-  syncAzureSqlMirror(startupContent, "startup").catch((error) => console.error("azure sql sync failed", error.message || error));
+  requestAzureSqlSync(startupContent, "startup").catch((error) => console.error("azure sql sync failed", error.message || error));
   checkDailyReminder().catch((error) => console.error("daily reminder failed", error));
   setInterval(() => {
     checkDailyReminder().catch((error) => console.error("daily reminder failed", error));
   }, REMINDER_INTERVAL_MS).unref();
+  setInterval(cleanupLoginAttempts, LOGIN_ATTEMPT_WINDOW_MS).unref();
   http.createServer((req, res) => {
     route(req, res).catch((error) => {
       const status = error.statusCode || 500;
