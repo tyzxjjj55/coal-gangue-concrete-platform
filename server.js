@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const { execFile } = require("child_process");
 let nodemailer = null;
 let mssql = null;
+let Busboy = null;
 try {
   nodemailer = require("nodemailer");
 } catch {
@@ -15,6 +16,11 @@ try {
   mssql = require("mssql");
 } catch {
   mssql = null;
+}
+try {
+  Busboy = require("busboy");
+} catch {
+  Busboy = null;
 }
 
 const PORT = Number(process.env.PORT || 5710);
@@ -6821,31 +6827,73 @@ function zipItems(a, b, c, keys) {
   return items;
 }
 
-function parseMultipart(buffer, contentType) {
-  const match = /boundary=(?:"([^"]+)"|([^;]+))/i.exec(contentType || "");
-  if (!match) throw Object.assign(new Error("missing multipart boundary"), { statusCode: 400 });
-  const boundary = Buffer.from(`--${match[1] || match[2]}`);
-  const parts = [];
-  let start = buffer.indexOf(boundary);
-  while (start !== -1) {
-    start += boundary.length;
-    if (buffer[start] === 45 && buffer[start + 1] === 45) break;
-    if (buffer[start] === 13 && buffer[start + 1] === 10) start += 2;
-    const end = buffer.indexOf(boundary, start);
-    if (end === -1) break;
-    const raw = buffer.subarray(start, end - 2);
-    const split = raw.indexOf(Buffer.from("\r\n\r\n"));
-    if (split !== -1) {
-      const headerText = raw.subarray(0, split).toString("utf8");
-      const body = raw.subarray(split + 4);
-      const name = /name="([^"]+)"/.exec(headerText)?.[1];
-      const filename = /filename="([^"]*)"/.exec(headerText)?.[1] || "";
-      const type = /Content-Type:\s*([^\r\n]+)/i.exec(headerText)?.[1]?.trim() || "";
-      if (name) parts.push({ name, filename, type, body });
-    }
-    start = end;
+async function parseMultipart(buffer, contentType, options = {}) {
+  if (!Busboy) {
+    throw Object.assign(new Error("multipart parser unavailable"), { statusCode: 500 });
   }
-  return parts;
+  const fileSizeLimit = options.fileSizeLimit || MAX_UPLOAD_BYTES;
+  return new Promise((resolve, reject) => {
+    const parts = [];
+    let settled = false;
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    };
+    let parser;
+    try {
+      parser = Busboy({
+        headers: { "content-type": contentType || "" },
+        limits: {
+          fileSize: fileSizeLimit,
+          files: options.files || 20,
+          fields: options.fields || 300,
+          parts: options.parts || 320
+        }
+      });
+    } catch {
+      fail(Object.assign(new Error("missing multipart boundary"), { statusCode: 400 }));
+      return;
+    }
+    parser.on("field", (name, value) => {
+      parts.push({ name, filename: "", type: "", body: Buffer.from(String(value ?? ""), "utf8") });
+    });
+    parser.on("file", (name, file, info = {}) => {
+      const chunks = [];
+      let size = 0;
+      file.on("data", (chunk) => {
+        size += chunk.length;
+        if (size > fileSizeLimit) {
+          fail(Object.assign(new Error("image too large"), { statusCode: 413 }));
+          file.resume();
+          return;
+        }
+        chunks.push(chunk);
+      });
+      file.on("limit", () => {
+        fail(Object.assign(new Error("image too large"), { statusCode: 413 }));
+      });
+      file.on("end", () => {
+        if (settled) return;
+        parts.push({
+          name,
+          filename: path.basename(String(info.filename || "")),
+          type: String(info.mimeType || ""),
+          body: Buffer.concat(chunks)
+        });
+      });
+    });
+    parser.on("filesLimit", () => fail(Object.assign(new Error("too many files"), { statusCode: 413 })));
+    parser.on("fieldsLimit", () => fail(Object.assign(new Error("too many fields"), { statusCode: 413 })));
+    parser.on("partsLimit", () => fail(Object.assign(new Error("too many multipart parts"), { statusCode: 413 })));
+    parser.on("error", (error) => fail(Object.assign(error, { statusCode: 400 })));
+    parser.on("finish", () => {
+      if (settled) return;
+      settled = true;
+      resolve(parts);
+    });
+    parser.end(buffer);
+  });
 }
 
 function redirect(res, message = "", basePath = BASE_PATH, hash = "") {
@@ -6935,11 +6983,12 @@ function redirectTo(res, location) {
   res.end();
 }
 
-function csrfTokenFromBody(req, body) {
+async function csrfTokenFromBody(req, body) {
   const type = String(req.headers["content-type"] || "");
   if (/multipart\/form-data/i.test(type)) {
     try {
-      return parseMultipart(body, type).find((part) => part.name === "_csrf")?.body.toString("utf8").trim() || "";
+      const parts = await parseMultipart(body, type, { fileSizeLimit: MAX_UPLOAD_BYTES });
+      return parts.find((part) => part.name === "_csrf")?.body.toString("utf8").trim() || "";
     } catch {
       return "";
     }
@@ -6962,7 +7011,7 @@ function bodyLimitForPath(pathname) {
 async function verifyCsrfRequest(req, res, url) {
   const body = await parseBody(req, bodyLimitForPath(url.pathname));
   const cookieToken = parseCookies(req).get(CSRF_COOKIE_NAME) || "";
-  const bodyToken = csrfTokenFromBody(req, body);
+  const bodyToken = await csrfTokenFromBody(req, body);
   if (safeTokenEqual(cookieToken, bodyToken)) return true;
   return send(res, 403, "CSRF token invalid", "text/plain; charset=utf-8");
 }
@@ -7377,7 +7426,7 @@ async function checkDailyReminder() {
 async function handleUpload(req, res) {
   const wantsJson = /application\/json/i.test(req.headers.accept || "") || req.headers["x-requested-with"] === "XMLHttpRequest";
   const body = await parseBody(req, MAX_UPLOAD_BYTES * 10 + 1024 * 1024);
-  const parts = parseMultipart(body, req.headers["content-type"]);
+  const parts = await parseMultipart(body, req.headers["content-type"], { fileSizeLimit: MAX_UPLOAD_BYTES });
   const getText = (name) => parts.find((part) => part.name === name)?.body.toString("utf8").trim() || "";
   const images = parts.filter((part) => part.name === "image" && part.filename && part.body.length);
   if (!images.length) throw Object.assign(new Error("missing image"), { statusCode: 400 });
@@ -7425,7 +7474,7 @@ async function handleUpload(req, res) {
 async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
   const wantsJson = /application\/json/i.test(req.headers.accept || "") || req.headers["x-requested-with"] === "XMLHttpRequest";
   const body = await parseBody(req, MAX_UPLOAD_BYTES * 12 + 1024 * 1024);
-  const parts = parseMultipart(body, req.headers["content-type"]);
+  const parts = await parseMultipart(body, req.headers["content-type"], { fileSizeLimit: MAX_UPLOAD_BYTES });
   const getText = (name) => parts.find((part) => part.name === name)?.body.toString("utf8").trim() || "";
   const targetType = String(getText("targetType") || "").trim();
   const targetId = String(getText("targetId") || "").trim();

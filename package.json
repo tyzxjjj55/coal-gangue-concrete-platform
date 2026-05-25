@@ -9,8 +9,9 @@
     "check": "node --check server.js"
   },
   "dependencies": {
+    "busboy": "^1.6.0",
     "mssql": "^12.5.4",
-    "nodemailer": "^6.9.16"
+    "nodemailer": "^8.0.8"
   },
   "engines": {
     "node": ">=18"
