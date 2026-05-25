@@ -3128,20 +3128,18 @@ function trendGroupsV22(content) {
 
 function renderTrendRowsForGroupV22(group) {
   if (!group || !group.rows.length) return `<p class="empty-v22" data-chart-empty>这个批次还没有可展示的抗压强度。</p>`;
-  const defaultRows = group.rows.slice(0, 6);
-  const defaultIds = new Set(defaultRows.map((row) => row.id));
-  const defaultMax = Math.max(1, ...defaultRows.flatMap((row) => row.values.map((item) => item.number || 0)));
   return `<div class="chart-compare-v251" data-chart-compare>
-      <div class="chart-pickers-v251" aria-label="选择试块组对比">
-        ${group.rows.map((row) => `<label title="${attr(row.blockName)}"><input type="checkbox" data-chart-picker value="${attr(row.id)}" ${defaultIds.has(row.id) ? "checked" : ""}><span>${html(row.blockName)}</span></label>`).join("")}
+      <div class="chart-toolbar-v251">
+        <span>${group.rows.length} 组试块 · 最大值 ${html(formatMpaValue(group.max))}</span>
+        <button class="secondary chart-expand-v251" type="button" data-chart-expand>放大查看</button>
       </div>
       <div class="chart-canvas-v251" data-chart-canvas>
-        <div class="chart-scale-v251"><span data-y-max>${html(formatMpaValue(defaultMax))}</span><span data-y-mid>${html(formatMpaValue(defaultMax / 2))}</span><span>0 MPa</span></div>
+        <div class="chart-scale-v251"><span>${html(formatMpaValue(group.max))}</span><span>${html(formatMpaValue(group.max / 2))}</span><span>0 MPa</span></div>
         <div class="bar-chart-v23 chart-bars-v251" data-chart-row>
-          ${group.rows.map((row) => `<article class="bar-group-v23" data-chart-block="${attr(row.id)}" ${defaultIds.has(row.id) ? "" : "hidden"}>
+          ${group.rows.map((row) => `<article class="bar-group-v23" data-chart-block="${attr(row.id)}">
             <div class="bar-columns-v23">
               ${row.values.map((item) => {
-    const height = Math.max(8, Math.min(100, (item.number / defaultMax) * 100));
+    const height = Math.max(8, Math.min(100, (item.number / group.max) * 100));
     return `<span class="column-v23 age-${item.age}" data-chart-column data-number="${attr(item.number)}" style="--h:${height}%" title="${attr(`${row.blockName} ${item.label}`)}"><i></i><b>${html(item.mean)}</b><em>${item.age}d</em></span>`;
   }).join("")}
             </div>
@@ -3149,7 +3147,6 @@ function renderTrendRowsForGroupV22(group) {
           </article>`).join("")}
         </div>
       </div>
-      <p class="empty-v22" data-chart-selection-empty hidden>先选择至少一个试块组。</p>
     </div>`;
 }
 
@@ -3206,45 +3203,47 @@ function renderStrengthTrendPanelV22(content) {
             const stage = document.currentScript.closest("[data-chart-stage]");
             const filter = stage?.querySelector("[data-chart-filter]");
             const groups = Array.from(stage?.querySelectorAll("[data-chart-group]") || []);
-            const formatMpa = (value) => {
-              if (!Number.isFinite(value)) return "0 MPa";
-              const rounded = Math.round(value * 100) / 100;
-              return String(rounded).replace(/\\.0+$/, "").replace(/(\\.\\d*?)0+$/, "$1") + " MPa";
-            };
-            const refreshGroup = (group) => {
-              const pickers = Array.from(group.querySelectorAll("[data-chart-picker]"));
-              const selected = new Set(pickers.filter((item) => item.checked).map((item) => item.value));
-              const blocks = Array.from(group.querySelectorAll("[data-chart-block]"));
-              const selectedBlocks = blocks.filter((block) => selected.has(block.dataset.chartBlock));
-              const values = selectedBlocks.flatMap((block) => Array.from(block.querySelectorAll("[data-chart-column]")).map((column) => Number(column.dataset.number || 0)).filter(Number.isFinite));
-              const max = Math.max(1, ...values);
-              blocks.forEach((block) => {
-                const visible = selected.has(block.dataset.chartBlock);
-                block.hidden = !visible;
-                if (!visible) return;
-                block.querySelectorAll("[data-chart-column]").forEach((column) => {
-                  const number = Number(column.dataset.number || 0);
-                  const height = Math.max(8, Math.min(100, (number / max) * 100));
-                  column.style.setProperty("--h", height + "%");
-                });
-              });
-              const empty = group.querySelector("[data-chart-selection-empty]");
-              if (empty) empty.hidden = selectedBlocks.length > 0;
-              const yMax = group.querySelector("[data-y-max]");
-              const yMid = group.querySelector("[data-y-mid]");
-              if (yMax) yMax.textContent = formatMpa(max);
-              if (yMid) yMid.textContent = formatMpa(max / 2);
-            };
             const showGroup = () => {
               groups.forEach((group) => {
                 const active = group.dataset.chartGroup === filter?.value;
                 group.hidden = !active;
-                if (active) refreshGroup(group);
               });
             };
-            groups.forEach((group) => group.addEventListener("change", (event) => {
-              if (event.target?.matches("[data-chart-picker]")) refreshGroup(group);
-            }));
+            let modal = document.querySelector("[data-chart-modal]");
+            if (!modal) {
+              modal = document.createElement("div");
+              modal.className = "chart-modal-v251";
+              modal.hidden = true;
+              modal.setAttribute("data-chart-modal", "");
+              modal.innerHTML = "<div class=\\"chart-modal-panel-v251\\"><button type=\\"button\\" data-chart-close>退出</button><div data-chart-modal-body></div></div>";
+              document.body.appendChild(modal);
+            }
+            const closeModal = () => {
+              modal.hidden = true;
+              modal.classList.remove("active");
+              document.body.classList.remove("chart-modal-open-v251");
+            };
+            const openModal = (source) => {
+              const body = modal.querySelector("[data-chart-modal-body]");
+              const clone = source.cloneNode(true);
+              clone.querySelectorAll("[data-chart-expand]").forEach((node) => node.remove());
+              body.replaceChildren(clone);
+              modal.hidden = false;
+              modal.classList.add("active");
+              document.body.classList.add("chart-modal-open-v251");
+            };
+            stage?.addEventListener("click", (event) => {
+              const trigger = event.target.closest("[data-chart-expand], [data-chart-canvas]");
+              if (!trigger) return;
+              const source = trigger.closest("[data-chart-compare]");
+              if (source) openModal(source);
+            });
+            modal.addEventListener("click", (event) => {
+              if (event.target === modal || event.target.closest("[data-chart-close]")) closeModal();
+            });
+            document.addEventListener("keydown", (event) => {
+              if (event.key === "Escape" && !modal.hidden) closeModal();
+            });
             filter?.addEventListener("change", showGroup);
             showGroup();
           })();
@@ -4048,21 +4047,21 @@ function workspaceStylesV3() {
     .chart-current-v22 { margin:0; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border:1px solid #d7e6e0; border-radius:8px; background:#f8fbfa; color:var(--green); font-size:13px; font-weight:900; }
     .chart-current-v22 select { min-height:34px; min-width:160px; padding:0 34px 0 10px; border:1px solid #cbded7; border-radius:8px; background:#fff; color:var(--ink); font:inherit; font-size:13px; }
     .chart-compare-v251 { display:grid; gap:12px; }
-    .chart-pickers-v251 { display:flex; flex-wrap:wrap; gap:8px; padding:10px; border:1px solid #d7e6e0; border-radius:8px; background:#fbfdfc; }
-    .chart-pickers-v251 label { max-width:220px; min-height:32px; display:inline-flex; align-items:center; gap:7px; padding:0 10px; border:1px solid #d7e6e0; border-radius:999px; background:#fff; color:var(--ink); font-size:12px; font-weight:900; cursor:pointer; }
-    .chart-pickers-v251 input { accent-color:var(--green); }
-    .chart-pickers-v251 span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .chart-toolbar-v251 { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid #d7e6e0; border-radius:8px; background:#fbfdfc; color:var(--muted); font-size:12px; font-weight:900; }
+    .chart-expand-v251 { min-height:32px; padding:0 10px; box-shadow:none; }
     .chart-canvas-v251 { display:grid; grid-template-columns:58px minmax(0,1fr); gap:10px; align-items:stretch; }
+    .chart-canvas-v251 { cursor:zoom-in; }
     .chart-scale-v251 { height:248px; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end; padding:6px 0 22px; color:var(--muted); font-size:11px; font-weight:900; }
-    .bar-chart-v23 { min-height:248px; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(112px,1fr); gap:12px; align-items:end; overflow-x:auto; padding:8px 4px 2px; }
+    .bar-chart-v23 { min-height:248px; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(132px,1fr); gap:12px; align-items:end; overflow-x:auto; padding:8px 4px 2px; }
     .chart-bars-v251 { background:linear-gradient(to bottom, transparent 0, transparent 24%, rgba(211,228,222,.75) 24.5%, transparent 25%, transparent 49%, rgba(211,228,222,.75) 49.5%, transparent 50%, transparent 74%, rgba(211,228,222,.75) 74.5%, transparent 75%); border-radius:8px; }
-    .bar-group-v23 { min-width:104px; display:grid; grid-template-rows:180px auto; gap:9px; }
+    .bar-group-v23 { min-width:132px; display:grid; grid-template-rows:180px auto; gap:9px; }
     .bar-columns-v23 { height:180px; display:flex; align-items:end; justify-content:center; gap:8px; padding:8px 8px 0; border-bottom:1px solid #d8e6e0; background:linear-gradient(180deg,#fbfdfc,#fff); border-radius:8px 8px 0 0; }
     .column-v23 { width:28px; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; color:var(--muted); font-style:normal; font-size:10px; font-weight:900; }
     .column-v23 i { width:100%; height:var(--h,0%); min-height:8px; border-radius:8px 8px 4px 4px; background:#337861; box-shadow:0 8px 16px rgba(51,120,97,.16); }
     .column-v23.age-7 i { background:#3d6f98; box-shadow:0 8px 16px rgba(61,111,152,.16); }
     .column-v23.age-28 i { background:#d28b34; box-shadow:0 8px 16px rgba(210,139,52,.16); }
     .column-v23 b { max-width:48px; min-height:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#172624; font-size:10px; line-height:1.2; }
+    .chart-bars-v251 .column-v23 b { display:none; }
     .column-v23 em { font-style:normal; color:var(--muted); }
     .bar-group-v23 > strong { min-width:0; display:grid; gap:2px; color:var(--ink); font-size:12px; text-align:center; }
     .bar-group-v23 > strong span, .bar-group-v23 > strong small { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -4070,6 +4069,20 @@ function workspaceStylesV3() {
     .bar-chart-28d-v23 .bar-group-v23 { grid-template-rows:170px auto; }
     .bar-chart-28d-v23 .bar-columns-v23 { height:170px; }
     .bar-group-v23.single .column-v23 { width:34px; }
+    .chart-modal-open-v251 { overflow:hidden; }
+    .chart-modal-v251 { position:fixed; inset:0; z-index:9999; display:none; align-items:center; justify-content:center; padding:22px; background:rgba(11,23,21,.58); backdrop-filter:blur(6px); }
+    .chart-modal-v251.active { display:flex; }
+    .chart-modal-panel-v251 { width:min(1120px,96vw); max-height:92vh; overflow:auto; padding:18px; border-radius:10px; background:#fff; box-shadow:0 24px 60px rgba(12,35,30,.28); }
+    .chart-modal-panel-v251 > button { float:right; min-height:34px; padding:0 12px; border:1px solid #d7e6e0; border-radius:8px; background:#f8fbfa; color:var(--green); font-weight:900; }
+    .chart-modal-v251 .chart-compare-v251 { clear:both; padding-top:8px; }
+    .chart-modal-v251 .chart-toolbar-v251 { margin-right:72px; }
+    .chart-modal-v251 .chart-canvas-v251 { grid-template-columns:72px minmax(0,1fr); cursor:default; }
+    .chart-modal-v251 .chart-scale-v251 { height:430px; }
+    .chart-modal-v251 .bar-chart-v23 { min-height:430px; grid-auto-columns:minmax(168px,1fr); gap:18px; }
+    .chart-modal-v251 .bar-group-v23 { min-width:168px; grid-template-rows:340px auto; }
+    .chart-modal-v251 .bar-columns-v23 { height:340px; gap:12px; }
+    .chart-modal-v251 .column-v23 { width:38px; font-size:12px; }
+    .chart-modal-v251 .chart-bars-v251 .column-v23 b { display:block; max-width:74px; min-height:18px; font-size:12px; }
     .data-health-v23 { margin-bottom:16px; }
     .data-health-v23 .section-head-v22 > strong { min-height:34px; display:inline-flex; align-items:center; padding:0 10px; border-radius:999px; background:#fff8f4; color:#a8422d; font-size:13px; }
     .health-grid-v23 { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:10px; }
@@ -4182,7 +4195,7 @@ function workspaceStylesV3() {
     @media (max-width:1320px) { .topbar-v22 { grid-template-columns:minmax(260px,1fr) minmax(0,360px); } .top-actions-v22 { grid-column:1/-1; justify-content:flex-start; } .metric-grid-v22 { grid-template-columns:repeat(3,minmax(0,1fr)); } .overview-grid-v22, .overview-grid-v22.compact { grid-template-columns:1fr; } }
     @media (max-width:980px) { .app-shell-v22 { grid-template-columns:1fr; } .sidebar-v22 { position:static; height:auto; flex-direction:row; align-items:center; overflow:auto; } .sidebar-v22 nav { display:flex; flex-wrap:wrap; } .side-foot-v22 { margin-left:auto; margin-top:0; display:flex; } .lab-overview { grid-template-columns:1fr; } .visual-map-grid-v22 { grid-template-columns:1fr; } .result-grid, .metric-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:repeat(2,minmax(0,1fr)); } .material-groups, .library-list { grid-template-columns:1fr; } .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:repeat(2,minmax(0,1fr)); } .task-row-v22 { grid-template-columns:1fr 1fr; } .task-row-v22.head { display:none; } }
     @media (max-width:760px) { .topbar-v22 { grid-template-columns:1fr; } .top-actions-v22 { grid-column:auto; } }
-    @media (max-width:640px) { .work-main-v22 { padding:14px; } .sidebar-v22 { padding:12px; } .topbar-v22 { padding:12px 14px; } .record-details[open] .record-drawer-body { width:100%; border-left:0; } .metric-grid-v22, .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:1fr; } .workspace-hero { min-height:auto; } .progress-matrix-head-v22 { display:none; } .progress-row-v22 { grid-template-columns:1fr 1fr; align-items:start; } .progress-row-v22 strong, .matrix-meter-v22 { grid-column:1/-1; } .coverage-row-v22 { grid-template-columns:38px minmax(0,1fr) 48px; } .coverage-row-v22 em { grid-column:2/-1; text-align:left; } .gangue-folder-head, .block-toolbar, .custom-material-row, .lab-upload-grid { grid-template-columns:1fr; } .calendar-agenda-head { flex-direction:column; } .calendar-legend { justify-content:flex-start; } .folder-badges, .archive-actions, .block-actions { justify-content:stretch; } .folder-badges span, .archive-actions .chip-button, .block-actions .export-check, .block-actions button { flex:1; justify-content:center; } .viz-row { grid-template-columns:1fr; gap:5px; } .result-row-title, .gangue-card summary { align-items:flex-start; flex-direction:column; } .record-details summary { grid-template-columns:1fr; align-items:start; } .record-toggle { justify-content:center; } .record-summary-main em { white-space:normal; } .result-grid, .metric-options, .library-list, .material-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:1fr; } .material-library-item { grid-template-columns:1fr; } .chart-canvas-v251 { grid-template-columns:1fr; } .chart-scale-v251 { display:none; } .chart-pickers-v251 label { max-width:100%; } .side-brand-v22 strong { white-space:nowrap; } }
+    @media (max-width:640px) { .work-main-v22 { padding:14px; } .sidebar-v22 { padding:12px; } .topbar-v22 { padding:12px 14px; } .record-details[open] .record-drawer-body { width:100%; border-left:0; } .metric-grid-v22, .gangue-overview-grid-v22, .recent-block-grid-v22 { grid-template-columns:1fr; } .workspace-hero { min-height:auto; } .progress-matrix-head-v22 { display:none; } .progress-row-v22 { grid-template-columns:1fr 1fr; align-items:start; } .progress-row-v22 strong, .matrix-meter-v22 { grid-column:1/-1; } .coverage-row-v22 { grid-template-columns:38px minmax(0,1fr) 48px; } .coverage-row-v22 em { grid-column:2/-1; text-align:left; } .gangue-folder-head, .block-toolbar, .custom-material-row, .lab-upload-grid { grid-template-columns:1fr; } .calendar-agenda-head { flex-direction:column; } .calendar-legend { justify-content:flex-start; } .folder-badges, .archive-actions, .block-actions { justify-content:stretch; } .folder-badges span, .archive-actions .chip-button, .block-actions .export-check, .block-actions button { flex:1; justify-content:center; } .viz-row { grid-template-columns:1fr; gap:5px; } .result-row-title, .gangue-card summary { align-items:flex-start; flex-direction:column; } .record-details summary { grid-template-columns:1fr; align-items:start; } .record-toggle { justify-content:center; } .record-summary-main em { white-space:normal; } .result-grid, .metric-options, .library-list, .material-options, .ratio-grid, .stat-strip, .calendar-kpis, .calendar-agenda-list, .template-weight-grid, .health-grid-v23 { grid-template-columns:1fr; } .material-library-item { grid-template-columns:1fr; } .chart-toolbar-v251 { align-items:flex-start; flex-direction:column; } .chart-canvas-v251, .chart-modal-v251 .chart-canvas-v251 { grid-template-columns:1fr; } .chart-scale-v251, .chart-modal-v251 .chart-scale-v251 { display:none; } .chart-modal-v251 { padding:10px; } .chart-modal-panel-v251 { width:100%; max-height:94vh; padding:12px; } .side-brand-v22 strong { white-space:nowrap; } }
   `;
 }
 
