@@ -1,6 +1,6 @@
 {
   "name": "xx520-admin",
-  "version": "1.0.0",
+  "version": "2.9.0",
   "private": true,
   "description": "Small private editor for xx520 static homepage",
   "main": "server.js",

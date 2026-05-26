@@ -98,6 +98,10 @@ const REVIEW_PACKAGE_FILES = [
   "data/content.json",
   "data/reminder-state.json"
 ];
+let assetVersions = {
+  css: "dev",
+  js: "dev"
+};
 
 function requiredEnv(name) {
   const value = process.env[name];
@@ -1703,6 +1707,22 @@ async function writeAtomic(filePath, data) {
   const temp = `${filePath}.tmp-${process.pid}-${Date.now()}`;
   await fsp.writeFile(temp, data);
   await fsp.rename(temp, filePath);
+}
+
+async function fileHashVersion(filePath) {
+  try {
+    const data = await fsp.readFile(filePath);
+    return crypto.createHash("sha256").update(data).digest("hex").slice(0, 8);
+  } catch {
+    return "dev";
+  }
+}
+
+async function refreshAssetVersions() {
+  assetVersions = {
+    css: await fileHashVersion(path.join(ASSETS_DIR, "workspace.css")),
+    js: await fileHashVersion(path.join(ASSETS_DIR, "workspace.js"))
+  };
 }
 
 async function pathExists(filePath) {
@@ -3910,7 +3930,7 @@ function renderWorkspaceV3(content, message = "") {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>煤矸石实验工作区 - ${html(content.siteTitle)}</title>
-  <link rel="stylesheet" href="/assets/workspace.css?v=26">
+  <link rel="stylesheet" href="/assets/workspace.css?v=${attr(assetVersions.css)}">
 </head>
 <body class="dashboard-shell-v22">
   <div class="app-shell-v22">
@@ -3968,7 +3988,7 @@ function renderWorkspaceV3(content, message = "") {
     </div>
   </div>
   ${renderTemplateDataScriptV3()}
-  <script defer src="/assets/workspace.js?v=26"></script>
+  <script defer src="/assets/workspace.js?v=${attr(assetVersions.js)}"></script>
 </body>
 </html>`;
 }
@@ -5750,7 +5770,10 @@ async function parseMultipart(buffer, contentType, options = {}) {
 function redirect(res, message = "", basePath = BASE_PATH, hash = "") {
   const suffix = message ? `?msg=${encodeURIComponent(message)}` : "";
   const anchor = hash ? `#${encodeURIComponent(String(hash).replace(/^#/, ""))}` : "";
-  res.writeHead(303, { Location: `${basePath}/${suffix}${anchor}` });
+  res.writeHead(303, {
+    Location: `${basePath}/${suffix}${anchor}`,
+    "Strict-Transport-Security": "max-age=31536000"
+  });
   res.end();
 }
 
@@ -5765,6 +5788,7 @@ function send(res, status, body, type = "text/html; charset=utf-8", headers = {}
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "same-origin",
+    "Strict-Transport-Security": "max-age=31536000",
     "Cache-Control": "no-store",
     ...headers
   });
@@ -5819,6 +5843,7 @@ async function serveStaticFromPrefix(req, res, urlPath, prefix, rootDir, options
       "X-Content-Type-Options": "nosniff",
       "X-Frame-Options": "DENY",
       "Referrer-Policy": "same-origin",
+      "Strict-Transport-Security": "max-age=31536000",
       "Cache-Control": options.cacheControl || (isAsset ? "private, max-age=86400" : "private, no-store")
     });
     if (req.method === "HEAD") return res.end();
@@ -5830,7 +5855,10 @@ async function serveStaticFromPrefix(req, res, urlPath, prefix, rootDir, options
 }
 
 function redirectTo(res, location) {
-  res.writeHead(303, { Location: location });
+  res.writeHead(303, {
+    Location: location,
+    "Strict-Transport-Security": "max-age=31536000"
+  });
   res.end();
 }
 
@@ -6858,6 +6886,7 @@ function sendDownload(res, filename, buffer) {
     "Content-Length": buffer.length,
     "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
     "X-Content-Type-Options": "nosniff",
+    "Strict-Transport-Security": "max-age=31536000",
     "Cache-Control": "private, no-store"
   });
   res.end(buffer);
@@ -6870,6 +6899,7 @@ function sendZipDownload(res, filename, buffer, archiveHash = "") {
     "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
     "X-Content-Type-Options": "nosniff",
     "X-Archive-SHA256": archiveHash,
+    "Strict-Transport-Security": "max-age=31536000",
     "Cache-Control": "private, no-store"
   });
   res.end(buffer);
@@ -6889,7 +6919,9 @@ async function gitText(args) {
 }
 
 async function buildReviewPackageArchive() {
-  const packageName = `xx520-admin-review-v2.8-full-data-no-images-${stamp()}`;
+  const packageData = JSON.parse(await fsp.readFile(path.join(__dirname, "package.json"), "utf8"));
+  const packageVersion = String(packageData.version || "0.0.0").replace(/[^0-9A-Za-z._-]/g, "-");
+  const packageName = `xx520-admin-review-v${packageVersion}-full-data-no-images-${stamp()}`;
   const files = [];
 
   for (const relativePath of REVIEW_PACKAGE_FILES) {
@@ -7440,8 +7472,13 @@ async function route(req, res) {
   if (url.pathname.startsWith(`${WORK_PATH}/`)) {
     if (url.pathname === `${WORK_PATH}/login`) return handleCustomLogin(req, res, url, "work");
     if (url.pathname === `${WORK_PATH}/logout`) return handleCustomLogout(res, "work");
+    const isWorkFileRequest = url.pathname === WORK_FILE_PATH || url.pathname.startsWith(`${WORK_FILE_PATH}/`);
+    if ((req.method === "GET" || req.method === "HEAD") && isWorkFileRequest && !validSession(req, authCookieName("work"), "work")) {
+      const authNext = safeNext(`${url.pathname}${url.search}`, `${WORK_PATH}/`, [WORK_PATH]);
+      return redirectTo(res, `${WORK_PATH}/login?next=${encodeURIComponent(authNext)}`);
+    }
     if (!ensureAuthed(req, res, url, "work")) return;
-    if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === WORK_FILE_PATH || url.pathname.startsWith(`${WORK_FILE_PATH}/`))) {
+    if ((req.method === "GET" || req.method === "HEAD") && isWorkFileRequest) {
       return serveStaticFromPrefix(req, res, url.pathname, WORK_FILE_PATH, WORK_UPLOAD_DIR);
     }
     if ((req.method === "GET" || req.method === "HEAD") && url.pathname === `${WORK_PATH}/`) {
@@ -7499,6 +7536,7 @@ async function route(req, res) {
 async function bootstrap() {
   await ensureDirs();
   await ensureWorkspaceAssets();
+  await refreshAssetVersions();
   await ensureSessionSecret();
   const startupContent = await readContent();
   await ensureThumbnails(startupContent);
