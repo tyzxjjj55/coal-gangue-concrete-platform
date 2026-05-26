@@ -49,6 +49,7 @@ const SESSION_SECRET_FILE = path.join(DATA_DIR, "session-secret");
 const BACKUP_DIR = path.join(DATA_DIR, "backups");
 const BACKUP_KEEP = Number(process.env.BACKUP_KEEP || 30);
 const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_BYTES || 20 * 1024 * 1024);
+const MAX_UPLOAD_TOTAL_BYTES = Number(process.env.MAX_UPLOAD_TOTAL_BYTES || MAX_UPLOAD_BYTES * 12);
 const THUMB_WIDTH = Number(process.env.THUMB_WIDTH || 900);
 const DEFAULT_ALBUM = "默认相册";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
@@ -97,6 +98,7 @@ const REVIEW_PACKAGE_FILES = [
   "package-lock.json",
   "README.md",
   ".gitignore",
+  "scripts/smoke-check.js",
   "data/content.json",
   "data/reminder-state.json"
 ];
@@ -1829,6 +1831,9 @@ async function ensureThumbnails(content) {
   }
 }
 
+// contentMutationQueue serializes request handlers that read, mutate, and save content.
+// saveContentQueue is a defensive backstop so future direct saveContent() calls cannot
+// write content.json concurrently and clobber a newer atomic write.
 let saveContentQueue = Promise.resolve();
 
 async function saveContentNow(content, options = {}) {
@@ -5922,6 +5927,21 @@ async function cleanupMultipartTempFiles(parts) {
     .map((part) => fsp.rm(part.tempPath, { force: true })));
 }
 
+async function cleanupStaleUploadTmpFiles(maxAgeMs = 60 * 60 * 1000) {
+  await fsp.mkdir(UPLOAD_TMP_DIR, { recursive: true });
+  const cutoff = Date.now() - maxAgeMs;
+  const entries = await fsp.readdir(UPLOAD_TMP_DIR, { withFileTypes: true }).catch(() => []);
+  await Promise.allSettled(entries
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".upload"))
+    .map(async (entry) => {
+      const filePath = path.join(UPLOAD_TMP_DIR, entry.name);
+      const stat = await fsp.stat(filePath).catch(() => null);
+      if (stat && stat.mtimeMs < cutoff) {
+        await fsp.rm(filePath, { force: true });
+      }
+    }));
+}
+
 async function moveUploadedTempFile(part, targetPath) {
   await fsp.mkdir(path.dirname(targetPath), { recursive: true });
   try {
@@ -5976,11 +5996,13 @@ async function parseMultipartStream(req, options = {}) {
   }
   await fsp.mkdir(UPLOAD_TMP_DIR, { recursive: true });
   const fileSizeLimit = options.fileSizeLimit || MAX_UPLOAD_BYTES;
+  const totalSizeLimit = options.totalSizeLimit || MAX_UPLOAD_TOTAL_BYTES;
   const contentType = req.headers["content-type"] || "";
   return new Promise((resolve, reject) => {
     const parts = [];
     const fileTasks = [];
     let settled = false;
+    let totalFileBytes = 0;
     let parser;
     const rejectWithCleanup = (error) => {
       if (settled) return;
@@ -6024,9 +6046,15 @@ async function parseMultipartStream(req, options = {}) {
       fileTasks.push(task);
       file.on("data", (chunk) => {
         part.size += chunk.length;
+        totalFileBytes += chunk.length;
         if (part.size > fileSizeLimit) {
           output.destroy();
           rejectWithCleanup(Object.assign(new Error("image too large"), { statusCode: 413 }));
+          return;
+        }
+        if (totalFileBytes > totalSizeLimit) {
+          output.destroy();
+          rejectWithCleanup(Object.assign(new Error("upload total too large"), { statusCode: 413 }));
         }
       });
       file.on("limit", () => {
@@ -6063,6 +6091,46 @@ function csrfTokenFromParts(parts) {
 function verifyCsrfParts(req, parts) {
   const cookieToken = parseCookies(req).get(CSRF_COOKIE_NAME) || "";
   return safeTokenEqual(cookieToken, csrfTokenFromParts(parts));
+}
+
+function multipartErrorMessage(error) {
+  if (error.statusCode === 413) return "上传文件太大";
+  if (error.message === "missing multipart boundary") return "上传表单格式错误";
+  if (error.message === "multipart parser unavailable") return "上传解析器不可用";
+  if (error.message === "too many files") return "上传文件数量过多";
+  if (error.message === "too many fields" || error.message === "too many multipart parts") return "上传字段过多";
+  if (error.message === "unsupported image type" || error.message === "unsupported image MIME type" || error.message === "unsupported image extension") return "不支持的图片格式";
+  if (error.message === "missing image") return "请选择要上传的图片";
+  if (error.message === "missing image target") return "缺少图片归属信息";
+  if (error.message === "image target not found") return "没有找到图片归属记录";
+  return error.message || "上传失败";
+}
+
+async function handleMultipartPost(req, res, handler, options = {}) {
+  const wantsJson = /application\/json/i.test(req.headers.accept || "") || req.headers["x-requested-with"] === "XMLHttpRequest";
+  let parts = [];
+  try {
+    parts = await parseMultipartStream(req, {
+      fileSizeLimit: options.fileSizeLimit || MAX_UPLOAD_BYTES,
+      totalSizeLimit: options.totalSizeLimit || MAX_UPLOAD_TOTAL_BYTES,
+      files: options.files,
+      fields: options.fields,
+      parts: options.parts
+    });
+    if (!verifyCsrfParts(req, parts)) {
+      return send(res, 403, "CSRF token invalid", "text/plain; charset=utf-8");
+    }
+    return await handler(parts);
+  } catch (error) {
+    const status = error.statusCode || 500;
+    const message = multipartErrorMessage(error);
+    if (wantsJson) {
+      return send(res, status, JSON.stringify({ ok: false, error: message }), "application/json; charset=utf-8");
+    }
+    return send(res, status, message, "text/plain; charset=utf-8");
+  } finally {
+    await cleanupMultipartTempFiles(parts);
+  }
 }
 
 function bodyLimitForPath(pathname) {
@@ -6493,11 +6561,7 @@ async function checkDailyReminder() {
 
 async function handleUpload(req, res) {
   const wantsJson = /application\/json/i.test(req.headers.accept || "") || req.headers["x-requested-with"] === "XMLHttpRequest";
-  const parts = await parseMultipartStream(req, { fileSizeLimit: MAX_UPLOAD_BYTES });
-  try {
-    if (!verifyCsrfParts(req, parts)) {
-      return send(res, 403, "CSRF token invalid", "text/plain; charset=utf-8");
-    }
+  return handleMultipartPost(req, res, async (parts) => {
   const getText = (name) => parts.find((part) => part.name === name)?.body.toString("utf8").trim() || "";
   const images = await validateUploadedImages(parts);
 
@@ -6533,18 +6597,12 @@ async function handleUpload(req, res) {
     return send(res, 200, JSON.stringify({ ok: true, count: uploaded.length, photos: uploaded }), "application/json; charset=utf-8");
   }
   redirect(res, `${uploaded.length} 张图片已上传并发布`);
-  } finally {
-    await cleanupMultipartTempFiles(parts);
-  }
+  });
 }
 
 async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
   const wantsJson = /application\/json/i.test(req.headers.accept || "") || req.headers["x-requested-with"] === "XMLHttpRequest";
-  const parts = await parseMultipartStream(req, { fileSizeLimit: MAX_UPLOAD_BYTES });
-  try {
-    if (!verifyCsrfParts(req, parts)) {
-      return send(res, 403, "CSRF token invalid", "text/plain; charset=utf-8");
-    }
+  return handleMultipartPost(req, res, async (parts) => {
   const getText = (name) => parts.find((part) => part.name === name)?.body.toString("utf8").trim() || "";
   const targetType = String(getText("targetType") || "").trim();
   const targetId = String(getText("targetId") || "").trim();
@@ -6614,9 +6672,7 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
     return redirectTo(res, `${redirectBase}/?msg=${encodeURIComponent(`${uploaded.length} 张实验图片已上传`)}&openBlock=${encodeURIComponent(targetId)}&tab=images#record-${encodeURIComponent(targetId)}`);
   }
   redirect(res, `${uploaded.length} 张实验图片已上传`, redirectBase, `gangue-${targetId}`);
-  } finally {
-    await cleanupMultipartTempFiles(parts);
-  }
+  });
 }
 
 async function handleDeleteLabImage(req, res, redirectBase = WORK_PATH) {
@@ -7165,6 +7221,7 @@ async function buildReviewPackageArchive(options = {}) {
     `Commit: ${commit || "unknown"}`,
     "",
     "Uncommitted status at package time:",
+    ...(status ? ["WARNING: working tree is dirty"] : []),
     status || "clean",
     "",
     "Included files:",
@@ -7756,6 +7813,7 @@ async function route(req, res) {
 
 async function bootstrap() {
   await ensureDirs();
+  await cleanupStaleUploadTmpFiles(60 * 60 * 1000);
   await ensureWorkspaceAssets();
   await refreshAssetVersions();
   await ensureSessionSecret();
