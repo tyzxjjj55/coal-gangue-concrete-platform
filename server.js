@@ -1,6 +1,7 @@
 ﻿const http = require("http");
 const fs = require("fs");
 const fsp = require("fs/promises");
+const os = require("os");
 const path = require("path");
 const crypto = require("crypto");
 const { execFile } = require("child_process");
@@ -41,6 +42,7 @@ const PRIVATE_UPLOAD_PATH = "/private-uploads";
 const PRIVATE_THUMB_DIR = process.env.PRIVATE_THUMB_DIR || "/var/lib/xx520-admin/private-thumbs";
 const PRIVATE_THUMB_PATH = "/private-thumbs";
 const PRIVATE_GALLERY_PATH = "/private-gallery";
+const UPLOAD_TMP_DIR = process.env.UPLOAD_TMP_DIR || path.join(os.tmpdir(), "xx520-admin-upload-tmp");
 const CONTENT_FILE = path.join(DATA_DIR, "content.json");
 const REMINDER_STATE_FILE = path.join(DATA_DIR, "reminder-state.json");
 const SESSION_SECRET_FILE = path.join(DATA_DIR, "session-secret");
@@ -150,6 +152,16 @@ function detectImageType(buffer) {
     return "image/gif";
   }
   return "";
+}
+
+function normalizeUploadMime(type) {
+  const clean = String(type || "").split(";")[0].trim().toLowerCase();
+  return clean === "image/jpg" ? "image/jpeg" : clean;
+}
+
+function allowedUploadExtension(filename) {
+  const extension = path.extname(String(filename || "")).toLowerCase();
+  return extension === ".jpeg" ? ".jpg" : extension;
 }
 
 const BUILTIN_RESULT_METRICS = [
@@ -1553,6 +1565,7 @@ async function ensureDirs() {
   await fsp.mkdir(PUBLIC_THUMB_DIR, { recursive: true });
   await fsp.mkdir(PRIVATE_UPLOAD_DIR, { recursive: true });
   await fsp.mkdir(PRIVATE_THUMB_DIR, { recursive: true });
+  await fsp.mkdir(UPLOAD_TMP_DIR, { recursive: true });
 }
 
 async function ensureWorkspaceAssets() {
@@ -1816,7 +1829,9 @@ async function ensureThumbnails(content) {
   }
 }
 
-async function saveContent(content, options = {}) {
+let saveContentQueue = Promise.resolve();
+
+async function saveContentNow(content, options = {}) {
   const { skipSite = false } = options;
   const normalized = normalizeContent(content);
   assertExperimentContentV25(normalized);
@@ -1836,6 +1851,20 @@ async function saveContent(content, options = {}) {
   }
   requestAzureSqlSync(normalized, "save").catch((error) => console.error("azure sql sync failed", error.message || error));
   return normalized;
+}
+
+async function saveContent(content, options = {}) {
+  const run = saveContentQueue.then(() => saveContentNow(content, options));
+  saveContentQueue = run.catch(() => {});
+  return run;
+}
+
+let contentMutationQueue = Promise.resolve();
+
+async function queueContentMutation(task) {
+  const run = contentMutationQueue.then(task);
+  contentMutationQueue = run.catch(() => {});
+  return run;
 }
 
 async function generateSite(content) {
@@ -2872,6 +2901,12 @@ function renderReviewPackagePanel() {
           <button type="submit">下载审查包 ZIP</button>
         </div>
         <p class="hint">仅后台登录后可下载。ZIP 响应头会包含 <code>X-Archive-SHA256</code> 校验值。</p>
+      </form>
+      <form class="compact-form" method="post" action="${BASE_PATH}/review-package-sanitized">
+        <div class="actions">
+          <button class="secondary" type="submit">下载脱敏审查包 ZIP</button>
+        </div>
+        <p class="hint">脱敏包会保留字段结构、ID 和引用关系，但隐藏图片路径、标题、备注和描述文本。</p>
       </form>
     </section>`;
 }
@@ -5881,6 +5916,155 @@ function safeTokenEqual(a, b) {
   return left.length > 0 && left.length === right.length && crypto.timingSafeEqual(left, right);
 }
 
+async function cleanupMultipartTempFiles(parts) {
+  await Promise.allSettled((parts || [])
+    .filter((part) => part && part.tempPath)
+    .map((part) => fsp.rm(part.tempPath, { force: true })));
+}
+
+async function moveUploadedTempFile(part, targetPath) {
+  await fsp.mkdir(path.dirname(targetPath), { recursive: true });
+  try {
+    await fsp.rename(part.tempPath, targetPath);
+  } catch (error) {
+    if (error.code !== "EXDEV") throw error;
+    await fsp.copyFile(part.tempPath, targetPath);
+    await fsp.rm(part.tempPath, { force: true });
+  }
+  part.tempPath = "";
+}
+
+async function detectImageTypeFromFile(filePath) {
+  const handle = await fsp.open(filePath, "r");
+  try {
+    const buffer = Buffer.alloc(16);
+    const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
+    return detectImageType(buffer.subarray(0, bytesRead));
+  } finally {
+    await handle.close();
+  }
+}
+
+async function validateUploadedImages(parts, fieldName = "image") {
+  const images = parts.filter((part) => part.name === fieldName && part.filename && part.tempPath && part.size > 0);
+  if (!images.length) throw Object.assign(new Error("missing image"), { statusCode: 400 });
+  for (const image of images) {
+    if (image.size > MAX_UPLOAD_BYTES) {
+      throw Object.assign(new Error("image too large"), { statusCode: 413 });
+    }
+    const claimedType = normalizeUploadMime(image.type);
+    if (!allowedTypes.has(claimedType)) {
+      throw Object.assign(new Error("unsupported image MIME type"), { statusCode: 400 });
+    }
+    const claimedExtension = allowedUploadExtension(image.filename);
+    if (![...allowedTypes.values()].includes(claimedExtension)) {
+      throw Object.assign(new Error("unsupported image extension"), { statusCode: 400 });
+    }
+    const detectedType = await detectImageTypeFromFile(image.tempPath);
+    if (!allowedTypes.has(detectedType) || detectedType !== claimedType) {
+      throw Object.assign(new Error("unsupported image type"), { statusCode: 400 });
+    }
+    image.detectedType = detectedType;
+    image.extension = allowedTypes.get(detectedType);
+  }
+  return images;
+}
+
+async function parseMultipartStream(req, options = {}) {
+  if (!Busboy) {
+    throw Object.assign(new Error("multipart parser unavailable"), { statusCode: 500 });
+  }
+  await fsp.mkdir(UPLOAD_TMP_DIR, { recursive: true });
+  const fileSizeLimit = options.fileSizeLimit || MAX_UPLOAD_BYTES;
+  const contentType = req.headers["content-type"] || "";
+  return new Promise((resolve, reject) => {
+    const parts = [];
+    const fileTasks = [];
+    let settled = false;
+    let parser;
+    const rejectWithCleanup = (error) => {
+      if (settled) return;
+      settled = true;
+      req.resume();
+      Promise.allSettled(fileTasks)
+        .then(() => cleanupMultipartTempFiles(parts))
+        .finally(() => reject(error));
+    };
+    try {
+      parser = Busboy({
+        headers: { "content-type": contentType },
+        limits: {
+          fileSize: fileSizeLimit,
+          files: options.files || 20,
+          fields: options.fields || 300,
+          parts: options.parts || 320
+        }
+      });
+    } catch {
+      reject(Object.assign(new Error("missing multipart boundary"), { statusCode: 400 }));
+      return;
+    }
+    parser.on("field", (name, value) => {
+      parts.push({ name, filename: "", type: "", body: Buffer.from(String(value ?? ""), "utf8") });
+    });
+    parser.on("file", (name, file, info = {}) => {
+      const filename = path.basename(String(info.filename || ""));
+      if (!filename) {
+        file.resume();
+        return;
+      }
+      const tempPath = path.join(UPLOAD_TMP_DIR, `${process.pid}-${Date.now()}-${crypto.randomBytes(8).toString("hex")}.upload`);
+      const part = { name, filename, type: String(info.mimeType || ""), body: Buffer.alloc(0), tempPath, size: 0 };
+      parts.push(part);
+      const output = fs.createWriteStream(tempPath, { flags: "wx" });
+      const task = new Promise((resolveTask, rejectTask) => {
+        output.on("finish", resolveTask);
+        output.on("error", rejectTask);
+      });
+      fileTasks.push(task);
+      file.on("data", (chunk) => {
+        part.size += chunk.length;
+        if (part.size > fileSizeLimit) {
+          output.destroy();
+          rejectWithCleanup(Object.assign(new Error("image too large"), { statusCode: 413 }));
+        }
+      });
+      file.on("limit", () => {
+        output.destroy();
+        rejectWithCleanup(Object.assign(new Error("image too large"), { statusCode: 413 }));
+      });
+      file.on("error", (error) => {
+        output.destroy();
+        rejectWithCleanup(Object.assign(error, { statusCode: 400 }));
+      });
+      file.pipe(output);
+    });
+    parser.on("filesLimit", () => rejectWithCleanup(Object.assign(new Error("too many files"), { statusCode: 413 })));
+    parser.on("fieldsLimit", () => rejectWithCleanup(Object.assign(new Error("too many fields"), { statusCode: 413 })));
+    parser.on("partsLimit", () => rejectWithCleanup(Object.assign(new Error("too many multipart parts"), { statusCode: 413 })));
+    parser.on("error", (error) => rejectWithCleanup(Object.assign(error, { statusCode: 400 })));
+    parser.on("finish", () => {
+      if (settled) return;
+      Promise.all(fileTasks)
+        .then(() => {
+          settled = true;
+          resolve(parts);
+        })
+        .catch((error) => rejectWithCleanup(Object.assign(error, { statusCode: 400 })));
+    });
+    req.pipe(parser);
+  });
+}
+
+function csrfTokenFromParts(parts) {
+  return parts.find((part) => part.name === "_csrf")?.body?.toString("utf8").trim() || "";
+}
+
+function verifyCsrfParts(req, parts) {
+  const cookieToken = parseCookies(req).get(CSRF_COOKIE_NAME) || "";
+  return safeTokenEqual(cookieToken, csrfTokenFromParts(parts));
+}
+
 function bodyLimitForPath(pathname) {
   return pathname === `${BASE_PATH}/upload` || pathname === `${WORK_PATH}/upload-lab-image`
     ? MAX_UPLOAD_BYTES * 10 + 1024 * 1024
@@ -5898,8 +6082,13 @@ async function verifyCsrfRequest(req, res, url) {
 const loginAttempts = new Map();
 
 function clientIp(req) {
-  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
-  return forwarded || req.socket.remoteAddress || "unknown";
+  const remoteAddress = String(req.socket.remoteAddress || "").trim();
+  const isTrustedProxy = ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(remoteAddress);
+  if (isTrustedProxy) {
+    const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+    if (forwarded) return forwarded;
+  }
+  return remoteAddress || "unknown";
 }
 
 function loginAttemptKey(req, scope) {
@@ -6304,17 +6493,13 @@ async function checkDailyReminder() {
 
 async function handleUpload(req, res) {
   const wantsJson = /application\/json/i.test(req.headers.accept || "") || req.headers["x-requested-with"] === "XMLHttpRequest";
-  const body = await parseBody(req, MAX_UPLOAD_BYTES * 10 + 1024 * 1024);
-  const parts = await parseMultipart(body, req.headers["content-type"], { fileSizeLimit: MAX_UPLOAD_BYTES });
+  const parts = await parseMultipartStream(req, { fileSizeLimit: MAX_UPLOAD_BYTES });
+  try {
+    if (!verifyCsrfParts(req, parts)) {
+      return send(res, 403, "CSRF token invalid", "text/plain; charset=utf-8");
+    }
   const getText = (name) => parts.find((part) => part.name === name)?.body.toString("utf8").trim() || "";
-  const images = parts.filter((part) => part.name === "image" && part.filename && part.body.length);
-  if (!images.length) throw Object.assign(new Error("missing image"), { statusCode: 400 });
-  if (images.some((image) => image.body.length > MAX_UPLOAD_BYTES)) {
-    throw Object.assign(new Error("image too large"), { statusCode: 413 });
-  }
-  if (images.some((image) => !allowedTypes.has(detectImageType(image.body)))) {
-    throw Object.assign(new Error("unsupported image type"), { statusCode: 400 });
-  }
+  const images = await validateUploadedImages(parts);
 
   await ensureDirs();
   const content = await readContent();
@@ -6328,11 +6513,11 @@ async function handleUpload(req, res) {
 
   for (let i = 0; i < images.length; i += 1) {
     const image = images[i];
-    const extension = allowedTypes.get(detectImageType(image.body));
+    const extension = image.extension;
     const safeBase = path.basename(image.filename, path.extname(image.filename)).replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 42) || "image";
     const imageTitle = title || path.basename(image.filename, path.extname(image.filename)) || "相册图片";
     const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeBase}${extension}`;
-    await writeAtomic(path.join(targetDir, filename), image.body);
+    await moveUploadedTempFile(image, path.join(targetDir, filename));
     uploaded.push({
       src: `${publicPath}/${filename}`,
       title: images.length === 1 ? imageTitle : `${imageTitle} ${i + 1}`,
@@ -6348,12 +6533,18 @@ async function handleUpload(req, res) {
     return send(res, 200, JSON.stringify({ ok: true, count: uploaded.length, photos: uploaded }), "application/json; charset=utf-8");
   }
   redirect(res, `${uploaded.length} 张图片已上传并发布`);
+  } finally {
+    await cleanupMultipartTempFiles(parts);
+  }
 }
 
 async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
   const wantsJson = /application\/json/i.test(req.headers.accept || "") || req.headers["x-requested-with"] === "XMLHttpRequest";
-  const body = await parseBody(req, MAX_UPLOAD_BYTES * 12 + 1024 * 1024);
-  const parts = await parseMultipart(body, req.headers["content-type"], { fileSizeLimit: MAX_UPLOAD_BYTES });
+  const parts = await parseMultipartStream(req, { fileSizeLimit: MAX_UPLOAD_BYTES });
+  try {
+    if (!verifyCsrfParts(req, parts)) {
+      return send(res, 403, "CSRF token invalid", "text/plain; charset=utf-8");
+    }
   const getText = (name) => parts.find((part) => part.name === name)?.body.toString("utf8").trim() || "";
   const targetType = String(getText("targetType") || "").trim();
   const targetId = String(getText("targetId") || "").trim();
@@ -6362,26 +6553,19 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
   const kind = allowedKindIds.has(rawKind) ? rawKind : (targetType === "gangue" ? "raw_gangue" : "specimen");
   const title = getText("imageTitle");
   const caption = getText("imageCaption");
-  const images = parts.filter((part) => part.name === "image" && part.filename && part.body.length);
+  const images = await validateUploadedImages(parts);
   if (!["gangue", "block"].includes(targetType) || !targetId) {
     throw Object.assign(new Error("missing image target"), { statusCode: 400 });
-  }
-  if (!images.length) throw Object.assign(new Error("missing image"), { statusCode: 400 });
-  if (images.some((image) => image.body.length > MAX_UPLOAD_BYTES)) {
-    throw Object.assign(new Error("image too large"), { statusCode: 413 });
-  }
-  if (images.some((image) => !allowedTypes.has(detectImageType(image.body)))) {
-    throw Object.assign(new Error("unsupported image type"), { statusCode: 400 });
   }
 
   await ensureDirs();
   const uploaded = [];
   for (let i = 0; i < images.length; i += 1) {
     const image = images[i];
-    const extension = allowedTypes.get(detectImageType(image.body));
+    const extension = image.extension;
     const safeBase = path.basename(image.filename, path.extname(image.filename)).replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 42) || "lab-image";
     const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeBase}${extension}`;
-    await writeAtomic(path.join(WORK_UPLOAD_DIR, filename), image.body);
+    await moveUploadedTempFile(image, path.join(WORK_UPLOAD_DIR, filename));
     const baseTitle = title || path.basename(image.filename, path.extname(image.filename)) || labImageKindLabel(kind);
     uploaded.push({
       src: `${WORK_FILE_PATH}/${filename}`,
@@ -6430,6 +6614,9 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
     return redirectTo(res, `${redirectBase}/?msg=${encodeURIComponent(`${uploaded.length} 张实验图片已上传`)}&openBlock=${encodeURIComponent(targetId)}&tab=images#record-${encodeURIComponent(targetId)}`);
   }
   redirect(res, `${uploaded.length} 张实验图片已上传`, redirectBase, `gangue-${targetId}`);
+  } finally {
+    await cleanupMultipartTempFiles(parts);
+  }
 }
 
 async function handleDeleteLabImage(req, res, redirectBase = WORK_PATH) {
@@ -6918,16 +7105,45 @@ async function gitText(args) {
   }
 }
 
-async function buildReviewPackageArchive() {
+function sanitizedTextForKey(key) {
+  const lower = String(key || "").toLowerCase();
+  if (lower === "src" || lower === "thumb" || lower === "href" || lower === "url" || lower.endsWith("path")) return "/review-placeholder/image.jpg";
+  if (lower.includes("title")) return "脱敏标题";
+  if (lower.includes("caption") || lower.includes("description") || lower.includes("body") || lower.includes("note") || lower.includes("remark") || lower.includes("failuremode") || lower.includes("lead") || lower.includes("eyebrow") || lower.includes("footer") || lower.includes("about")) return "脱敏文本";
+  if (lower === "name" || lower.endsWith("name")) return "脱敏名称";
+  if (lower === "tag" || lower.endsWith("tag") || lower.includes("album")) return "脱敏标签";
+  if (lower.includes("source") || lower.includes("address") || lower.includes("location")) return "脱敏来源";
+  return null;
+}
+
+function sanitizeReviewData(value, key = "") {
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeReviewData(item, key));
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([entryKey, entryValue]) => [entryKey, sanitizeReviewData(entryValue, entryKey)]));
+  }
+  if (typeof value === "string") {
+    const replacement = sanitizedTextForKey(key);
+    return replacement === null ? value : replacement;
+  }
+  return value;
+}
+
+async function buildReviewPackageArchive(options = {}) {
+  const { sanitized = false } = options;
   const packageData = JSON.parse(await fsp.readFile(path.join(__dirname, "package.json"), "utf8"));
   const packageVersion = String(packageData.version || "0.0.0").replace(/[^0-9A-Za-z._-]/g, "-");
-  const packageName = `xx520-admin-review-v${packageVersion}-full-data-no-images-${stamp()}`;
+  const packageName = `xx520-admin-review-v${packageVersion}-${sanitized ? "sanitized" : "full-data"}-no-images-${stamp()}`;
   const files = [];
 
   for (const relativePath of REVIEW_PACKAGE_FILES) {
     const normalizedPath = relativePath.replaceAll("\\", "/");
     const absolutePath = path.join(__dirname, normalizedPath);
-    const data = await fsp.readFile(absolutePath);
+    let data = await fsp.readFile(absolutePath);
+    if (sanitized && normalizedPath === "data/content.json") {
+      data = Buffer.from(`${JSON.stringify(sanitizeReviewData(JSON.parse(data.toString("utf8"))), null, 2)}\n`, "utf8");
+    }
     files.push({
       name: `${packageName}/${normalizedPath}`,
       data
@@ -6943,6 +7159,7 @@ async function buildReviewPackageArchive() {
   const manifest = [
     "xx520-admin review package",
     `Generated: ${new Date().toISOString()}`,
+    `Sanitized: ${sanitized ? "yes" : "no"}`,
     "Source: /opt/xx520-admin",
     `Branch: ${branch || "unknown"}`,
     `Commit: ${commit || "unknown"}`,
@@ -6966,6 +7183,7 @@ async function buildReviewPackageArchive() {
     "/var/lib/xx520-admin/private-uploads/",
     "/var/lib/xx520-admin/private-thumbs/",
     "/var/lib/xx520-admin/work-uploads/",
+    ...(sanitized ? ["", "Sanitization:", "Image paths and title/note/description text fields in data/content.json are replaced with placeholders while IDs, arrays and references are preserved."] : []),
     "",
     "Included file SHA256:",
     ...fileHashes,
@@ -6987,8 +7205,8 @@ async function buildReviewPackageArchive() {
   };
 }
 
-async function handleReviewPackageDownload(req, res) {
-  const reviewPackage = await buildReviewPackageArchive();
+async function handleReviewPackageDownload(req, res, options = {}) {
+  const reviewPackage = await buildReviewPackageArchive(options);
   sendZipDownload(res, reviewPackage.filename, reviewPackage.archive, reviewPackage.archiveHash);
 }
 
@@ -7486,19 +7704,19 @@ async function route(req, res) {
       content._reminderState = await readReminderState();
       return sendProtectedHtml(req, res, 200, renderWorkspaceV3(content, url.searchParams.get("msg") || ""));
     }
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/upload-lab-image`) return queueContentMutation(() => handleUploadLabImage(req, res, WORK_PATH));
     if (req.method === "POST" && !(await verifyCsrfRequest(req, res, url))) return;
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/add-block`) return handleAddBlock(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-block`) return handleDeleteBlock(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/toggle-task`) return handleToggleTask(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-reminder`) return handleDeleteReminder(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/dismiss-anomalies`) return handleDismissAnomalies(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/update-material-library`) return handleUpdateRecipeMaterialLibrary(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/add-gangue`) return handleAddGangue(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/update-gangue`) return handleUpdateGangue(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-gangue`) return handleDeleteGangue(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/update-block-record`) return handleUpdateBlockRecord(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/upload-lab-image`) return handleUploadLabImage(req, res, WORK_PATH);
-    if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-lab-image`) return handleDeleteLabImage(req, res, WORK_PATH);
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/add-block`) return queueContentMutation(() => handleAddBlock(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-block`) return queueContentMutation(() => handleDeleteBlock(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/toggle-task`) return queueContentMutation(() => handleToggleTask(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-reminder`) return queueContentMutation(() => handleDeleteReminder(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/dismiss-anomalies`) return queueContentMutation(() => handleDismissAnomalies(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/update-material-library`) return queueContentMutation(() => handleUpdateRecipeMaterialLibrary(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/add-gangue`) return queueContentMutation(() => handleAddGangue(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/update-gangue`) return queueContentMutation(() => handleUpdateGangue(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-gangue`) return queueContentMutation(() => handleDeleteGangue(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/update-block-record`) return queueContentMutation(() => handleUpdateBlockRecord(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-lab-image`) return queueContentMutation(() => handleDeleteLabImage(req, res, WORK_PATH));
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/export-blocks`) return handleExportBlocks(req, res, WORK_PATH);
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/send-reminder`) return handleSendReminder(req, res);
     return send(res, 404, "Not found", "text/plain; charset=utf-8");
@@ -7514,22 +7732,25 @@ async function route(req, res) {
     const content = await readContent();
     return sendProtectedHtml(req, res, 200, renderAdmin(content, url.searchParams.get("msg") || ""));
   }
+  if (req.method === "POST" && url.pathname === `${BASE_PATH}/upload`) return queueContentMutation(() => handleUpload(req, res));
   if (req.method === "POST" && !(await verifyCsrfRequest(req, res, url))) return;
   if (req.method === "POST" && url.pathname === `${BASE_PATH}/save`) {
-    const previous = await readContent();
-    const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
-    await saveContent(contentFromForm(params, previous));
-    return redirect(res, "内容已保存并发布");
+    return queueContentMutation(async () => {
+      const previous = await readContent();
+      const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
+      await saveContent(contentFromForm(params, previous));
+      return redirect(res, "内容已保存并发布");
+    });
   }
-  if (req.method === "POST" && url.pathname === `${BASE_PATH}/upload`) return handleUpload(req, res);
-  if (req.method === "POST" && url.pathname === `${BASE_PATH}/delete-image`) return handleDeleteImage(req, res);
-  if (req.method === "POST" && url.pathname === `${BASE_PATH}/rename-album`) return handleRenameAlbum(req, res);
-  if (req.method === "POST" && url.pathname === `${BASE_PATH}/add-block`) return handleAddBlock(req, res);
-  if (req.method === "POST" && url.pathname === `${BASE_PATH}/delete-block`) return handleDeleteBlock(req, res);
-  if (req.method === "POST" && url.pathname === `${BASE_PATH}/toggle-task`) return handleToggleTask(req, res, BASE_PATH);
-  if (req.method === "POST" && url.pathname === `${BASE_PATH}/update-block-record`) return handleUpdateBlockRecord(req, res, BASE_PATH);
+  if (req.method === "POST" && url.pathname === `${BASE_PATH}/delete-image`) return queueContentMutation(() => handleDeleteImage(req, res));
+  if (req.method === "POST" && url.pathname === `${BASE_PATH}/rename-album`) return queueContentMutation(() => handleRenameAlbum(req, res));
+  if (req.method === "POST" && url.pathname === `${BASE_PATH}/add-block`) return queueContentMutation(() => handleAddBlock(req, res));
+  if (req.method === "POST" && url.pathname === `${BASE_PATH}/delete-block`) return queueContentMutation(() => handleDeleteBlock(req, res));
+  if (req.method === "POST" && url.pathname === `${BASE_PATH}/toggle-task`) return queueContentMutation(() => handleToggleTask(req, res, BASE_PATH));
+  if (req.method === "POST" && url.pathname === `${BASE_PATH}/update-block-record`) return queueContentMutation(() => handleUpdateBlockRecord(req, res, BASE_PATH));
   if (req.method === "POST" && url.pathname === `${BASE_PATH}/export-blocks`) return handleExportBlocks(req, res, BASE_PATH);
   if (req.method === "POST" && url.pathname === `${BASE_PATH}/review-package`) return handleReviewPackageDownload(req, res);
+  if (req.method === "POST" && url.pathname === `${BASE_PATH}/review-package-sanitized`) return handleReviewPackageDownload(req, res, { sanitized: true });
   return send(res, 404, "Not found", "text/plain; charset=utf-8");
 }
 
@@ -7558,7 +7779,17 @@ async function bootstrap() {
   });
 }
 
-bootstrap().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+if (require.main === module) {
+  bootstrap().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  normalizeContent,
+  getTestBlocks,
+  specimenGroupForBlockV25,
+  testResultsForBlockV25,
+  stableExperimentIdV25
+};
