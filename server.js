@@ -598,11 +598,19 @@ function parseResultSamples(value) {
     .slice(0, 12);
 }
 
-function calculateResultSamples(samples) {
+function isStrengthMetricV31(metric) {
+  const text = String(metric || "").trim();
+  return /strength|compression|flexural|split|抗压|抗折|劈裂|强度/i.test(text)
+    && !/mass|重量|质量/i.test(text);
+}
+
+function calculateResultSamples(samples, options = {}) {
   const values = parseResultSamples(samples);
-  const numbers = values.map(parseMeasurementNumber).filter((number) => number !== null);
+  const rawNumbers = values.map(parseMeasurementNumber).filter((number) => number !== null);
+  const zeroPlaceholders = options.ignoreZero ? rawNumbers.filter((number) => number === 0).length : 0;
+  const numbers = options.ignoreZero ? rawNumbers.filter((number) => number !== 0) : rawNumbers;
   if (!numbers.length) {
-    return { values, mean: "", std: "", cv: "", min: "", max: "", n: "", meanSource: "未录入" };
+    return { values, mean: "", std: "", cv: "", min: "", max: "", n: "", meanSource: zeroPlaceholders ? "疑似占位值" : "未录入", zeroPlaceholders };
   }
   const mean = numbers.reduce((total, number) => total + number, 0) / numbers.length;
   const variance = numbers.length > 1
@@ -618,7 +626,8 @@ function calculateResultSamples(samples) {
     min: formatRecipeNumber(Math.min(...numbers), 3),
     max: formatRecipeNumber(Math.max(...numbers), 3),
     n: String(numbers.length),
-    meanSource: numbers.length >= 3 ? "三块计算" : numbers.length === 2 ? "多块计算" : "单块计算"
+    meanSource: numbers.length >= 3 ? "三块计算" : numbers.length === 2 ? "多块计算" : "单块计算",
+    zeroPlaceholders
   };
 }
 
@@ -697,10 +706,11 @@ function normalizeMetricResultEntry(value, legacyValue = "", options = {}) {
   const legacyText = String(legacyValue || "").trim();
   const rawManual = source.manualMean ?? source.manualValue ?? source.value ?? "";
   const manualMean = String(rawManual || (!sampleValues.length ? (source.mean || legacyText) : "") || "").trim();
-  const sampleStats = calculateResultSamples(sampleValues);
-  const hasSamples = sampleStats.values.length > 0;
+  const sampleStats = calculateResultSamples(sampleValues, { ignoreZero: isStrengthMetricV31(source.metric || options.metric) });
+  const hasSamples = Boolean(sampleStats.n);
+  const hasOnlyZeroPlaceholders = !hasSamples && sampleStats.zeroPlaceholders > 0;
   const mean = hasSamples ? sampleStats.mean : manualMean;
-  const sourceLabel = hasSamples ? sampleStats.meanSource : (manualMean ? "手动录入" : "未录入");
+  const sourceLabel = hasSamples ? sampleStats.meanSource : (hasOnlyZeroPlaceholders ? "疑似占位值" : (manualMean ? "手动录入" : "未录入"));
   const measurementFailureMode = sampleMeasurements.map((item) => item.failureMode).filter(Boolean).join("；");
   const measurementRemark = sampleMeasurements.map((item) => item.remark).filter(Boolean).join("；");
   return {
@@ -717,6 +727,7 @@ function normalizeMetricResultEntry(value, legacyValue = "", options = {}) {
     max: hasSamples ? sampleStats.max : "",
     n: hasSamples ? sampleStats.n : "",
     meanSource: sourceLabel,
+    zeroPlaceholder: hasOnlyZeroPlaceholders,
     manualOverride: source.manualOverride === true || source.manualOverride === "true" || source.manualOverride === "1"
       || sampleMeasurements.some((item) => item.manualOverride),
     failureMode: String(source.failureMode || measurementFailureMode || "").trim(),
@@ -726,6 +737,7 @@ function normalizeMetricResultEntry(value, legacyValue = "", options = {}) {
 
 function metricResultFilled(entry) {
   const item = normalizeMetricResultEntry(entry);
+  if (item.zeroPlaceholder && !item.mean && !item.manualMean) return false;
   return item.sampleValues.length > 0 || Boolean(item.manualMean || item.mean);
 }
 
@@ -911,6 +923,51 @@ function applyWeighingTemplateToRecipeValues(recipeValues, materials, templateKe
 
 function gradationSchemeForCategory(category) {
   return GRADATION_SCHEMES[normalizeBlockCategory(category)] || GRADATION_SCHEMES.road;
+}
+
+function applicationTypeForCategoryV31(category) {
+  const normalized = normalizeBlockCategory(category, "road");
+  if (normalized === "spray") return "shotcrete";
+  if (normalized === "road") return "road";
+  return "mortar";
+}
+
+function particleRangeBoundsV31(ranges) {
+  const values = (Array.isArray(ranges) ? ranges : [])
+    .flatMap((range) => String(range || "").match(/\d+(?:\.\d+)?/g) || [])
+    .map((value) => Number.parseFloat(value))
+    .filter((value) => Number.isFinite(value));
+  if (!values.length) return { min: "", max: "" };
+  return { min: Math.min(...values), max: Math.max(...values) };
+}
+
+function gradingRangeTextV31(ranges) {
+  const bounds = particleRangeBoundsV31(ranges);
+  if (bounds.min === "" || bounds.max === "") return "";
+  return `${formatRecipeNumber(bounds.min, 2)}-${formatRecipeNumber(bounds.max, 2)} mm`;
+}
+
+function maxParticleSizeMmV31(ranges) {
+  const bounds = particleRangeBoundsV31(ranges);
+  return bounds.max === "" ? "" : formatRecipeNumber(bounds.max, 2);
+}
+
+function talbotNForRecordV31(category, record) {
+  const scheme = gradationSchemeForCategory(category);
+  const template = scheme.templates[normalizeGradationTemplate(record.gradationTemplate)] || scheme.templates.raw;
+  return String(record.gradationCoefficient || template.nValue || "").trim();
+}
+
+function blockGradationMetaV31(block, record = null) {
+  const normalizedRecord = record || normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+  const category = normalizeBlockCategory(block.blockCategory || block.purpose, "road");
+  const scheme = gradationSchemeForCategory(category);
+  return {
+    applicationType: applicationTypeForCategoryV31(category),
+    gradingRange: gradingRangeTextV31(scheme.ranges),
+    maxParticleSizeMm: maxParticleSizeMmV31(scheme.ranges),
+    talbotN: talbotNForRecordV31(category, normalizedRecord)
+  };
 }
 
 function normalizeGradationTemplate(value) {
@@ -1268,6 +1325,7 @@ function gradationPlanForBlockV25(block) {
   const scheme = gradationSchemeForCategory(category);
   const templateKey = normalizeGradationTemplate(record.gradationTemplate);
   const template = scheme.templates[templateKey] || scheme.templates.raw;
+  const gradationMeta = blockGradationMetaV31(block, record);
   return {
     id: gradationPlanIdForBlockV25(block),
     specimenGroupId: specimenGroupIdForBlockV25(block),
@@ -1277,6 +1335,10 @@ function gradationPlanForBlockV25(block) {
     templateKey,
     templateLabel: template.label,
     coefficient: record.gradationCoefficient || template.nValue || "",
+    talbotN: gradationMeta.talbotN,
+    gradingRange: gradationMeta.gradingRange,
+    maxParticleSizeMm: gradationMeta.maxParticleSizeMm,
+    applicationType: gradationMeta.applicationType,
     particleRanges: scheme.ranges,
     particleWeights: normalizeBlockGradationWeights(record.gradationWeights, category, templateKey),
     note: String(record.recipeNote || "").trim(),
@@ -1327,6 +1389,7 @@ function mixDesignForBlockV25(block) {
 
 function specimenGroupForBlockV25(block) {
   const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+  const gradationMeta = blockGradationMetaV31(block, record);
   return {
     id: specimenGroupIdForBlockV25(block),
     legacyBlockId: block.id,
@@ -1338,6 +1401,10 @@ function specimenGroupForBlockV25(block) {
     quantity: Math.max(1, Number.parseInt(block.quantity, 10) || 1),
     specimenSize: normalizeSpecimenSizeV25(block.specimenSize || record.specimenSize),
     purpose: blockPurposeV25(block),
+    applicationType: gradationMeta.applicationType,
+    maxParticleSizeMm: gradationMeta.maxParticleSizeMm,
+    gradingRange: gradationMeta.gradingRange,
+    talbotN: gradationMeta.talbotN,
     strength: String(block.strength || "").trim(),
     ages: normalizeAges(block.ages),
     note: String(block.note || "").trim(),
@@ -1379,6 +1446,7 @@ function testResultsForBlockV25(block) {
     const samples = testResultSamplesV25(entry);
     if (!metricResultFilled(entry) && !row.testDate && !row.resultNote && !row.abnormalFlag) return null;
     const first = samples[0] || {};
+    const qualityFlags = strengthQualityFlagsForEntryV31(block, age, metric, row, entry);
     return {
       id: stableExperimentIdV25("result", `${block.id}:${age}:${metric.id}`),
       specimenGroupId: specimenGroupIdForBlockV25(block),
@@ -1396,6 +1464,8 @@ function testResultsForBlockV25(block) {
       manualOverride: entry.manualOverride === true || samples.some((sample) => sample.manualOverride) || Boolean(entry.manualMean && !entry.sampleValues.length),
       note: String(entry.remark || row.resultNote || "").trim(),
       meanSource: entry.meanSource,
+      qualityFlags: qualityFlags.map((flag) => flag.title).join("；"),
+      strengthQualityFlags: qualityFlags.map((flag) => flag.code),
       modelSource: "testBlocks"
     };
   }).filter(Boolean));
@@ -1447,15 +1517,21 @@ function normalizeTopLevelTestResultV25(item = {}) {
 function syncExperimentDataModelV25(content) {
   const blocks = getTestBlocks(content);
   const gangues = getCoalGangueDb(content);
-  const batchRows = gangues.map((item) => ({
-    id: item.id,
-    name: item.name,
-    source: item.source,
-    shortCode: item.shortCode,
-    particleRanges: item.particleRanges,
-    note: item.otherInfo,
-    modelSource: "coalGangueDb"
-  }));
+  const batchRows = gangues.map((item) => {
+    const completeness = coalGangueCompletenessV31(item);
+    return {
+      id: item.id,
+      name: item.name,
+      source: item.source,
+      shortCode: item.shortCode,
+      particleRanges: item.particleRanges,
+      completenessScore: completeness.score,
+      missingFields: completeness.missing,
+      modelAnalysisRecommendation: completeness.modelReady ? "可用于模型分析" : "暂不建议用于模型分析",
+      note: item.otherInfo,
+      modelSource: "coalGangueDb"
+    };
+  });
   const blockGradationPlans = blocks.map(gradationPlanForBlockV25);
   const gangueGradationPlans = gangues.flatMap(gradationPlansForGangueV25);
   const blockTestResults = blocks.flatMap(testResultsForBlockV25);
@@ -1546,7 +1622,12 @@ function normalizeLabImages(value, options = {}) {
         legacyKind: rawKind && rawKind !== imageType ? rawKind : String(item.legacyKind || "").trim(),
         targetType,
         blockId: String(item.blockId || options.blockId || "").trim(),
+        specimenGroupId: String(item.specimenGroupId || item.groupId || item.blockId || options.specimenGroupId || options.blockId || "").trim(),
         gangueBatchId: String(item.gangueBatchId || options.gangueBatchId || "").trim(),
+        ageDays: String(item.ageDays || item.age || "").trim().replace(/d$/i, ""),
+        metric: String(item.metric || "").trim(),
+        strengthMPa: String(item.strengthMPa || item.strengthMpa || "").trim(),
+        failureMode: String(item.failureMode || "").trim(),
         createdAt: String(item.createdAt || item.date || "").trim()
       };
     })
@@ -2261,6 +2342,35 @@ function calculateGangueCrushingSummary(item) {
   return rows[0];
 }
 
+function anyObjectValueFilledV31(value) {
+  return Object.values(value && typeof value === "object" ? value : {}).some((item) => String(item || "").trim());
+}
+
+function coalGangueCompletenessV31(item) {
+  const normalized = normalizeCoalGangueItem(item);
+  const hasBulkDensity = normalized.gradations.some((row) => row.looseBulkDensity || row.compactedBulkDensity)
+    || Boolean(normalized.looseBulkDensity || normalized.compactedBulkDensity);
+  const checks = [
+    { key: "crushing", label: "压碎值", done: Boolean(normalized.batchCrushingValue) },
+    { key: "waterAbsorption", label: "吸水率", done: Boolean(normalized.coarseWaterAbsorption || normalized.fineWaterAbsorption) },
+    { key: "apparentDensity", label: "表观密度", done: Boolean(normalized.coarseApparentDensity || normalized.fineApparentDensity) },
+    { key: "bulkDensity", label: "堆积密度", done: hasBulkDensity },
+    { key: "moisture", label: "含水率", done: Boolean(normalized.moistureContent) },
+    { key: "flakiness", label: "针片状含量", done: anyObjectValueFilledV31(normalized.flakinessValues) },
+    { key: "powderMb", label: "石粉/MB值", done: Boolean(normalized.stonePowderContent || normalized.mbValue || /石粉|MB|亚甲蓝/i.test(normalized.otherInfo)) }
+  ];
+  const done = checks.filter((item) => item.done).length;
+  const score = checks.length ? Math.round((done / checks.length) * 100) : 0;
+  return {
+    score,
+    done,
+    total: checks.length,
+    checks,
+    missing: checks.filter((item) => !item.done).map((item) => item.label),
+    modelReady: score >= 60
+  };
+}
+
 function normalizeGangueGradations(value, ranges = []) {
   return (Array.isArray(value) ? value : [])
     .map((item) => {
@@ -2321,6 +2431,11 @@ function normalizeCoalGangueItem(item = {}) {
     fineWaterAbsorption: String(item.fineWaterAbsorption || "").trim(),
     coarseApparentDensity: String(item.coarseApparentDensity || "").trim(),
     fineApparentDensity: String(item.fineApparentDensity || "").trim(),
+    looseBulkDensity: String(item.looseBulkDensity || "").trim(),
+    compactedBulkDensity: String(item.compactedBulkDensity || "").trim(),
+    moistureContent: String(item.moistureContent || "").trim(),
+    stonePowderContent: String(item.stonePowderContent || item.stonePowder || "").trim(),
+    mbValue: String(item.mbValue || item.methyleneBlueValue || "").trim(),
     gradations: normalizeGangueGradations(item.gradations, ranges),
     images: normalizeLabImages(item.images, { targetType: "gangue", gangueBatchId: id }),
     otherInfo: String(item.otherInfo || item.note || "").trim(),
@@ -3584,10 +3699,72 @@ function renderStrengthTrendPanelV22(content) {
     </section>`;
 }
 
+function strengthQualityFlagsForEntryV31(block, age, metric, row, entry) {
+  if (!isStrengthMetricV31(metric.id || metric.label)) return [];
+  const flags = [];
+  const measurements = normalizeSampleMeasurements(entry.sampleMeasurements || []);
+  const sampleStrengthNumbers = measurements
+    .map((sample) => parseMeasurementNumber(sample.strengthMpa))
+    .filter((value) => value !== null);
+  const positiveSampleCount = sampleStrengthNumbers.filter((value) => value > 0).length;
+  const meanNumber = parseMeasurementNumber(entry.mean || entry.manualMean);
+  const hasStrength = (meanNumber !== null && meanNumber > 0) || positiveSampleCount > 0;
+  const hasZeroPlaceholder = sampleStrengthNumbers.some((value) => value === 0) || meanNumber === 0 || entry.zeroPlaceholder;
+  const hasRawLoad = measurements.some((sample) => {
+    const load = parseMeasurementNumber(sample.pressureKn);
+    return load !== null && load > 0;
+  });
+  const hasRawStrength = positiveSampleCount > 0;
+  if (hasZeroPlaceholder) {
+    flags.push({ code: "zero-placeholder", title: "疑似占位值", detail: "strengthMPa 为 0，默认不参与统计" });
+  }
+  if (hasStrength && positiveSampleCount < 3) {
+    flags.push({ code: "insufficient-samples", title: "试件数量不足", detail: `有效试件 ${positiveSampleCount}/3` });
+  }
+  if (hasStrength && !row.testDate) {
+    flags.push({ code: "missing-test-date", title: "缺试验日期", detail: "有强度值但未填写 testDate" });
+  }
+  if (hasStrength && (!hasRawLoad || !hasRawStrength)) {
+    flags.push({ code: "missing-raw-samples", title: "缺原始荷载/样本", detail: "有均值但缺原始荷载或原始强度样本" });
+  }
+  return flags.map((flag) => ({
+    ...flag,
+    label: `${block.name} ${age}d ${metric.label}：${flag.detail}`,
+    href: `#record-${block.id}`
+  }));
+}
+
+function blockStrengthQualityRowsV31(block) {
+  const metrics = normalizeResultMetrics(block.metrics || (block.record && block.record.metrics), "", { fallbackToDefault: true });
+  const record = normalizeBlockRecord(block.record, block.ages, metrics, block.recipeMaterials);
+  const results = normalizeAgeResults(record, block.ages, metrics);
+  return normalizeAges(block.ages).flatMap((age) => {
+    const row = results[String(age)] || {};
+    return metrics.map((metric) => {
+      const entry = normalizeMetricResultEntry((row.metricResults || {})[metric.id], (row.metrics || {})[metric.id], {
+        age,
+        metric: metric.id,
+        dueDate: addDays(block.madeDate, age)
+      });
+      return {
+        block,
+        record,
+        age,
+        metric,
+        row,
+        entry,
+        flags: strengthQualityFlagsForEntryV31(block, age, metric, row, entry)
+      };
+    });
+  });
+}
+
 function dataHealthItemsV23(content) {
   const blocks = getTestBlocks(content);
   const gangues = getCoalGangueDb(content);
-  const blockHasStrength = (block) => blockResultDueItemsV22([block]).some((item) => item.metric.id === "compressionStrength" && item.filled);
+  const blockHasStrength = (block) => blockResultDueItemsV22([block]).some((item) => item.metric.id === "compressionStrength" && item.filled && metricResultNumber(item.result) > 0);
+  const qualityRows = blocks.flatMap(blockStrengthQualityRowsV31);
+  const qualityItems = (code) => qualityRows.flatMap((row) => row.flags.filter((flag) => flag.code === code));
   const cvAlerts = blocks.flatMap((block) => {
     const metrics = normalizeResultMetrics(block.metrics || (block.record && block.record.metrics), "", { fallbackToDefault: true });
     const record = normalizeBlockRecord(block.record, block.ages, metrics, block.recipeMaterials);
@@ -3621,6 +3798,7 @@ function dataHealthItemsV23(content) {
     && String(item.age) === String(age)
     && item.metric === metric
     && parseMeasurementNumber(item.strengthMPa) !== null
+    && (!isStrengthMetricV31(item.metric || item.metricLabel) || parseMeasurementNumber(item.strengthMPa) > 0)
   ));
   const groups = [
     {
@@ -3649,6 +3827,14 @@ function dataHealthItemsV23(content) {
       items: gangues.filter((item) => !item.coarseApparentDensity && !item.fineApparentDensity).map((item) => ({ label: item.name, href: `#gangue-${item.id}` }))
     },
     {
+      key: "gangueCompleteness",
+      title: "煤矸石完整度低",
+      items: gangues
+        .map((item) => ({ item, completeness: coalGangueCompletenessV31(item) }))
+        .filter((row) => row.completeness.score < 60)
+        .map((row) => ({ label: `${row.item.name} 完整度 ${row.completeness.score}%：暂不建议用于模型分析`, href: `#gangue-${row.item.id}` }))
+    },
+    {
       key: "images",
       title: "缺图片",
       items: [
@@ -3660,6 +3846,26 @@ function dataHealthItemsV23(content) {
       key: "cv",
       title: "CV 异常",
       items: cvAlerts
+    },
+    {
+      key: "zeroPlaceholder",
+      title: "疑似占位值",
+      items: qualityItems("zero-placeholder")
+    },
+    {
+      key: "insufficientSamples",
+      title: "试件数量不足",
+      items: qualityItems("insufficient-samples")
+    },
+    {
+      key: "missingTestDate",
+      title: "强度缺试验日期",
+      items: qualityItems("missing-test-date")
+    },
+    {
+      key: "missingRawSamples",
+      title: "缺原始荷载/样本",
+      items: qualityItems("missing-raw-samples")
     },
     {
       key: "gangueRelation",
@@ -3682,6 +3888,14 @@ function dataHealthItemsV23(content) {
       items: specimenGroups.flatMap((item) => [3, 7, 28]
         .filter((age) => normalizeAges(item.ages).includes(age) && !resultValueFor(item.id, age, "compressionStrength"))
         .map((age) => ({ label: `${item.name} ${age}d`, href: `#record-${item.legacyBlockId || item.id}` })))
+    },
+    {
+      key: "coreAgeCoverage",
+      title: "3/7/28 龄期覆盖不完整",
+      items: blocks.map((block) => {
+        const missing = [3, 7, 28].filter((age) => !resultValueFor(specimenGroupIdForBlockV25(block), age, "compressionStrength"));
+        return missing.length ? { label: `${block.name} 缺 ${missing.map((age) => `${age}d`).join("、")}`, href: `#record-${block.id}` } : null;
+      }).filter(Boolean)
     },
     {
       key: "strengthRange",
@@ -3751,6 +3965,7 @@ function renderGangueOverviewV22(content) {
     const blocks = blocksForGangueV3(content, item.id);
     const resultStats = resultStatsForBlocksV3(blocks);
     const rangeText = item.particleRanges.length ? item.particleRanges.join("，") : "未填";
+    const completeness = coalGangueCompletenessV31(item);
     return `<article class="gangue-summary-v22">
           <strong>${html(item.name)}</strong>
           <span>来源：${html(item.source || "未填")}</span>
@@ -3759,6 +3974,7 @@ function renderGangueOverviewV22(content) {
           <span>强度结果：${resultStats.filled}/${resultStats.total}</span>
           <span>压碎值：${html(item.batchCrushingValue || "未填")}</span>
           <span>吸水率：${html(item.coarseWaterAbsorption || item.fineWaterAbsorption || "未填")}</span>
+          <span>完整度：${completeness.score}%${completeness.modelReady ? "" : " · 暂不建议用于模型分析"}</span>
           <div><a href="#gangue-${attr(item.id)}">查看档案</a><a href="#gangue-${attr(item.id)}">新建试块</a></div>
         </article>`;
   }).join("")}
@@ -3772,6 +3988,7 @@ function blockSearchTextV3(block, content = {}) {
   const scheme = gradationSchemeForCategory(category);
   const gradationTemplate = scheme.templates[normalizeGradationTemplate(record.gradationTemplate)] || scheme.templates.raw;
   const weighingTemplate = WEIGHING_TEMPLATES[normalizeWeighingTemplate(record.weighingTemplate, category)] || {};
+  const gradationMeta = blockGradationMetaV31(block, record);
   const gangueName = record.gangueAggregateName || coalGangueNameById(content, record.gangueAggregateId) || "";
   const acceleratorText = templateUsesAccelerator(normalizeWeighingTemplate(record.weighingTemplate, category)) ? "有速凝剂 速凝剂" : "无速凝剂 不用速凝剂";
   const ageText = block.ages.flatMap((age) => [`${age}`, `${age}d`, `${age}天`]);
@@ -3790,6 +4007,10 @@ function blockSearchTextV3(block, content = {}) {
     record.gangueAggregateId,
     scheme.label,
     scheme.ranges.join(" "),
+    gradationMeta.gradingRange,
+    gradationMeta.maxParticleSizeMm ? `${gradationMeta.maxParticleSizeMm}mm ${gradationMeta.maxParticleSizeMm} mm 16mm 16 mm`.trim() : "",
+    gradationMeta.applicationType,
+    gradationMeta.applicationType === "road" && gradationMeta.maxParticleSizeMm === "16" ? "16 mm 煤矸石道路组 道路16mm" : "",
     gradationTemplate.label,
     gradationTemplate.nValue ? `n=${gradationTemplate.nValue}` : "",
     record.gradationCoefficient ? `级配系数 ${record.gradationCoefficient}` : "",
@@ -4501,6 +4722,10 @@ function renderLabUploadFormV3(targetType, targetId, actionBase, defaultKind = "
       <div class="lab-upload-grid">
         <label class="field"><span>图片标题</span><input name="imageTitle" placeholder="不填就用文件名"></label>
         <label class="field"><span>${html(typeLabel)}</span><select name="imageKind">${kinds.map((item) => `<option value="${attr(item.id)}" ${item.id === selectedKind ? "selected" : ""}>${html(item.label)}</option>`).join("")}</select></label>
+        <label class="field"><span>关联龄期</span><input name="imageAgeDays" placeholder="例：3 / 7 / 28"></label>
+        <label class="field"><span>关联指标</span><input name="imageMetric" placeholder="例：抗压强度"></label>
+        <label class="field"><span>关联强度 MPa</span><input name="imageStrengthMPa" inputmode="decimal" placeholder="例：24.8"></label>
+        <label class="field"><span>破坏形态</span><input name="imageFailureMode" placeholder="例：正常破坏"></label>
       </div>
       <label class="field"><span>图片说明</span><input name="imageCaption" placeholder="例：原始矸石、成型后、劈裂后、称重记录"></label>
       <input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
@@ -4526,6 +4751,12 @@ function renderLabImageGalleryV3(images, targetType, targetId, actionBase) {
         </a>
         <figcaption>
           <strong>${html(image.title || labImageKindLabel(image.kind))}</strong>
+          ${(image.ageDays || image.metric || image.strengthMPa || image.failureMode) ? `<small>${[
+    image.ageDays ? `${html(image.ageDays)}d` : "",
+    image.metric ? html(image.metric) : "",
+    image.strengthMPa ? `${html(image.strengthMPa)} MPa` : "",
+    image.failureMode ? html(image.failureMode) : ""
+  ].filter(Boolean).join(" · ")}</small>` : ""}
           <small>${html(labImageKindLabel(image.kind))}${image.caption ? ` · ${html(image.caption)}` : ""}</small>
           <small><a href="${attr(image.src)}" target="_blank" rel="noopener">查看原图</a> · <a href="${attr(image.src)}" download>下载</a></small>
         </figcaption>
@@ -4792,10 +5023,11 @@ function renderCoalGangueCardV3(item, actionBase = WORK_PATH) {
   const ranges = item.particleRanges.length ? item.particleRanges : defaultParticleRanges();
   const gradations = [...item.gradations, {}, {}, {}].slice(0, Math.max(item.gradations.length + 2, 4));
   const crushingSummary = calculateGangueCrushingSummary(item);
+  const completeness = coalGangueCompletenessV31(item);
   return `<details class="gangue-card" id="gangue-edit-${attr(item.id)}">
       <summary>
         <strong>${html(item.name)}</strong>
-        <span>${html(item.source || "未填来源")}${item.shortCode ? ` · 短码 ${html(item.shortCode)}` : ""} · ${ranges.length} 个粒径区间 · ${item.gradations.length} 个级配${crushingSummary.text ? ` · 本批压碎值 ${html(crushingSummary.text)}` : ""}</span>
+        <span>${html(item.source || "未填来源")}${item.shortCode ? ` · 短码 ${html(item.shortCode)}` : ""} · 完整度 ${completeness.score}%${completeness.modelReady ? "" : " · 暂不建议用于模型分析"} · ${ranges.length} 个粒径区间 · ${item.gradations.length} 个级配${crushingSummary.text ? ` · 本批压碎值 ${html(crushingSummary.text)}` : ""}</span>
       </summary>
       <form class="gangue-form" method="post" action="${actionBase}/update-gangue">
         <input type="hidden" name="id" value="${attr(item.id)}">
@@ -4808,8 +5040,12 @@ function renderCoalGangueCardV3(item, actionBase = WORK_PATH) {
           <label class="field"><span>细骨料吸水率</span><input name="fineWaterAbsorption" value="${attr(item.fineWaterAbsorption)}"></label>
           <label class="field"><span>粗骨料表观密度</span><input name="coarseApparentDensity" value="${attr(item.coarseApparentDensity)}"></label>
           <label class="field"><span>细骨料表观密度</span><input name="fineApparentDensity" value="${attr(item.fineApparentDensity)}"></label>
+          <label class="field"><span>含水率</span><input name="moistureContent" value="${attr(item.moistureContent)}" placeholder="例：3.2%"></label>
+          <label class="field"><span>石粉含量</span><input name="stonePowderContent" value="${attr(item.stonePowderContent)}" placeholder="例：8.5%"></label>
+          <label class="field"><span>MB/亚甲蓝值</span><input name="mbValue" value="${attr(item.mbValue)}" placeholder="例：1.2"></label>
           <label class="field wide"><span>其他信息</span><input name="otherInfo" value="${attr(item.otherInfo)}"></label>
         </div>
+        <div class="gangue-crushing-summary">煤矸石性质完整度：${completeness.score}%（${completeness.done}/${completeness.total}）${completeness.modelReady ? "" : " · 暂不建议用于模型分析"}${completeness.missing.length ? ` · 缺：${html(completeness.missing.join("、"))}` : ""}</div>
         <h4>压碎值 <small>每个粒径填 3 次，自动取平均；最大平均值作为本批骨料压碎值</small></h4>
         <div class="gangue-crushing-summary">本批骨料压碎值：${crushingSummary.text ? `${html(crushingSummary.range)} 粒径 · ${html(crushingSummary.text)}` : "未计算"}</div>
         <table class="gangue-range-table">
@@ -6611,6 +6847,10 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
   const kind = allowedKindIds.has(rawKind) ? rawKind : (targetType === "gangue" ? "raw_gangue" : "specimen");
   const title = getText("imageTitle");
   const caption = getText("imageCaption");
+  const imageAgeDays = String(getText("imageAgeDays") || "").replace(/d$/i, "").trim();
+  const imageMetric = String(getText("imageMetric") || "").trim();
+  const imageStrengthMPa = String(getText("imageStrengthMPa") || "").trim();
+  const imageFailureMode = String(getText("imageFailureMode") || "").trim();
   const images = await validateUploadedImages(parts);
   if (!["gangue", "block"].includes(targetType) || !targetId) {
     throw Object.assign(new Error("missing image target"), { statusCode: 400 });
@@ -6633,7 +6873,12 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
       imageType: kind,
       targetType,
       blockId: targetType === "block" ? targetId : "",
+      specimenGroupId: targetType === "block" ? targetId : "",
       gangueBatchId: targetType === "gangue" ? targetId : "",
+      ageDays: imageAgeDays,
+      metric: imageMetric,
+      strengthMPa: imageStrengthMPa,
+      failureMode: imageFailureMode,
       createdAt: new Date().toISOString()
     });
   }
@@ -7061,7 +7306,8 @@ function createBlocksExportWorkbook(content, blocks) {
   });
 
   const rawResultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "试件序号", "压力kN", "受压面积mm2", "强度MPa", "破坏形态", "备注", "值来源"]];
-  const statResultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "均值", "标准差", "CV%", "最小值", "最大值", "n", "均值来源", "备注"]];
+  const statResultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "均值", "标准差", "CV%", "最小值", "最大值", "n", "均值来源", "质量标记", "备注"]];
+  const qualityFlagRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "质量标记", "说明", "定位"]];
   normalized.forEach(({ block, record, metrics }) => {
     const results = normalizeAgeResults(record, block.ages, metrics);
     block.ages.forEach((age) => {
@@ -7072,6 +7318,7 @@ function createBlocksExportWorkbook(content, blocks) {
           metric: metric.id,
           dueDate: addDays(block.madeDate, age)
         });
+        const qualityFlags = strengthQualityFlagsForEntryV31(block, age, metric, row, entry);
         const measurements = (entry.sampleMeasurements || []).filter((sample) => (
           sample.pressureKn || sample.areaMm2 || sample.strengthMpa || sample.failureMode || sample.remark
         ));
@@ -7088,23 +7335,66 @@ function createBlocksExportWorkbook(content, blocks) {
         }
         statResultRows.push([
           block.id, record.gangueAggregateId, block.name, age, metric.label, addDays(block.madeDate, age), row.testDate || "",
-          entry.mean, entry.std, entry.cv, entry.min, entry.max, entry.n, entry.meanSource, entry.remark || row.resultNote || ""
+          entry.mean, entry.std, entry.cv, entry.min, entry.max, entry.n, entry.meanSource,
+          qualityFlags.map((flag) => flag.title).join("；"),
+          entry.remark || row.resultNote || ""
         ]);
+        qualityFlags.forEach((flag) => qualityFlagRows.push([
+          block.id, record.gangueAggregateId, block.name, age, metric.label, flag.title, flag.detail, flag.href
+        ]));
       });
     });
   });
 
-  const imageRows = [["图片路径", "图片类型", "旧类型", "目标类型", "试块组ID", "试块组名称", "煤矸石ID", "煤矸石名称", "标题", "说明", "上传时间"]];
+  const imageRows = [["图片路径", "图片类型", "旧类型", "目标类型", "试块组ID", "试块组名称", "煤矸石ID", "煤矸石名称", "龄期", "指标", "强度MPa", "破坏形态", "标题", "说明", "上传时间"]];
+  const imageDatasetRows = [["图片路径", "图片类型", "试块组ID", "试块组名称", "煤矸石ID", "煤矸石名称", "应用类型", "级配范围", "最大粒径mm", "Talbot n", "龄期", "指标", "强度MPa", "破坏形态", "煤矸石完整度%", "压碎值", "吸水率", "表观密度"]];
+  const labelsRows = [["图片路径", "label_strength_mpa", "label_age_days", "label_metric", "label_failure_mode", "label_image_type", "label_application_type", "label_gangue_batch", "label_talbot_n", "label_max_particle_mm"]];
   normalized.forEach(({ block, record }) => {
     const gangue = relatedGangues.find((item) => item.id === record.gangueAggregateId);
+    const gradationMeta = blockGradationMetaV31(block, record);
     normalizeLabImages(block.images, { targetType: "block", blockId: block.id, gangueBatchId: record.gangueAggregateId }).forEach((image) => imageRows.push([
       image.src, image.imageType, image.legacyKind, image.targetType, image.blockId || block.id, block.name,
-      image.gangueBatchId || record.gangueAggregateId, gangue?.name || record.gangueAggregateName, image.title, image.caption, image.createdAt
+      image.gangueBatchId || record.gangueAggregateId, gangue?.name || record.gangueAggregateName, image.ageDays, image.metric, image.strengthMPa, image.failureMode, image.title, image.caption, image.createdAt
     ]));
+    normalizeLabImages(block.images, { targetType: "block", blockId: block.id, gangueBatchId: record.gangueAggregateId }).forEach((image) => {
+      const completeness = gangue ? coalGangueCompletenessV31(gangue) : { score: "" };
+      const waterAbsorption = gangue ? (gangue.coarseWaterAbsorption || gangue.fineWaterAbsorption || "") : "";
+      const apparentDensity = gangue ? (gangue.coarseApparentDensity || gangue.fineApparentDensity || "") : "";
+      imageDatasetRows.push([
+        image.src, image.imageType, image.blockId || block.id, block.name, image.gangueBatchId || record.gangueAggregateId,
+        gangue?.name || record.gangueAggregateName, gradationMeta.applicationType, gradationMeta.gradingRange, gradationMeta.maxParticleSizeMm, gradationMeta.talbotN,
+        image.ageDays, image.metric, image.strengthMPa, image.failureMode, completeness.score, gangue?.batchCrushingValue || "", waterAbsorption, apparentDensity
+      ]);
+      labelsRows.push([
+        image.src, image.strengthMPa, image.ageDays, image.metric, image.failureMode, image.imageType, gradationMeta.applicationType,
+        image.gangueBatchId || record.gangueAggregateId, gradationMeta.talbotN, gradationMeta.maxParticleSizeMm
+      ]);
+    });
   });
   relatedGangues.forEach((gangue) => normalizeLabImages(gangue.images, { targetType: "gangue", gangueBatchId: gangue.id }).forEach((image) => imageRows.push([
-    image.src, image.imageType, image.legacyKind, image.targetType, image.blockId, "", image.gangueBatchId || gangue.id, gangue.name, image.title, image.caption, image.createdAt
+    image.src, image.imageType, image.legacyKind, image.targetType, image.blockId, "", image.gangueBatchId || gangue.id, gangue.name, image.ageDays, image.metric, image.strengthMPa, image.failureMode, image.title, image.caption, image.createdAt
   ])));
+  relatedGangues.forEach((gangue) => {
+    const completeness = coalGangueCompletenessV31(gangue);
+    const waterAbsorption = gangue.coarseWaterAbsorption || gangue.fineWaterAbsorption || "";
+    const apparentDensity = gangue.coarseApparentDensity || gangue.fineApparentDensity || "";
+    normalizeLabImages(gangue.images, { targetType: "gangue", gangueBatchId: gangue.id }).forEach((image) => {
+      imageDatasetRows.push([
+        image.src, image.imageType, "", "", image.gangueBatchId || gangue.id, gangue.name, "", "", "", "",
+        image.ageDays, image.metric, image.strengthMPa, image.failureMode, completeness.score, gangue.batchCrushingValue || "", waterAbsorption, apparentDensity
+      ]);
+      labelsRows.push([image.src, image.strengthMPa, image.ageDays, image.metric, image.failureMode, image.imageType, "", image.gangueBatchId || gangue.id, "", ""]);
+    });
+  });
+
+  const completenessRows = [["煤矸石ID", "煤矸石编号/名称", "完整度%", "完成项", "总项", "缺失项", "模型分析建议"]];
+  relatedGangues.forEach((item) => {
+    const completeness = coalGangueCompletenessV31(item);
+    completenessRows.push([
+      item.id, item.name, completeness.score, completeness.done, completeness.total, completeness.missing.join("；"),
+      completeness.modelReady ? "可用于模型分析" : "暂不建议用于模型分析"
+    ]);
+  });
 
   const healthRows = [["检查项", "记录", "定位"]];
   dataHealthItemsV23({ ...content, testBlocks: blocks, coalGangueDb: relatedGangues }).forEach((group) => {
@@ -7118,8 +7408,12 @@ function createBlocksExportWorkbook(content, blocks) {
     { name: "强度原始值", rows: rawResultRows, widths: [22, 22, 26, 10, 18, 12, 12, 10, 12, 14, 12, 18, 34, 14] },
     { name: "强度统计值", rows: statResultRows, widths: [22, 22, 26, 10, 18, 12, 12, 12, 12, 10, 12, 12, 8, 14, 34] },
     { name: "煤矸石批次表", rows: gangueRows, widths: [22, 24, 14, 22, 12, 34, 12, 16, 82, 42, 42, 42, 42, 14, 14, 16, 16, 36, 32, 36, 20] },
-    { name: "图片索引表", rows: imageRows, widths: [42, 18, 16, 12, 22, 26, 22, 24, 24, 34, 22] },
-    { name: "数据健康检查表", rows: healthRows, widths: [18, 48, 36] }
+    { name: "图片索引表", rows: imageRows, widths: [42, 18, 16, 12, 22, 26, 22, 24, 10, 16, 12, 18, 24, 34, 22] },
+    { name: "数据健康检查表", rows: healthRows, widths: [18, 48, 36] },
+    { name: "strength_quality_flags", rows: qualityFlagRows, widths: [22, 22, 26, 10, 18, 18, 42, 36] },
+    { name: "coal_gangue_completeness", rows: completenessRows, widths: [22, 28, 12, 10, 10, 46, 28] },
+    { name: "image_dataset_index", rows: imageDatasetRows, widths: [42, 18, 22, 26, 22, 24, 14, 18, 14, 12, 10, 18, 12, 18, 14, 14, 14, 14] },
+    { name: "labels", rows: labelsRows, widths: [42, 16, 12, 18, 18, 18, 16, 22, 12, 16] }
   ]);
 }
 
@@ -7352,6 +7646,9 @@ function coalGangueFromParams(params, existing = {}) {
     fineWaterAbsorption: params.get("fineWaterAbsorption"),
     coarseApparentDensity: params.get("coarseApparentDensity"),
     fineApparentDensity: params.get("fineApparentDensity"),
+    moistureContent: params.get("moistureContent"),
+    stonePowderContent: params.get("stonePowderContent"),
+    mbValue: params.get("mbValue"),
     gradations,
     otherInfo: params.get("otherInfo"),
     updatedAt: today()
