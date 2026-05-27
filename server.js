@@ -187,13 +187,14 @@ const BUILTIN_RECIPE_MATERIALS = [
   { id: "admixture", label: "外加剂", category: "admixture", placeholder: "例：6.2g" },
   { id: "expansiveAgent", label: "膨胀剂", category: "admixture", placeholder: "例：8g" },
   { id: "accelerator", label: "速凝剂", category: "admixture", placeholder: "例：4g" },
+  { id: "ns", label: "NS", category: "admixture", placeholder: "例：59.4g" },
   { id: "fiber", label: "纤维", category: "admixture", placeholder: "例：0.9g" },
   { id: "sand", label: "砂", category: "aggregate", placeholder: "例：760g" },
   { id: "stone", label: "石子", category: "aggregate", placeholder: "例：1080g" },
   { id: "water", label: "水", category: "water", placeholder: "例：165g" }
 ];
-const DEFAULT_RECIPE_MATERIAL_IDS = ["cement", "flyAsh", "生石灰", "煤矸石", "硫酸钠", "accelerator", "water"];
-const EXPERIMENT_MATERIAL_LABELS = ["硅酸盐水泥", "粉煤灰", "生石灰", "煤矸石", "硫酸钠", "速凝剂", "水"];
+const DEFAULT_RECIPE_MATERIAL_IDS = ["cement", "flyAsh", "生石灰", "煤矸石", "ns", "accelerator", "water"];
+const EXPERIMENT_MATERIAL_LABELS = ["硅酸盐水泥", "粉煤灰", "生石灰", "煤矸石", "NS", "速凝剂", "水"];
 const BLOCK_CATEGORIES = [
   { id: "spray", label: "喷浆", scheme: "A", note: "0.15-4.75mm，默认带速凝剂" },
   { id: "road", label: "道路", scheme: "B", note: "0.15-16mm，可选速凝剂" },
@@ -225,17 +226,17 @@ const WEIGHING_TEMPLATES = {
   withAccelerator: {
     label: "有速凝剂",
     totalWithoutWater: "6098.4",
-    values: { "硅酸盐水泥": "1485", "粉煤灰": "435.6", "生石灰": "59.4", "煤矸石": "3960", "硫酸钠": "59.4", "速凝剂": "99.0", "水": "825" }
+    values: { "硅酸盐水泥": "1485", "粉煤灰": "435.6", "生石灰": "59.4", "煤矸石": "3960", "NS": "59.4", "速凝剂": "99.0", "水": "825" }
   },
   withoutAccelerator: {
     label: "无速凝剂",
     totalWithoutWater: "5999.4",
-    values: { "硅酸盐水泥": "1485", "粉煤灰": "435.6", "生石灰": "59.4", "煤矸石": "3960", "硫酸钠": "59.4", "水": "825" }
+    values: { "硅酸盐水泥": "1485", "粉煤灰": "435.6", "生石灰": "59.4", "煤矸石": "3960", "NS": "59.4", "水": "825" }
   },
   strengthBoost: {
     label: "强度加强：40%胶凝材料 + 水825",
     totalWithoutWater: "6130",
-    values: { "硅酸盐水泥": "1782", "粉煤灰": "523", "生石灰": "71", "煤矸石": "3564", "硫酸钠": "71", "速凝剂": "119", "水": "825" },
+    values: { "硅酸盐水泥": "1782", "粉煤灰": "523", "生石灰": "71", "煤矸石": "3564", "NS": "71", "速凝剂": "119", "水": "825" },
     note: "强度加强方案：40%胶凝材料 + 水825"
   }
 };
@@ -773,6 +774,50 @@ function materialIdFromLabel(label) {
   return `material_${crypto.createHash("sha1").update(String(label || "")).digest("hex").slice(0, 10)}`;
 }
 
+function isNsMaterialName(value) {
+  const text = String(value || "").trim();
+  const compact = text.replace(/\s+/g, "").toLowerCase();
+  return compact === "ns"
+    || compact === "硫酸钠"
+    || compact === "sodiumsulfate"
+    || compact === "sodium_sulfate"
+    || compact === "na2so4"
+    || compact === "na₂so₄";
+}
+
+function normalizeRecipeMaterialIdValue(id, label = "") {
+  return isNsMaterialName(id) || isNsMaterialName(label) ? "ns" : String(id || "").trim();
+}
+
+function normalizeRecipeMaterialLabelValue(label, id = "") {
+  if (isNsMaterialName(label) || isNsMaterialName(id)) return "NS";
+  return String(label || "").trim();
+}
+
+function nsLegacyMassValueFrom(source = {}, legacy = {}) {
+  // legacy sodium sulfate fields are normalized to NS fields
+  const candidates = [
+    "ns", "NS", "nsMass",
+    "sodiumSulfate", "sodiumSulfateMass",
+    "sodium_sulfate", "na2so4", "na2so4Mass", "Na2SO4", "Na₂SO₄",
+    "硫酸钠", materialIdFromLabel("硫酸钠"), materialIdFromLabel("NS")
+  ];
+  for (const key of candidates) {
+    const value = source[key] ?? legacy[key];
+    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+  }
+  return "";
+}
+
+function nsLegacyRatioValueFrom(source = {}) {
+  const candidates = ["nsRatio", "nsDosagePercent", "sodiumSulfateRatio", "sodiumSulfateDosagePercent", "na2so4Ratio"];
+  for (const key of candidates) {
+    const value = source[key];
+    if (value !== undefined && value !== null && String(value).trim()) return String(value).trim();
+  }
+  return "";
+}
+
 function normalizeRecipeMaterialCategory(value, fallback = "binder") {
   const id = String(value || "").trim();
   return RECIPE_MATERIAL_CATEGORIES.some((category) => category.id === id) ? id : fallback;
@@ -780,8 +825,9 @@ function normalizeRecipeMaterialCategory(value, fallback = "binder") {
 
 function inferRecipeMaterialCategory(label) {
   const text = String(label || "");
+  if (isNsMaterialName(text)) return "admixture";
   if (/^(水|拌合水|用水)$/.test(text)) return "water";
-  if (/硫酸钠|外加剂|减水|膨胀|速凝|缓凝|引气|泵送|早强|纤维|剂/.test(text)) return "admixture";
+  if (/外加剂|减水|膨胀|速凝|缓凝|引气|泵送|早强|纤维|剂/.test(text)) return "admixture";
   if (/水泥|粉煤灰|矿粉|硅灰|石灰|生石灰|水渣/.test(text)) return "binder";
   if (/砂|石|骨料|碎石|卵石|机制砂|河砂|煤矸石/.test(text)) return "aggregate";
   return "binder";
@@ -791,7 +837,7 @@ function recipeMaterialCategory(material) {
   const label = String(material && material.label || "").trim();
   const inferred = inferRecipeMaterialCategory(label);
   if (/^(水|拌合水|用水)$/.test(label)) return "water";
-  if (/硫酸钠|速凝剂|外加剂|减水|膨胀|缓凝|引气|泵送|早强|纤维|剂/.test(label)) return "admixture";
+  if (isNsMaterialName(label) || /速凝剂|外加剂|减水|膨胀|缓凝|引气|泵送|早强|纤维|剂/.test(label)) return "admixture";
   if (/硅酸盐水泥|水泥|粉煤灰|矿粉|硅灰|石灰|生石灰|水渣/.test(label)) return "binder";
   if (/煤矸石|砂|石|骨料|碎石|卵石|机制砂|河砂/.test(label)) return "aggregate";
   return normalizeRecipeMaterialCategory(material && material.category, inferred);
@@ -895,9 +941,10 @@ function templateRecipeMaterials(templateKey, existing = []) {
 }
 
 function materialIdForTemplateLabel(materials, label) {
-  const text = String(label || "").trim();
+  const text = normalizeRecipeMaterialLabelValue(label, label);
   const normalized = normalizeRecipeMaterials(materials, "", { fallbackToDefault: false });
   const matched = normalized.find((item) => item.label === text)
+    || (text === "NS" ? normalized.find((item) => item.id === "ns") : null)
     || (/^(水泥|硅酸盐水泥)$/.test(text) ? normalized.find((item) => item.id === "cement") : null)
     || normalized.find((item) => item.id === materialIdFromLabel(text));
   return matched?.id || "";
@@ -1045,8 +1092,8 @@ function normalizeRecipeMaterials(value, customValue = "", options = {}) {
   const librarySource = Array.isArray(options.library) ? options.library : [];
   [...BUILTIN_RECIPE_MATERIALS, ...librarySource].forEach((item) => {
     if (!item || typeof item !== "object") return;
-    const id = String(item.id || "").trim();
-    const label = String(item.label || "").trim();
+    const id = normalizeRecipeMaterialIdValue(item.id, item.label);
+    const label = normalizeRecipeMaterialLabelValue(item.label || item.id, item.id);
     if (!id || !label) return;
     const category = recipeMaterialCategory(item);
     const normalized = {
@@ -1064,9 +1111,9 @@ function normalizeRecipeMaterials(value, customValue = "", options = {}) {
   const addMaterial = (item, forceCustom = false) => {
     if (item === undefined || item === null) return;
     if (typeof item === "string") {
-      const text = item.trim();
+      const text = normalizeRecipeMaterialLabelValue(item.trim(), item.trim());
       if (!text) return;
-      const builtin = builtins.get(text) || BUILTIN_RECIPE_MATERIALS.find((material) => material.label === text);
+      const builtin = builtins.get(normalizeRecipeMaterialIdValue(text, text)) || BUILTIN_RECIPE_MATERIALS.find((material) => material.label === text);
       if (builtin && !forceCustom) {
         materials.set(builtin.id, { ...builtin, custom: false });
         return;
@@ -1082,8 +1129,8 @@ function normalizeRecipeMaterials(value, customValue = "", options = {}) {
       return;
     }
     if (typeof item === "object") {
-      const id = String(item.id || "").trim();
-      const label = String(item.label || "").trim();
+      const id = normalizeRecipeMaterialIdValue(item.id, item.label);
+      const label = normalizeRecipeMaterialLabelValue(item.label || item.id, item.id);
       const builtin = id ? builtins.get(id) : BUILTIN_RECIPE_MATERIALS.find((material) => material.label === label);
       if (builtin && !forceCustom) {
         materials.set(builtin.id, { ...builtin, custom: false });
@@ -1116,7 +1163,8 @@ function normalizeRecipeValues(value, materials, legacy = {}) {
   const source = value && typeof value === "object" ? value : {};
   const values = {};
   materials.forEach((material) => {
-    values[material.id] = String(source[material.id] || legacy[material.id] || "").trim();
+    const direct = source[material.id] || source[material.label] || legacy[material.id] || legacy[material.label] || "";
+    values[material.id] = material.id === "ns" ? String(direct || nsLegacyMassValueFrom(source, legacy)).trim() : String(direct).trim();
   });
   return values;
 }
@@ -1250,7 +1298,14 @@ function normalizeBlockRecord(value, ages = [], metrics = [], recipeMaterials = 
       normalizedRecipeMaterials.push({ ...material, custom: false });
     }
   });
+  legacyRecipeValues.ns = legacyRecipeValues.ns || nsLegacyMassValueFrom(record.recipeValues || record.materialValues || {}, record);
+  if (legacyRecipeValues.ns && !normalizedRecipeMaterials.some((item) => item.id === "ns")) {
+    normalizedRecipeMaterials.push({ ...BUILTIN_RECIPE_MATERIALS.find((item) => item.id === "ns"), custom: false });
+  }
   const recipeValues = normalizeRecipeValues(record.recipeValues || record.materialValues, normalizedRecipeMaterials, legacyRecipeValues);
+  const nsMass = recipeValues.ns || nsLegacyMassValueFrom(record.recipeValues || record.materialValues || {}, record);
+  const nsRatio = nsLegacyRatioValueFrom(record);
+  const nsDosagePercent = String(record.nsDosagePercent || nsRatio || "").trim();
   return {
     mixName: String(record.mixName || record.recipe || "").trim(),
     cement: recipeValues.cement || String(record.cement || "").trim(),
@@ -1260,6 +1315,9 @@ function normalizeBlockRecord(value, ages = [], metrics = [], recipeMaterials = 
     admixture: recipeValues.admixture || String(record.admixture || "").trim(),
     flyAsh: recipeValues.flyAsh || String(record.flyAsh || "").trim(),
     mineralPowder: recipeValues.mineralPowder || String(record.mineralPowder || "").trim(),
+    nsMass,
+    nsRatio,
+    nsDosagePercent,
     otherMaterials: String(record.otherMaterials || "").trim(),
     waterBinderRatio: String(record.waterBinderRatio || "").trim(),
     slump: String(record.slump || "").trim(),
@@ -5412,7 +5470,7 @@ function calculateRecipeRatios(record) {
   const totalFor = (predicate) => rows.filter(predicate).reduce((total, item) => total + item.grams, 0);
   const gangueTotal = totalFor((item) => item.id === "煤矸石" || /煤矸石/.test(item.label));
   const acceleratorTotal = totalFor((item) => item.id === "accelerator" || /速凝剂/.test(item.label));
-  const sodiumSulfateTotal = totalFor((item) => /硫酸钠/.test(item.label));
+  const nsTotal = totalFor((item) => item.id === "ns" || isNsMaterialName(item.label));
   const dryTotal = binderTotal + admixtureTotal + aggregateTotal;
   const mainMaterialTotal = binderTotal + aggregateTotal;
   const binderParts = rows
@@ -5431,7 +5489,8 @@ function calculateRecipeRatios(record) {
     waterTotal,
     gangueTotal,
     acceleratorTotal,
-    sodiumSulfateTotal,
+    nsTotal,
+    nsMass: nsTotal,
     cementWeight,
     binderParts,
     aggregateBinderRatio: binderTotal > 0 && aggregateTotal > 0 ? aggregateTotal / binderTotal : null,
@@ -5440,7 +5499,8 @@ function calculateRecipeRatios(record) {
     waterCementRatio: cementWeight > 0 && waterTotal > 0 ? waterTotal / cementWeight : null,
     admixtureBinderPercent: binderTotal > 0 && admixtureTotal > 0 ? admixtureTotal / binderTotal : null,
     acceleratorBinderPercent: binderTotal > 0 && acceleratorTotal > 0 ? acceleratorTotal / binderTotal : null,
-    sodiumSulfateBinderPercent: binderTotal > 0 && sodiumSulfateTotal > 0 ? sodiumSulfateTotal / binderTotal : null
+    nsRatio: binderTotal > 0 && nsTotal > 0 ? nsTotal / binderTotal : null,
+    nsDosagePercent: binderTotal > 0 && nsTotal > 0 ? nsTotal / binderTotal : null
   };
 }
 
@@ -5488,7 +5548,7 @@ function renderRecipeRatioPanelV3(record) {
     ["水胶比", ratios.waterBinderRatio ? formatRecipeNumber(ratios.waterBinderRatio) : "缺胶凝或水"],
     ["外加剂掺量", ratios.admixtureBinderPercent ? `${formatRecipeNumber(ratios.admixtureBinderPercent * 100, 2)}%` : "未填"],
     ["速凝剂掺量", ratios.acceleratorBinderPercent ? `${formatRecipeNumber(ratios.acceleratorBinderPercent * 100, 2)}%` : "未填"],
-    ["硫酸钠掺量", ratios.sodiumSulfateBinderPercent ? `${formatRecipeNumber(ratios.sodiumSulfateBinderPercent * 100, 2)}%` : "未填"]
+    ["NS掺量", ratios.nsDosagePercent ? `${formatRecipeNumber(ratios.nsDosagePercent * 100, 2)}%` : "未填"]
   ];
   const binderText = ratios.binderParts.length
     ? ratios.binderParts.map((item) => `${item.label} ${formatRecipeNumber(item.percent * 100, 2)}%`).join("，")
@@ -7268,8 +7328,8 @@ function createBlocksExportWorkbook(content, blocks) {
 
   const mixRows = [[
     "配合比ID", "试块组ID", "配合比名称", "胶凝材料合计g", "总干料g", "煤矸石g", "煤矸石/骨料合计g", "水g", "水胶比", "煤矸石:胶凝", "骨灰比",
-    "外加剂掺量", "速凝剂掺量", "硫酸钠掺量",
-    "硅酸盐水泥g", "粉煤灰g", "生石灰g", "煤矸石g", "硫酸钠g", "速凝剂g", "称量模板", "备注"
+    "外加剂掺量", "速凝剂掺量", "NS掺量",
+    "硅酸盐水泥g", "粉煤灰g", "生石灰g", "煤矸石g", "NSg", "速凝剂g", "称量模板", "备注"
   ]];
   normalized.forEach(({ block, record, recipeMaterials }) => {
     const ratios = calculateRecipeRatios(record);
@@ -7281,8 +7341,8 @@ function createBlocksExportWorkbook(content, blocks) {
     mixRows.push([
       `${block.id}-mix`, block.id, record.mixName, ratios.binderTotal || "", ratios.dryTotal || "", ratios.gangueTotal || "", ratios.aggregateTotal || "", ratios.waterTotal || "",
       ratioText(ratios.waterBinderRatio), ratioText(ratios.gangueBinderRatio), ratioText(ratios.aggregateBinderRatio),
-      percentText(ratios.admixtureBinderPercent), percentText(ratios.acceleratorBinderPercent), percentText(ratios.sodiumSulfateBinderPercent),
-      valueFor("硅酸盐水泥"), valueFor("粉煤灰"), valueFor("生石灰"), valueFor("煤矸石"), valueFor("硫酸钠"), valueFor("速凝剂"),
+      percentText(ratios.admixtureBinderPercent), percentText(ratios.acceleratorBinderPercent), percentText(ratios.nsDosagePercent),
+      valueFor("硅酸盐水泥"), valueFor("粉煤灰"), valueFor("生石灰"), valueFor("煤矸石"), valueFor("NS"), valueFor("速凝剂"),
       WEIGHING_TEMPLATES[normalizeWeighingTemplate(record.weighingTemplate, block.blockCategory)]?.label || "", record.recipeNote
     ]);
   });
