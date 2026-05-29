@@ -467,30 +467,74 @@
 
       const lightbox = document.createElement("div");
       lightbox.className = "lab-lightbox-v22";
-      lightbox.innerHTML = "<img alt=\"实验原图\"><div class=\"lab-lightbox-actions-v22\"><a download>下载原图</a><button type=\"button\">退出</button></div>";
+      lightbox.innerHTML = "<button class=\"lab-lightbox-nav-v22 prev\" type=\"button\" aria-label=\"上一张\">‹</button><img alt=\"实验原图\"><button class=\"lab-lightbox-nav-v22 next\" type=\"button\" aria-label=\"下一张\">›</button><div class=\"lab-lightbox-counter-v22\" aria-live=\"polite\"></div><div class=\"lab-lightbox-actions-v22\"><a download>下载原图</a><button type=\"button\" data-lightbox-close>退出</button></div>";
       document.body.appendChild(lightbox);
       const lightboxImage = lightbox.querySelector("img");
       const lightboxDownload = lightbox.querySelector("a");
+      const lightboxCounter = lightbox.querySelector(".lab-lightbox-counter-v22");
+      const lightboxPrev = lightbox.querySelector(".lab-lightbox-nav-v22.prev");
+      const lightboxNext = lightbox.querySelector(".lab-lightbox-nav-v22.next");
+      let lightboxItems = [];
+      let lightboxIndex = 0;
+      const setLightboxImage = (index) => {
+        if (!lightboxItems.length) return;
+        lightboxIndex = (index + lightboxItems.length) % lightboxItems.length;
+        const item = lightboxItems[lightboxIndex];
+        const href = item.getAttribute("href");
+        if (!href) return;
+        lightboxImage.src = href;
+        lightboxImage.alt = item.querySelector("img")?.alt || "实验原图";
+        lightboxDownload.href = item.dataset.download || href;
+        if (lightboxCounter) lightboxCounter.textContent = (lightboxIndex + 1) + " / " + lightboxItems.length;
+        lightboxPrev.disabled = lightboxItems.length <= 1;
+        lightboxNext.disabled = lightboxItems.length <= 1;
+      };
+      const moveLightbox = (step) => setLightboxImage(lightboxIndex + step);
       const closeLightbox = () => lightbox.classList.remove("active");
-      lightbox.querySelector("button")?.addEventListener("click", closeLightbox);
+      lightbox.querySelector("[data-lightbox-close]")?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        closeLightbox();
+      });
+      lightboxPrev?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        moveLightbox(-1);
+      });
+      lightboxNext?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        moveLightbox(1);
+      });
       lightbox.addEventListener("click", (event) => {
+        event.stopPropagation();
         if (event.target === lightbox) closeLightbox();
       });
       document.addEventListener("keydown", (event) => {
+        if (!lightbox.classList.contains("active")) return;
         if (event.key === "Escape") {
+          event.preventDefault();
           closeLightbox();
-          recordDetails.forEach((details) => { if (details.open) details.open = false; });
+        } else if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          moveLightbox(-1);
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          moveLightbox(1);
         }
       });
-      document.querySelectorAll("[data-lightbox-image]").forEach((link) => {
-        link.addEventListener("click", (event) => {
-          event.preventDefault();
-          const href = link.getAttribute("href");
-          if (!href) return;
-          lightboxImage.src = href;
-          lightboxDownload.href = href;
-          lightbox.classList.add("active");
-        });
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest("[data-lightbox-image]");
+        if (!link) return;
+        if (!link.getAttribute("href")) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const gallery = link.closest(".lab-gallery");
+        lightboxItems = Array.from((gallery || document).querySelectorAll("[data-lightbox-image]"))
+          .filter((item) => item.getAttribute("href"));
+        const index = Math.max(0, lightboxItems.indexOf(link));
+        setLightboxImage(index);
+        lightbox.classList.add("active");
       });
 
       document.querySelectorAll(".delete-block").forEach((button) => {
