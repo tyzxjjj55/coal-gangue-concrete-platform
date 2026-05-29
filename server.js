@@ -119,7 +119,9 @@ const allowedTypes = new Map([
   ["image/jpeg", ".jpg"],
   ["image/png", ".png"],
   ["image/webp", ".webp"],
-  ["image/gif", ".gif"]
+  ["image/gif", ".gif"],
+  ["image/heic", ".heic"],
+  ["image/heif", ".heif"]
 ]);
 
 function detectImageType(buffer) {
@@ -153,12 +155,20 @@ function detectImageType(buffer) {
   ) {
     return "image/gif";
   }
+  if (buffer.length >= 12 && buffer.subarray(4, 8).toString("ascii") === "ftyp") {
+    const brand = buffer.subarray(8, 12).toString("ascii").toLowerCase();
+    if (["heic", "heix", "hevc", "hevx"].includes(brand)) return "image/heic";
+    if (["heif", "mif1", "msf1"].includes(brand)) return "image/heif";
+  }
   return "";
 }
 
 function normalizeUploadMime(type) {
   const clean = String(type || "").split(";")[0].trim().toLowerCase();
-  return clean === "image/jpg" ? "image/jpeg" : clean;
+  if (clean === "image/jpg") return "image/jpeg";
+  if (clean === "image/x-heic" || clean === "image/heic-sequence") return "image/heic";
+  if (clean === "image/x-heif" || clean === "image/heif-sequence") return "image/heif";
+  return clean;
 }
 
 function allowedUploadExtension(filename) {
@@ -2528,13 +2538,27 @@ function taskDeleted(block, type, age = "") {
   return false;
 }
 
+function ageResultsCompletedForBlock(block, age) {
+  const metrics = normalizeResultMetrics(block.metrics || (block.record && block.record.metrics), "", { fallbackToDefault: true });
+  const record = normalizeBlockRecord(block.record, block.ages, metrics, block.recipeMaterials);
+  const row = record.results?.[String(age)] || {};
+  return metrics.length > 0 && metrics.every((metric) => {
+    const result = normalizeMetricResultEntry((row.metricResults || {})[metric.id], (row.metrics || {})[metric.id], {
+      age,
+      metric: metric.id,
+      dueDate: addDays(block.madeDate, age)
+    });
+    return metricResultFilled(result);
+  });
+}
+
 function getBlockDueItems(content) {
   return getTestBlocks(content).flatMap((block) => block.ages.map((age) => ({
     type: "age",
     block,
     age,
     date: addDays(block.madeDate, age),
-    completed: taskCompleted(block, "age", age)
+    completed: taskCompleted(block, "age", age) || ageResultsCompletedForBlock(block, age)
   })).filter((item) => !taskDeleted(item.block, "age", item.age))).sort((a, b) => a.date.localeCompare(b.date) || a.block.name.localeCompare(b.block.name));
 }
 
@@ -2566,7 +2590,11 @@ function splitReminderItems(items, referenceDate = today()) {
 }
 
 function activeMailItems(content, referenceDate = today()) {
-  return getCalendarItems(content).filter((item) => item.date <= referenceDate && !item.completed);
+  return workspaceCalendarItemsV22(content)
+    .filter((item) => item.type !== "age" && item.date <= referenceDate && !calendarItemCompletedV22(item))
+    .sort((a, b) => a.date.localeCompare(b.date)
+      || a.block.name.localeCompare(b.block.name, "zh-CN")
+      || String(a.metric?.label || a.type).localeCompare(String(b.metric?.label || b.type), "zh-CN"));
 }
 
 function shiftMonth(monthKey, offset) {
@@ -3205,7 +3233,7 @@ function renderAdmin(content, message = "") {
         ${field("imageCaption", "图片说明", "")}
       </div>
       <label for="image">选择图片，可以一次选择多张</label>
-      <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+      <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif" multiple required>
       <label class="check-row"><input id="privateAlbum" name="privateAlbum" type="checkbox" value="1"><span>设为私密相册图片</span></label>
       <p class="hint">一次选择多张图片时，它们会进入同一个相册；标题留空时会使用文件名。勾选私密后，页面和原图都需要密码。</p>
       <div id="upload-progress" class="progress" aria-live="polite">
@@ -4436,7 +4464,7 @@ function calendarItemsForBlocksV3(blocks) {
       block,
       age,
       date: addDays(block.madeDate, age),
-      completed: taskCompleted(block, "age", age)
+      completed: taskCompleted(block, "age", age) || ageResultsCompletedForBlock(block, age)
     }))
   ].filter(Boolean)).sort((a, b) => a.date.localeCompare(b.date) || a.block.name.localeCompare(b.block.name) || a.type.localeCompare(b.type));
 }
@@ -4786,7 +4814,7 @@ function renderLabUploadFormV3(targetType, targetId, actionBase, defaultKind = "
         <label class="field"><span>破坏形态</span><input name="imageFailureMode" placeholder="例：正常破坏"></label>
       </div>
       <label class="field"><span>图片说明</span><input name="imageCaption" placeholder="例：原始矸石、成型后、劈裂后、称重记录"></label>
-      <input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple required>
+      <input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif" multiple required>
       <div class="mini-progress" data-upload-progress>
         <div class="mini-progress-track"><span class="mini-progress-bar" data-upload-bar></span></div>
         <span data-upload-text>准备上传</span>
@@ -6149,6 +6177,8 @@ function mimeType(filePath) {
     ".png": "image/png",
     ".webp": "image/webp",
     ".gif": "image/gif",
+    ".heic": "image/heic",
+    ".heif": "image/heif",
     ".svg": "image/svg+xml"
   }[extension] || "application/octet-stream";
 }
@@ -6253,7 +6283,7 @@ async function moveUploadedTempFile(part, targetPath) {
 async function detectImageTypeFromFile(filePath) {
   const handle = await fsp.open(filePath, "r");
   try {
-    const buffer = Buffer.alloc(16);
+    const buffer = Buffer.alloc(32);
     const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
     return detectImageType(buffer.subarray(0, bytesRead));
   } finally {
@@ -6269,16 +6299,16 @@ async function validateUploadedImages(parts, fieldName = "image") {
       throw Object.assign(new Error("image too large"), { statusCode: 413 });
     }
     const claimedType = normalizeUploadMime(image.type);
-    if (!allowedTypes.has(claimedType)) {
-      throw Object.assign(new Error("unsupported image MIME type"), { statusCode: 400 });
-    }
     const claimedExtension = allowedUploadExtension(image.filename);
-    if (![...allowedTypes.values()].includes(claimedExtension)) {
-      throw Object.assign(new Error("unsupported image extension"), { statusCode: 400 });
-    }
     const detectedType = await detectImageTypeFromFile(image.tempPath);
-    if (!allowedTypes.has(detectedType) || detectedType !== claimedType) {
-      throw Object.assign(new Error("unsupported image type"), { statusCode: 400 });
+    if (!allowedTypes.has(detectedType)) {
+      throw Object.assign(new Error("不支持的图片格式，请上传 JPG、PNG、WebP、GIF 或 HEIC/HEIF 原图。"), { statusCode: 400 });
+    }
+    if (claimedType && claimedType !== "application/octet-stream" && claimedType !== detectedType) {
+      image.claimedTypeMismatch = claimedType;
+    }
+    if (claimedExtension && ![...allowedTypes.values()].includes(claimedExtension)) {
+      image.claimedExtensionMismatch = claimedExtension;
     }
     image.detectedType = detectedType;
     image.extension = allowedTypes.get(detectedType);
@@ -6675,7 +6705,8 @@ async function saveReminderState(state) {
 function reminderSubject(referenceDate, items) {
   const demoldCount = items.filter((item) => item.type === "demold").length;
   const ageCount = items.filter((item) => item.type === "age").length;
-  return `混凝土试块提醒 ${referenceDate}：拆模${demoldCount}项，龄期${ageCount}项`;
+  const resultCount = items.filter((item) => item.type === "result").length;
+  return `混凝土试块提醒 ${referenceDate}：拆模${demoldCount}项，龄期${ageCount}项，强度${resultCount}项`;
 }
 
 function reminderBody(content, referenceDate, items, forced = false) {
@@ -6763,8 +6794,9 @@ async function fetchCampusWeather() {
 function reminderSubjectV2(referenceDate, items, weather) {
   const demoldCount = items.filter((item) => item.type === "demold").length;
   const ageCount = items.filter((item) => item.type === "age").length;
+  const resultCount = items.filter((item) => item.type === "result").length;
   const weatherText = weather && weather.ok ? `，${weather.summary}` : "";
-  return `工作区提醒 ${referenceDate}：拆模${demoldCount}项，龄期${ageCount}项${weatherText}`;
+  return `工作区提醒 ${referenceDate}：拆模${demoldCount}项，龄期${ageCount}项，强度${resultCount}项${weatherText}`;
 }
 
 function reminderBodyV2(content, referenceDate, items, forced = false, weather = null) {
