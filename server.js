@@ -2657,6 +2657,7 @@ function publicHeader(content) {
         <a href="/gallery/">相册</a>
         <a href="${PRIVATE_GALLERY_PATH}/">私密相册</a>
         <a href="${WORK_PATH}/">工作区</a>
+        <a href="${BASE_PATH}/">后台</a>
         <a href="/#ideas">项目</a>
         <a href="/#about">关于</a>
       </div>
@@ -2730,6 +2731,11 @@ function renderHome(content) {
           <span class="admin-icon">相</span>
           <strong>私密相册</strong>
           <em>查看私密照片和下载原图</em>
+        </a>
+        <a class="admin-card" href="${BASE_PATH}/">
+          <span class="admin-icon">控</span>
+          <strong>内容后台</strong>
+          <em>编辑首页、笔记、相册和审查包</em>
         </a>
       </div>
     </section>
