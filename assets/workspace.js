@@ -355,7 +355,7 @@
       document.querySelectorAll("[data-check-visible-export]").forEach((button) => button.addEventListener("click", () => {
         exportChecks.forEach((input) => {
           const card = input.closest("[data-block-card]");
-          if (!card || !card.classList.contains("hidden")) input.checked = true;
+          input.checked = !card || !card.classList.contains("hidden");
         });
         updateExportCount();
       }));
