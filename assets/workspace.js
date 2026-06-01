@@ -16,8 +16,15 @@
         window.setTimeout(() => message.remove(), 4000);
       });
       const navLinks = Array.from(document.querySelectorAll(".sidebar-v22 nav a[href^='#']"));
+      const navHashFor = (hash) => {
+        const value = hash || "#overview";
+        if (navLinks.some((link) => link.getAttribute("href") === value)) return value;
+        if (/^#record-/.test(value)) return "#block-management";
+        if (/^#gangue-/.test(value)) return "#gangue-archive";
+        return "#overview";
+      };
       const setCurrentNav = (hash) => {
-        const current = hash || "#overview";
+        const current = navHashFor(hash);
         navLinks.forEach((link) => {
           const active = link.getAttribute("href") === current;
           if (active) link.setAttribute("aria-current", "page");
@@ -281,7 +288,7 @@
         if (id && location.hash !== "#record-" + id) {
           history.replaceState(null, "", location.pathname + location.search + "#record-" + id);
         }
-        window.setTimeout(() => details.scrollIntoView({ block: "center", behavior: "smooth" }), 60);
+        setCurrentNav("#record-" + id);
       };
       recordDetails.forEach((details) => {
         const summary = details.querySelector("summary");
