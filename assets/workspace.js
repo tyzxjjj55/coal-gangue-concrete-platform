@@ -173,6 +173,26 @@
         globalSearch.focus();
       });
       blockFilters.forEach((filter) => filter.addEventListener("change", () => applySearch(search?.value || globalSearch?.value || "")));
+      document.querySelectorAll("#calendar [data-calendar-filter]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const calendar = button.closest("#calendar") || document.getElementById("calendar");
+          if (!calendar) return;
+          const filter = button.dataset.calendarFilter || "";
+          const alreadyActive = button.classList.contains("active");
+          const activeFilter = alreadyActive ? "" : filter;
+          calendar.querySelectorAll("[data-calendar-filter]").forEach((item) => item.classList.toggle("active", activeFilter && item === button));
+          calendar.querySelectorAll("[data-calendar-item]").forEach((item) => {
+            const tokens = String(item.dataset.calendarTokens || "").split(/\s+/).filter(Boolean);
+            item.classList.toggle("calendar-filter-hidden", Boolean(activeFilter) && !tokens.includes(activeFilter));
+          });
+          const status = calendar.querySelector("[data-calendar-filter-status]");
+          if (status) {
+            const labels = { overdue: "只看逾期未完成", today: "只看今天要处理", next7: "只看未来 7 天", next14: "只看未来 14 天", completed: "只看已完成任务" };
+            status.hidden = !activeFilter;
+            status.textContent = activeFilter ? labels[activeFilter] + "。再次点击同一数字可取消筛选。" : "";
+          }
+        });
+      });
       document.querySelectorAll("[data-image-filter-panel]").forEach((panel) => {
         const filters = Array.from(panel.querySelectorAll("[data-image-filter]"));
         const gallery = panel.nextElementSibling;

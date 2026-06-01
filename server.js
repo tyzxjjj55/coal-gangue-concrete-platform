@@ -5397,6 +5397,13 @@ function calendarItemStateV3(item, referenceDate = today()) {
   return "upcoming";
 }
 
+function calendarFilterTokensV37(item, referenceDate = today()) {
+  const tokens = [calendarItemStateV3(item, referenceDate)];
+  if (!calendarItemCompletedV22(item) && item.date > referenceDate && item.date <= addDays(referenceDate, 7)) tokens.push("next7");
+  if (!calendarItemCompletedV22(item) && item.date > referenceDate && item.date <= addDays(referenceDate, 14)) tokens.push("next14");
+  return tokens.join(" ");
+}
+
 function calendarItemCompletedV22(item) {
   return item.type === "result" ? item.filled === true : item.completed === true;
 }
@@ -5430,11 +5437,11 @@ function calendarStatsV3(dueItems, referenceDate = today()) {
 function renderCalendarStatsV3(dueItems, referenceDate = today()) {
   const stats = calendarStatsV3(dueItems, referenceDate);
   return `<div class="calendar-kpis">
-        <span class="danger"><b>${stats.overdue}</b><small>逾期未完成</small></span>
-        <span class="today"><b>${stats.today}</b><small>今天要处理</small></span>
-        <span class="future"><b>${stats.next7}</b><small>未来 7 天</small></span>
-        <span class="future"><b>${stats.next14}</b><small>未来 14 天</small></span>
-        <span class="done"><b>${stats.completed}</b><small>已完成任务</small></span>
+        <button type="button" class="danger" data-calendar-filter="overdue"><b>${stats.overdue}</b><small>逾期未完成</small></button>
+        <button type="button" class="today" data-calendar-filter="today"><b>${stats.today}</b><small>今天要处理</small></button>
+        <button type="button" class="future" data-calendar-filter="next7"><b>${stats.next7}</b><small>未来 7 天</small></button>
+        <button type="button" class="future" data-calendar-filter="next14"><b>${stats.next14}</b><small>未来 14 天</small></button>
+        <button type="button" class="done" data-calendar-filter="completed"><b>${stats.completed}</b><small>已完成任务</small></button>
       </div>`;
 }
 
@@ -5489,6 +5496,7 @@ function renderBlockCalendarV3(content, actionBase = WORK_PATH) {
       </div>
       <div class="calendar-dashboard">
         ${renderCalendarStatsV3(dueItems, referenceDate)}
+        <p class="calendar-filter-status" data-calendar-filter-status hidden></p>
         ${renderCalendarAgendaV3(dueItems, actionBase, referenceDate)}
       </div>
       <div class="calendar-board">
@@ -5557,7 +5565,7 @@ function formatCalendarPillV3(item) {
 function renderCalendarActionV22(item, actionBase = WORK_PATH, extraClass = "") {
   const typeClass = item.type === "demold" ? "demold" : item.type === "result" ? "result" : "age";
   const tab = item.type === "result" ? "results" : "tasks";
-  return `<a class="calendar-task-link-v22 ${extraClass} ${typeClass}${calendarItemCompletedV22(item) ? " completed" : ""}" href="#record-${attr(item.block.id)}" data-open-record="${attr(item.block.id)}" data-record-tab-target="${attr(tab)}">
+  return `<a class="calendar-task-link-v22 ${extraClass} ${typeClass}${calendarItemCompletedV22(item) ? " completed" : ""}" href="#record-${attr(item.block.id)}" data-calendar-item data-calendar-tokens="${attr(calendarFilterTokensV37(item))}" data-calendar-date="${attr(item.date)}" data-open-record="${attr(item.block.id)}" data-record-tab-target="${attr(tab)}">
           <span>${html(extraClass.split(/\s+/).includes("due-pill") ? formatCalendarPillV3(item) : formatCalendarItemV3(item, true))}</span>
         </a>`;
 }
@@ -5566,7 +5574,7 @@ function renderTaskCheckboxV3(item, actionBase = WORK_PATH, extraClass = "") {
   const classes = extraClass.split(/\s+/).filter(Boolean);
   const compact = classes.includes("due-pill");
   const returnAnchor = classes.includes("agenda-task") || compact ? "calendar" : `record-${item.block.id}`;
-  return `<form class="task-form ${extraClass} ${item.type === "demold" ? "demold" : "age"}${item.completed ? " completed" : ""}" method="post" action="${actionBase}/toggle-task">
+  return `<form class="task-form ${extraClass} ${item.type === "demold" ? "demold" : "age"}${item.completed ? " completed" : ""}" method="post" action="${actionBase}/toggle-task" data-calendar-item data-calendar-tokens="${attr(calendarFilterTokensV37(item))}" data-calendar-date="${attr(item.date)}">
           <input type="hidden" name="id" value="${attr(item.block.id)}">
           <input type="hidden" name="taskType" value="${attr(item.type)}">
           ${item.type === "age" ? `<input type="hidden" name="age" value="${attr(item.age)}">` : ""}

@@ -121,7 +121,8 @@
     .stat-strip small { color:var(--muted); font-weight:800; }
     .calendar-dashboard { display:grid; gap:14px; margin:16px 0; }
     .calendar-kpis { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
-    .calendar-kpis span { display:grid; gap:5px; padding:12px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; }
+    .calendar-kpis button { display:grid; gap:5px; padding:12px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; text-align:left; cursor:pointer; box-shadow:none; }
+    .calendar-kpis button:hover, .calendar-kpis button:focus-visible, .calendar-kpis button.active { transform:none; outline:none; box-shadow:0 12px 26px rgba(20,38,35,.1); }
     .calendar-kpis b { color:var(--ink); font-size:24px; line-height:1; }
     .calendar-kpis small { color:var(--muted); font-size:12px; font-weight:900; }
     .calendar-kpis .danger b { color:#a8422d; }
@@ -561,7 +562,7 @@
     .age-progress-v22 span.due { background:#fff0cf; color:#8a5800; }
     .age-progress-v22 span.upcoming { background:#edf4fb; color:#3d6f98; }
     .calendar-kpis { gap:8px; }
-    .calendar-kpis span { min-height:68px; padding:10px 12px; border-left-width:4px; }
+    .calendar-kpis button { min-height:68px; padding:10px 12px; border-left-width:4px; }
     .calendar-kpis .danger { border-color:#edc7ba; border-left-color:#a8422d; background:#fff8f4; }
     .calendar-kpis .today { border-color:#efd6ad; border-left-color:#d28b34; background:#fffaf0; }
     .calendar-kpis .future { border-color:#c8dcef; border-left-color:#3d6f98; background:#f3f8fc; }
@@ -569,6 +570,8 @@
     .calendar-kpis .today b { color:#d28b34; }
     .calendar-kpis .future b { color:#3d6f98; }
     .calendar-kpis .done b { color:#337861; }
+    .calendar-filter-status { margin:8px 0 0; padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; color:var(--muted); font-size:12px; font-weight:900; }
+    #calendar [data-calendar-item].calendar-filter-hidden { display:none; }
     .calendar-collapse-v22 { padding:0; overflow:hidden; }
     .calendar-collapse-v22 > summary, .create-panel-v22 > summary { cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 18px; }
     .calendar-collapse-v22 > summary::-webkit-details-marker, .create-panel-v22 > summary::-webkit-details-marker { display:none; }
