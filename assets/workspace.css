@@ -182,6 +182,12 @@
     .lab-photo small { color:var(--muted); font-weight:800; }
     .lab-photo form { margin:0; padding:0 9px 9px; box-shadow:none; border:0; background:transparent; }
     .lab-photo button { width:100%; min-height:32px; padding:0 8px; font-size:12px; box-shadow:none; }
+    .image-edit-v32 { margin:0 9px 9px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; }
+    .image-edit-v32 summary { cursor:pointer; padding:8px 10px; color:var(--green); font-size:12px; font-weight:900; list-style:none; }
+    .image-edit-v32 summary::-webkit-details-marker { display:none; }
+    .image-edit-v32 form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; padding:0 9px 9px; }
+    .image-edit-v32 label { display:grid; gap:4px; color:var(--muted); font-size:11px; font-weight:900; }
+    .image-edit-v32 button { grid-column:1 / -1; }
     .lab-upload { display:grid; gap:10px; margin-top:10px; padding:12px; border:1px dashed #c9ddd6; border-radius:8px; background:#fff; }
     .lab-upload-grid { display:grid; grid-template-columns:minmax(0,1fr) 150px; gap:10px; }
     .lab-upload input[type=file] { background:#fff; }
@@ -194,6 +200,10 @@
     .add-block-panel > summary::-webkit-details-marker { display:none; }
     .add-block-panel > summary h4 { margin:0; }
     .add-block-panel[open] > summary { margin-bottom:12px; }
+    .workflow-form-v32 { display:grid; gap:14px; }
+    .workflow-form-v32 section { display:grid; gap:10px; padding:12px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; }
+    .workflow-form-v32 h5 { margin:0; color:var(--green); font-size:13px; font-weight:900; }
+    .workflow-form-v32 h5 small { color:var(--muted); font-weight:800; }
     .nested-block-list { display:grid; gap:12px; }
     .orphan-panel { border-color:#e4d2a8; background:#fffdf6; }
     .panel { border-color:rgba(205,220,217,.92); box-shadow:0 18px 54px rgba(29,48,50,.08); }
@@ -588,6 +598,7 @@
     .specimen-row-v22.head { color:var(--muted); font-size:12px; font-weight:900; }
     .specimen-row-v22 > span:first-child { color:var(--green); font-weight:900; }
     .specimen-row-v22 [data-strength-mpa] { background:#f3f8f6; color:var(--green); font-weight:900; }
+    .add-specimen-v32 { justify-self:start; margin-top:4px; }
     .specimen-summary-v22 { min-width:820px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px; border:1px solid #d8e6e0; border-radius:8px; background:#f8fbfa; }
     .specimen-summary-v22 span { min-height:30px; display:inline-flex; align-items:center; gap:6px; padding:0 9px; border-radius:999px; background:#fff; color:var(--muted); font-size:12px; font-weight:900; }
     .specimen-summary-v22 b { color:var(--green); }

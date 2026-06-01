@@ -332,7 +332,9 @@
         });
         form.querySelector("[data-weighing-template]")?.addEventListener("change", (event) => applyWeighingTemplate(form, event.target.value));
       });
-      document.querySelectorAll("[data-specimen-row]").forEach((row) => {
+      const bindSpecimenRow = (row) => {
+        if (!row || row.dataset.specimenBound === "1") return;
+        row.dataset.specimenBound = "1";
         const pressure = row.querySelector("[data-pressure-kn]");
         const area = row.querySelector("[data-area-mm2]");
         const strength = row.querySelector("[data-strength-mpa]");
@@ -349,7 +351,8 @@
         pressure?.addEventListener("input", updateStrength);
         area?.addEventListener("input", updateStrength);
         updateStrength();
-      });
+      };
+      document.querySelectorAll("[data-specimen-row]").forEach(bindSpecimenRow);
       const updateSpecimenSummary = (table) => {
         const values = Array.from(table.querySelectorAll("[data-strength-mpa]"))
           .map((input) => Number.parseFloat(String(input.value || "").replace(",", ".")))
@@ -397,6 +400,33 @@
             window.setTimeout(() => updateSpecimenSummary(table), 0);
           }
         });
+        updateSpecimenSummary(table);
+      });
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-add-specimen-row]");
+        if (!button) return;
+        event.preventDefault();
+        const table = button.closest("[data-specimen-table]");
+        if (!table) return;
+        const rows = Array.from(table.querySelectorAll("[data-specimen-row]"));
+        const maxRows = Number.parseInt(table.dataset.maxSpecimens || "12", 10);
+        if (rows.length >= maxRows) {
+          alert("最多记录 " + maxRows + " 个试件。");
+          return;
+        }
+        const template = rows[rows.length - 1]?.cloneNode(true);
+        if (!template) return;
+        const nextIndex = rows.length;
+        template.dataset.specimenBound = "";
+        template.querySelectorAll("input, select").forEach((field) => {
+          if (field.name) field.name = field.name.replace(/_(\d+)$/, "_" + nextIndex);
+          if (field.name?.startsWith("sampleSpecimenNo_")) field.value = String(nextIndex + 1);
+          else if (field.matches("[data-area-mm2]")) field.value = table.dataset.defaultArea || "";
+          else if (field.tagName === "SELECT") field.value = "";
+          else field.value = "";
+        });
+        button.before(template);
+        bindSpecimenRow(template);
         updateSpecimenSummary(table);
       });
       const openRecordFromHash = () => {

@@ -188,6 +188,7 @@ const BUILTIN_RESULT_METRICS = [
 const DEFAULT_RESULT_METRIC_IDS = ["compressionStrength"];
 const DEFAULT_SPECIMEN_SIZE = "100mm x 100mm x 100mm";
 const DEFAULT_CUBE_AREA_MM2 = "10000";
+const MAX_DYNAMIC_SPECIMENS = 12;
 
 const BUILTIN_RECIPE_MATERIALS = [
   { id: "cement", label: "硅酸盐水泥", category: "binder", placeholder: "例：1485g" },
@@ -1712,6 +1713,12 @@ function renderFailureModeSelect(name, selected = "") {
   return `<select name="${attr(name)}">${options.join("")}</select>`;
 }
 
+function renderLabImageKindSelect(name, selected = "", targetType = "block") {
+  const kinds = labImageKindsForTarget(targetType);
+  const value = normalizeLabImageKind(selected);
+  return `<select name="${attr(name)}">${kinds.map((item) => `<option value="${attr(item.id)}" ${item.id === value ? "selected" : ""}>${html(item.label)}</option>`).join("")}</select>`;
+}
+
 function labImageKindsForTarget(targetType) {
   const ids = targetType === "gangue" ? GANGUE_LAB_IMAGE_KIND_IDS : BLOCK_LAB_IMAGE_KIND_IDS;
   return ids.map((id) => LAB_IMAGE_KINDS.find((item) => item.id === id)).filter(Boolean);
@@ -2397,9 +2404,13 @@ function getAlbums(content, options = {}) {
 }
 
 function addDays(dateText, days) {
-  const [year, month, day] = normalizeDateValue(dateText).split("-").map(Number);
+  const normalized = normalizeDateValue(dateText);
+  if (!normalized) return "";
+  const [year, month, day] = normalized.split("-").map(Number);
+  if (!year || !month || !day) return "";
   const date = new Date(Date.UTC(year, month - 1, day));
   date.setUTCDate(date.getUTCDate() + Number(days));
+  if (Number.isNaN(date.getTime())) return "";
   return date.toISOString().slice(0, 10);
 }
 
@@ -4425,12 +4436,12 @@ function renderTestBlocksPanelV3(content, options = {}) {
         </div>
         <form method="post" action="${actionBase}/add-block">
           <div class="form-grid">
-            <label class="field wide"><span>试块名称/部位</span><input name="blockName" placeholder="例：1#楼三层梁板 C30" required></label>
-            <label class="field"><span>制作日期</span><input name="madeDate" type="date" value="${today()}" required></label>
-            <label class="field"><span>试块数量</span><input name="quantity" type="number" min="1" step="1" value="3" required></label>
+            <label class="field wide"><span>试块组名称</span><input name="blockName" placeholder="例：1#楼三层梁板 C30" required></label>
+            <label class="field"><span>制作日期</span><input name="madeDate" type="date" value="${today()}"></label>
+            <label class="field"><span>试块数量</span><input name="quantity" type="number" min="1" step="1" value="3"></label>
             <label class="field"><span>试块尺寸</span><input name="specimenSize" value="${attr(DEFAULT_SPECIMEN_SIZE)}" placeholder="${attr(DEFAULT_SPECIMEN_SIZE)}"></label>
             <label class="field"><span>强度等级</span><input name="strength" placeholder="例：C30"></label>
-            <label class="field wide"><span>需要龄期</span><input id="ageInput" name="ages" value="7,28" placeholder="例：3,7,28">
+            <label class="field wide"><span>需要龄期</span><input id="ageInput" name="ages" value="3,7,28" placeholder="例：3,7,28">
               <div class="age-toolbar">
                 <button class="chip-button" type="button" data-age="3">3天</button>
                 <button class="chip-button" type="button" data-age="7">7天</button>
@@ -4522,21 +4533,24 @@ function orphanBlocksV3(content) {
 }
 
 function calendarItemsForBlocksV3(blocks) {
-  return blocks.flatMap((block) => [
-    taskDeleted(block, "demold") ? null : {
+  return blocks.flatMap((block) => {
+    if (!normalizeDateValue(block.madeDate)) return [];
+    return [
+      taskDeleted(block, "demold") ? null : {
       type: "demold",
       block,
       date: normalizeDateValue(block.demoldDate || addDays(block.madeDate, 1)),
       completed: taskCompleted(block, "demold")
-    },
-    ...block.ages.filter((age) => !taskDeleted(block, "age", age)).map((age) => ({
+      },
+      ...block.ages.filter((age) => !taskDeleted(block, "age", age)).map((age) => ({
       type: "age",
       block,
       age,
       date: addDays(block.madeDate, age),
       completed: taskCompleted(block, "age", age) || ageResultsCompletedForBlock(block, age)
-    }))
-  ].filter(Boolean)).sort((a, b) => a.date.localeCompare(b.date) || a.block.name.localeCompare(b.block.name) || a.type.localeCompare(b.type));
+      }))
+    ].filter(Boolean);
+  }).sort((a, b) => a.date.localeCompare(b.date) || a.block.name.localeCompare(b.block.name) || a.type.localeCompare(b.type));
 }
 
 function taskStatsForBlocksV3(blocks) {
@@ -4568,6 +4582,7 @@ function resultStatsForBlocksV3(blocks) {
 
 function blockResultDueItemsV22(blocks) {
   return blocks.flatMap((block) => {
+    if (!normalizeDateValue(block.madeDate)) return [];
     const metrics = normalizeResultMetrics(block.metrics || (block.record && block.record.metrics), "", { fallbackToDefault: true });
     const record = normalizeBlockRecord(block.record, block.ages, metrics, block.recipeMaterials);
     return block.ages.filter((age) => !taskDeleted(block, "age", age)).flatMap((age) => {
@@ -4933,6 +4948,23 @@ function renderLabImageGalleryV3(images, targetType, targetId, actionBase) {
           <input type="hidden" name="src" value="${attr(image.src)}">
           <button class="danger delete-lab-image" type="submit">删除图片</button>
         </form>
+        <details class="image-edit-v32">
+          <summary>编辑图片信息</summary>
+          <form method="post" action="${actionBase}/update-lab-image">
+            <input type="hidden" name="targetType" value="${attr(targetType)}">
+            <input type="hidden" name="targetId" value="${attr(targetId)}">
+            <input type="hidden" name="src" value="${attr(image.src)}">
+            <label><span>标题</span><input name="imageTitle" value="${attr(image.title)}"></label>
+            <label><span>类型</span>${renderLabImageKindSelect("imageKind", image.imageType || image.kind, targetType)}</label>
+            <label><span>龄期</span><input name="imageAgeDays" value="${attr(image.ageDays)}" placeholder="例：3 / 7 / 28"></label>
+            <label><span>指标</span><input name="imageMetric" value="${attr(image.metric)}" placeholder="例：抗压强度"></label>
+            <label><span>强度 MPa</span><input name="imageStrengthMPa" value="${attr(image.strengthMPa)}" inputmode="decimal"></label>
+            <label><span>破坏形态</span>${renderFailureModeSelect("imageFailureMode", image.failureMode)}</label>
+            <label><span>标签</span><input name="imageTags" value="${attr((image.tags || []).join("、"))}" placeholder="可选：界面剥离、孔洞明显"></label>
+            <label><span>说明</span><input name="imageCaption" value="${attr(image.note || image.caption)}"></label>
+            <button class="secondary" type="submit">保存图片信息</button>
+          </form>
+        </details>
       </figure>`;
   }).join("")}
     </div>`;
@@ -4982,39 +5014,58 @@ function renderGangueAddBlockFormV3(item, content, actionBase) {
       </summary>
       <form method="post" action="${actionBase}/add-block">
         <input type="hidden" name="gangueAggregateId" value="${attr(item.id)}">
-        <div class="form-grid">
-          <label class="field wide"><span>试块编号/部位</span><input name="blockName" placeholder="例：${attr(item.name)}-01" data-block-name-input required></label>
-          <div class="field wide block-code-hint-v24"><span>推荐编号</span><strong data-block-code-suggestion>${html(suggestedCode)}</strong><button class="chip-button" type="button" data-use-block-code>填入编号</button><small>只给建议，不会覆盖已有试块名称。</small></div>
-          ${renderBlockCategorySelectV3("road")}
-          ${renderWeighingTemplateSelectV3("withoutAccelerator", "road")}
-          ${renderGradationTemplateSelectV3("road", "raw")}
-          <label class="field"><span>制作日期</span><input name="madeDate" type="date" value="${today()}" required></label>
-          <label class="field"><span>试块数量</span><input name="quantity" type="number" min="1" step="1" value="3" required></label>
-          <label class="field"><span>试块尺寸</span><input name="specimenSize" value="${attr(DEFAULT_SPECIMEN_SIZE)}" placeholder="${attr(DEFAULT_SPECIMEN_SIZE)}"></label>
-          <label class="field"><span>强度等级</span><input name="strength" placeholder="例：C30"></label>
-          <label class="field wide"><span>需要龄期</span><input id="${attr(ageId)}" name="ages" value="3,7,28" placeholder="例：3,7,28">
-            <div class="age-toolbar">
-              ${[3, 7, 14, 28, 56].map((age) => `<button class="chip-button" type="button" data-age="${age}" data-age-target="#${attr(ageId)}">${age}天</button>`).join("")}
+        <div class="workflow-form-v32">
+          <section>
+            <h5>基础信息 <small>只需要先填名称，其它都可后续补充</small></h5>
+            <div class="form-grid">
+              <label class="field wide"><span>试块组名称</span><input name="blockName" placeholder="例：${attr(item.name)}-RD-01" data-block-name-input required></label>
+              <div class="field wide block-code-hint-v24"><span>推荐编号</span><strong data-block-code-suggestion>${html(suggestedCode)}</strong><button class="chip-button" type="button" data-use-block-code>填入编号</button><small>只给建议，不会覆盖已有试块名称。</small></div>
+              ${renderBlockCategorySelectV3("road")}
+              <label class="field"><span>制作日期</span><input name="madeDate" type="date" value="${today()}"></label>
+              <label class="field"><span>试块数量</span><input name="quantity" type="number" min="1" step="1" value="3"></label>
+              <label class="field"><span>试块尺寸</span><input name="specimenSize" value="${attr(DEFAULT_SPECIMEN_SIZE)}" placeholder="${attr(DEFAULT_SPECIMEN_SIZE)}"></label>
+              <label class="field"><span>强度等级</span><input name="strength" placeholder="可后续补充"></label>
             </div>
-          </label>
-          <label class="field"><span>配方/编号</span><input name="mixName" placeholder="例：配方A"></label>
-          <label class="field"><span>水胶比</span><input name="waterBinderRatio" placeholder="例：0.42"></label>
-          <label class="field"><span>坍落度</span><input name="slump" placeholder="例：180mm"></label>
-          <label class="field"><span>级配系数</span><input name="gradationCoefficient" placeholder="例：0.68"></label>
-          <label class="field"><span>不含水总量</span><input name="totalWithoutWater" value="${attr(WEIGHING_TEMPLATES.withoutAccelerator.totalWithoutWater)}" placeholder="自动/手填"></label>
-          <div class="field wide">
-            <span>配方材料</span>
-            ${renderRecipeMaterialSelectorV3(defaultRecipeMaterialsForContent(content), "", content.recipeMaterialLibrary, content.disabledRecipeMaterialIds)}
-          </div>
-          <div class="field wide">
-            <span>检测指标</span>
-            ${renderMetricSelectorV3(normalizeResultMetrics(DEFAULT_RESULT_METRIC_IDS), "")}
-          </div>
-          <div class="field wide">
-            ${renderBlockGradationWeightsV3({ gradationTemplate: "raw", gradationWeights: {} }, "road")}
-          </div>
-          <label class="field wide"><span>备注</span><input name="note" placeholder="可填成型方式、养护条件、编号说明"></label>
+          </section>
+          <section>
+            <h5>煤矸石 / 级配</h5>
+            <div class="form-grid">
+              ${renderGradationTemplateSelectV3("road", "raw")}
+              <label class="field"><span>级配系数</span><input name="gradationCoefficient" placeholder="可后续补充"></label>
+              <div class="field wide">${renderBlockGradationWeightsV3({ gradationTemplate: "raw", gradationWeights: {} }, "road")}</div>
+            </div>
+          </section>
+          <section>
+            <h5>配合比</h5>
+            <div class="form-grid">
+              ${renderWeighingTemplateSelectV3("withoutAccelerator", "road")}
+              <label class="field"><span>配方/编号</span><input name="mixName" placeholder="可后续补充"></label>
+              <label class="field"><span>水胶比</span><input name="waterBinderRatio" placeholder="可后续补充"></label>
+              <label class="field"><span>坍落度</span><input name="slump" placeholder="可后续补充"></label>
+              <label class="field"><span>不含水总量</span><input name="totalWithoutWater" value="${attr(WEIGHING_TEMPLATES.withoutAccelerator.totalWithoutWater)}" placeholder="自动/手填"></label>
+              <div class="field wide">
+                <span>配方材料</span>
+                ${renderRecipeMaterialSelectorV3(defaultRecipeMaterialsForContent(content), "", content.recipeMaterialLibrary, content.disabledRecipeMaterialIds)}
+              </div>
+            </div>
+          </section>
+          <section>
+            <h5>龄期计划和备注</h5>
+            <div class="form-grid">
+              <label class="field wide"><span>计划龄期</span><input id="${attr(ageId)}" name="ages" value="3,7,28" placeholder="例：3,7,28">
+                <div class="age-toolbar">
+                  ${[3, 7, 14, 28, 56].map((age) => `<button class="chip-button" type="button" data-age="${age}" data-age-target="#${attr(ageId)}">${age}天</button>`).join("")}
+                </div>
+              </label>
+              <div class="field wide">
+                <span>检测指标</span>
+                ${renderMetricSelectorV3(normalizeResultMetrics(DEFAULT_RESULT_METRIC_IDS), "")}
+              </div>
+              <label class="field wide"><span>备注</span><input name="note" placeholder="可填成型方式、养护条件、编号说明"></label>
+            </div>
+          </section>
         </div>
+        <p class="hint">未填字段会显示为“可后续补充”，不会阻止保存；缺成型日期时不会生成日历和邮件提醒。</p>
         <div class="actions"><button type="submit">登记到 ${html(item.name)}</button></div>
       </form>
     </details>`;
@@ -5845,11 +5896,11 @@ function renderAgeResultsV3(block, record) {
       ${block.ages.map((age) => {
     const key = String(age);
     const item = results[key] || {};
-    const dueDate = addDays(block.madeDate, age);
+    const dueDate = block.madeDate ? addDays(block.madeDate, age) : "";
     return `<section class="result-row">
           <div class="result-row-title">
             <strong>${age} 天试验结果</strong>
-            <span>到期：${formatDateCnV3(dueDate)}</span>
+            <span>到期：${dueDate ? formatDateCnV3(dueDate) : "可补充成型日期"}</span>
           </div>
           <div class="record-grid result-grid">
             ${recordFieldV3(`resultTestDate_${key}`, "试验日期", item.testDate, { type: "date" })}
@@ -5863,7 +5914,8 @@ function renderAgeResultsV3(block, record) {
       dueDate
     });
     const defaultArea = defaultBearingAreaMm2V25(block.specimenSize || record.specimenSize, metric.id);
-    const specimenRows = [0, 1, 2].map((index) => result.sampleMeasurements[index] || {
+    const specimenRowCount = Math.min(MAX_DYNAMIC_SPECIMENS, Math.max(3, result.sampleMeasurements.length));
+    const specimenRows = Array.from({ length: specimenRowCount }, (_unused, index) => result.sampleMeasurements[index] || {
       specimenNo: String(index + 1),
       pressureKn: "",
       areaMm2: defaultArea,
@@ -5887,7 +5939,7 @@ function renderAgeResultsV3(block, record) {
                 <span class="source-pill-v22">${html(result.meanSource)}</span>
               </div>
               <input type="hidden" name="manualMean_${key}_${attr(metric.id)}" value="${attr(manualMeanValue)}">
-      <div class="specimen-table-v22">
+      <div class="specimen-table-v22" data-specimen-table data-age-key="${attr(key)}" data-metric-id="${attr(metric.id)}" data-default-area="${attr(defaultArea || "")}" data-max-specimens="${MAX_DYNAMIC_SPECIMENS}">
                 <div class="specimen-row-v22 head"><span>试件编号</span><span>压力 kN</span><span>受压面积 mm²</span><span>强度 MPa</span><span>破坏形态</span><span>备注</span></div>
                 ${specimenRows.map((sample, index) => `<div class="specimen-row-v22" data-specimen-row>
                   <input name="sampleSpecimenNo_${key}_${attr(metric.id)}_${index}" value="${attr(sample.specimenNo || index + 1)}" placeholder="${index + 1}">
@@ -5897,6 +5949,7 @@ function renderAgeResultsV3(block, record) {
                   ${renderFailureModeSelect(`sampleFailureMode_${key}_${metric.id}_${index}`, sample.failureMode || "未记录")}
                   <input name="sampleRemark_${key}_${attr(metric.id)}_${index}" value="${attr(sample.remark)}" placeholder="读数说明">
                 </div>`).join("")}
+                <button class="chip-button add-specimen-v32" type="button" data-add-specimen-row>添加试件</button>
                 <div class="specimen-summary-v22" data-specimen-summary>
                   <span>当前已录入 <b data-n>${html(result.n || "0")}</b> 个试件 / 可继续补充</span>
                   <span>均值 <b data-mean>${html(meanDisplay)}</b></span>
@@ -5947,11 +6000,11 @@ function renderBlockRecordV3(block, actionBase = WORK_PATH, materialLibrary = []
                   <h4>基础信息 <small>试块组是最小实验单位</small></h4>
                   <div class="record-grid">
                     <label><span>试块组编号/名称</span><input name="blockName" value="${attr(block.name)}" required></label>
-                    <label><span>成型日期</span><input name="madeDate" type="date" value="${attr(block.madeDate)}" required></label>
+                    <label><span>成型日期</span><input name="madeDate" type="date" value="${attr(block.madeDate)}"></label>
                     <label><span>数量</span><input name="quantity" type="number" min="1" step="1" value="${attr(block.quantity)}"></label>
                     <label><span>强度等级</span><input name="strength" value="${attr(block.strength)}" placeholder="例：C30"></label>
                     <label><span>试块尺寸</span><input name="specimenSize" value="${attr(block.specimenSize || record.specimenSize)}" placeholder="${attr(DEFAULT_SPECIMEN_SIZE)}"></label>
-                    <label><span>拆模日期</span><input name="demoldDate" type="date" value="${attr(block.demoldDate || addDays(block.madeDate, 1))}"></label>
+                    <label><span>拆模日期</span><input name="demoldDate" type="date" value="${attr(block.demoldDate || (block.madeDate ? addDays(block.madeDate, 1) : ""))}"></label>
                     <label><span>龄期</span><input name="ages" value="${attr(block.ages.join(","))}" placeholder="例：3,7,28"></label>
                     <label class="wide"><span>备注</span><input name="note" value="${attr(block.note)}" placeholder="成型方式、养护条件、编号说明"></label>
                   </div>
@@ -7135,6 +7188,63 @@ async function handleDeleteLabImage(req, res, redirectBase = WORK_PATH) {
   redirect(res, removed ? "实验图片已删除" : "没有找到这张实验图片", redirectBase, targetType === "gangue" ? `gangue-${targetId}` : `block-${targetId}`);
 }
 
+async function handleUpdateLabImage(req, res, redirectBase = WORK_PATH) {
+  const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
+  const targetType = String(params.get("targetType") || "").trim();
+  const targetId = String(params.get("targetId") || "").trim();
+  const src = String(params.get("src") || "").trim();
+  if (!["gangue", "block"].includes(targetType) || !targetId || !src) {
+    throw Object.assign(new Error("missing image update target"), { statusCode: 400 });
+  }
+  const updateImage = (image, options = {}) => normalizeLabImages([{
+    ...image,
+    title: String(params.get("imageTitle") || "").trim(),
+    caption: String(params.get("imageCaption") || "").trim(),
+    note: String(params.get("imageCaption") || "").trim(),
+    kind: normalizeLabImageKind(params.get("imageKind")),
+    imageType: normalizeLabImageKind(params.get("imageKind")),
+    ageDays: String(params.get("imageAgeDays") || "").replace(/d$/i, "").trim(),
+    metric: String(params.get("imageMetric") || "").trim(),
+    strengthMPa: String(params.get("imageStrengthMPa") || "").trim(),
+    failureMode: String(params.get("imageFailureMode") || "").trim(),
+    tags: normalizeImageTags(params.get("imageTags")),
+    targetType,
+    blockId: targetType === "block" ? targetId : image.blockId,
+    specimenGroupId: targetType === "block" ? targetId : image.specimenGroupId,
+    gangueBatchId: targetType === "gangue" ? targetId : image.gangueBatchId
+  }], options)[0];
+  const content = await readContent();
+  let found = false;
+  if (targetType === "gangue") {
+    content.coalGangueDb = getCoalGangueDb(content).map((item) => {
+      if (item.id !== targetId) return item;
+      const images = normalizeLabImages(item.images, { targetType: "gangue", gangueBatchId: item.id }).map((image) => {
+        if (image.src !== src) return image;
+        found = true;
+        return updateImage(image, { targetType: "gangue", gangueBatchId: item.id });
+      });
+      return normalizeCoalGangueItem({ ...item, images });
+    });
+  } else {
+    content.testBlocks = getTestBlocks(content).map((block) => {
+      if (block.id !== targetId) return block;
+      const gangueBatchId = blockGangueIdV3(block);
+      const images = normalizeLabImages(block.images, { targetType: "block", blockId: block.id, gangueBatchId }).map((image) => {
+        if (image.src !== src) return image;
+        found = true;
+        return updateImage(image, { targetType: "block", blockId: block.id, gangueBatchId });
+      });
+      return { ...block, images };
+    });
+  }
+  if (!found) throw Object.assign(new Error("image not found"), { statusCode: 404 });
+  await saveContent(content, { skipSite: true });
+  if (targetType === "block") {
+    return redirectTo(res, `${redirectBase}/?msg=${encodeURIComponent("图片信息已保存")}&openBlock=${encodeURIComponent(targetId)}&tab=images#record-${encodeURIComponent(targetId)}`);
+  }
+  redirect(res, "图片信息已保存", redirectBase, `gangue-${targetId}`);
+}
+
 async function handleDeleteImage(req, res) {
   const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
   const src = String(params.get("src") || "");
@@ -7858,12 +7968,12 @@ async function handleAddBlock(req, res, redirectBase = BASE_PATH) {
     blockCategory,
     purpose: blockCategory,
     madeDate,
-    quantity: Math.max(1, Number.parseInt(params.get("quantity"), 10) || 1),
+    quantity: Math.max(1, Number.parseInt(params.get("quantity"), 10) || 3),
     specimenSize,
     ages: blockAges,
     metrics: blockMetrics,
     recipeMaterials: blockRecipeMaterials,
-    demoldDate: addDays(madeDate, 1),
+    demoldDate: madeDate ? addDays(madeDate, 1) : "",
     completed: normalizeCompleted({}, blockAges),
     record: normalizeBlockRecord({
       mixName: params.get("mixName"),
@@ -7931,7 +8041,7 @@ async function handleUpdateRecipeMaterialLibrary(req, res, redirectBase = WORK_P
 }
 
 function sampleMeasurementsFromParams(params, ageKey, metricId, specimenSize = DEFAULT_SPECIMEN_SIZE) {
-  return [0, 1, 2].map((index) => {
+  return Array.from({ length: MAX_DYNAMIC_SPECIMENS }, (_unused, index) => {
     const specimenNo = String(params.get(`sampleSpecimenNo_${ageKey}_${metricId}_${index}`) || (index + 1)).trim();
     const pressureKn = String(params.get(`samplePressure_${ageKey}_${metricId}_${index}`) || "").trim();
     const defaultArea = pressureKn ? defaultBearingAreaMm2V25(specimenSize, metricId) : "";
@@ -7993,7 +8103,7 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
     const editedAges = normalizeAges(params.get("ages"));
     const nextAges = editedAges.length ? editedAges : block.ages;
     const nextMadeDate = normalizeDateValue(params.get("madeDate") || block.madeDate);
-    const nextDemoldDate = optionalDateValue(params.get("demoldDate")) || addDays(nextMadeDate, 1);
+    const nextDemoldDate = optionalDateValue(params.get("demoldDate")) || (nextMadeDate ? addDays(nextMadeDate, 1) : "");
     const nextCategory = normalizeBlockCategory(params.get("blockCategory"), block.blockCategory || "road");
     const nextSpecimenSize = normalizeSpecimenSizeV25(params.get("specimenSize") || block.specimenSize || block.record?.specimenSize);
     const nextWeighingTemplate = normalizeWeighingTemplate(params.get("weighingTemplate"), nextCategory);
@@ -8012,6 +8122,7 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
     const results = {};
     nextAges.forEach((age) => {
       const key = String(age);
+      const dueDate = nextMadeDate ? addDays(nextMadeDate, age) : "";
       const metricValues = {};
       const metricResults = {};
       nextMetrics.forEach((metric) => {
@@ -8027,18 +8138,18 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
         const entry = normalizeMetricResultEntry({
           age,
           metric: metric.id,
-          dueDate: addDays(nextMadeDate, age),
+          dueDate,
           sampleMeasurements,
           sampleValues,
           manualMean,
           failureMode: sampleMeasurements.map((sample) => sample.failureMode).filter(Boolean).join("；"),
           remark: sampleMeasurements.map((sample) => sample.remark).filter(Boolean).join("；")
-        }, manualMean, { age, metric: metric.id, dueDate: addDays(nextMadeDate, age) });
+        }, manualMean, { age, metric: metric.id, dueDate });
         metricResults[metric.id] = entry;
         metricValues[metric.id] = entry.mean || entry.manualMean || "";
       });
       results[key] = {
-        dueDate: addDays(nextMadeDate, age),
+        dueDate,
         testDate: params.get(`resultTestDate_${key}`),
         abnormalFlag: params.get(`resultAbnormal_${key}`) === "1",
         compressionStrength: metricValues.compressionStrength || "",
@@ -8207,6 +8318,7 @@ async function route(req, res) {
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/update-gangue`) return queueContentMutation(() => handleUpdateGangue(req, res, WORK_PATH));
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-gangue`) return queueContentMutation(() => handleDeleteGangue(req, res, WORK_PATH));
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/update-block-record`) return queueContentMutation(() => handleUpdateBlockRecord(req, res, WORK_PATH));
+    if (req.method === "POST" && url.pathname === `${WORK_PATH}/update-lab-image`) return queueContentMutation(() => handleUpdateLabImage(req, res, WORK_PATH));
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/delete-lab-image`) return queueContentMutation(() => handleDeleteLabImage(req, res, WORK_PATH));
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/export-blocks`) return handleExportBlocks(req, res, WORK_PATH);
     if (req.method === "POST" && url.pathname === `${WORK_PATH}/send-reminder`) return handleSendReminder(req, res);
