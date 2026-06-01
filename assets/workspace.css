@@ -606,9 +606,10 @@
     .specimen-summary-v22 b { color:var(--green); }
     .specimen-summary-v22 em { color:#8a5800; font-size:12px; font-style:normal; font-weight:900; }
     .specimen-summary-v22.warn { border-color:#efd6ad; background:#fffaf0; }
+    body.lab-lightbox-open-v34 { overflow:hidden; }
     .lab-lightbox-v22 { position:fixed; z-index:100; inset:0; display:none; place-items:center; padding:24px; background:rgba(12,24,22,.86); }
     .lab-lightbox-v22.active { display:grid; }
-    .lab-lightbox-v22 img { max-width:min(1180px,96vw); max-height:82vh; border-radius:8px; background:#fff; object-fit:contain; }
+    .lab-lightbox-v22 img { max-width:min(1180px,96vw); max-height:82vh; border-radius:8px; background:#fff; object-fit:contain; cursor:pointer; }
     .lab-lightbox-actions-v22 { position:fixed; top:18px; right:18px; display:flex; gap:8px; }
     .lab-lightbox-actions-v22 a, .lab-lightbox-actions-v22 button { min-height:40px; display:inline-flex; align-items:center; padding:0 12px; border:1px solid rgba(255,255,255,.28); border-radius:8px; background:#fff; color:#10211e; font-weight:900; box-shadow:none; }
     .lab-lightbox-nav-v22 { position:fixed; top:50%; width:48px; min-height:64px; display:grid; place-items:center; transform:translateY(-50%); border:1px solid rgba(255,255,255,.26); border-radius:8px; background:rgba(255,255,255,.94); color:#10211e; font-size:36px; font-weight:900; line-height:1; box-shadow:0 18px 48px rgba(0,0,0,.25); }

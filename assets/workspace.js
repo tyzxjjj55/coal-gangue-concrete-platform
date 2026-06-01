@@ -559,7 +559,7 @@
 
       const lightbox = document.createElement("div");
       lightbox.className = "lab-lightbox-v22";
-      lightbox.innerHTML = "<button class=\"lab-lightbox-nav-v22 prev\" type=\"button\" aria-label=\"上一张\">‹</button><img alt=\"实验原图\"><button class=\"lab-lightbox-nav-v22 next\" type=\"button\" aria-label=\"下一张\">›</button><div class=\"lab-lightbox-counter-v22\" aria-live=\"polite\"></div><div class=\"lab-lightbox-actions-v22\"><a download>下载原图</a><button type=\"button\" data-lightbox-close>退出</button></div>";
+      lightbox.innerHTML = "<button class=\"lab-lightbox-nav-v22 prev\" type=\"button\" aria-label=\"上一张\">‹</button><img alt=\"实验原图\"><button class=\"lab-lightbox-nav-v22 next\" type=\"button\" aria-label=\"下一张\">›</button><div class=\"lab-lightbox-counter-v22\" aria-live=\"polite\"></div><div class=\"lab-lightbox-actions-v22\"><a download>下载原图</a><button type=\"button\" data-lightbox-close>关闭预览</button></div>";
       document.body.appendChild(lightbox);
       const lightboxImage = lightbox.querySelector("img");
       const lightboxDownload = lightbox.querySelector("a");
@@ -568,6 +568,15 @@
       const lightboxNext = lightbox.querySelector(".lab-lightbox-nav-v22.next");
       let lightboxItems = [];
       let lightboxIndex = 0;
+      let lightboxReturnFocus = null;
+      let lightboxScroll = { x: 0, y: 0 };
+      let lightboxTouchX = 0;
+      const isVisibleLightboxLink = (item) => {
+        if (!item?.getAttribute("href")) return false;
+        const card = item.closest("[data-image-card]");
+        if (card?.classList.contains("hidden")) return false;
+        return item.getClientRects().length > 0;
+      };
       const setLightboxImage = (index) => {
         if (!lightboxItems.length) return;
         lightboxIndex = (index + lightboxItems.length) % lightboxItems.length;
@@ -582,7 +591,16 @@
         lightboxNext.disabled = lightboxItems.length <= 1;
       };
       const moveLightbox = (step) => setLightboxImage(lightboxIndex + step);
-      const closeLightbox = () => lightbox.classList.remove("active");
+      const closeLightbox = () => {
+        if (!lightbox.classList.contains("active")) return;
+        lightbox.classList.remove("active");
+        document.body.classList.remove("lab-lightbox-open-v34");
+        lightboxImage.removeAttribute("src");
+        window.scrollTo(lightboxScroll.x, lightboxScroll.y);
+        if (lightboxReturnFocus && document.contains(lightboxReturnFocus)) {
+          lightboxReturnFocus.focus({ preventScroll: true });
+        }
+      };
       lightbox.querySelector("[data-lightbox-close]")?.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -602,6 +620,19 @@
         event.stopPropagation();
         if (event.target === lightbox) closeLightbox();
       });
+      lightboxImage?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (lightboxItems.length > 1) moveLightbox(1);
+      });
+      lightbox.addEventListener("touchstart", (event) => {
+        lightboxTouchX = event.changedTouches?.[0]?.clientX || 0;
+      }, { passive: true });
+      lightbox.addEventListener("touchend", (event) => {
+        const endX = event.changedTouches?.[0]?.clientX || 0;
+        const distance = endX - lightboxTouchX;
+        if (Math.abs(distance) > 42) moveLightbox(distance > 0 ? -1 : 1);
+      }, { passive: true });
       document.addEventListener("keydown", (event) => {
         if (!lightbox.classList.contains("active")) return;
         if (event.key === "Escape") {
@@ -623,10 +654,13 @@
         event.stopPropagation();
         const gallery = link.closest(".lab-gallery");
         lightboxItems = Array.from((gallery || document).querySelectorAll("[data-lightbox-image]"))
-          .filter((item) => item.getAttribute("href"));
+          .filter(isVisibleLightboxLink);
         const index = Math.max(0, lightboxItems.indexOf(link));
+        lightboxReturnFocus = link;
+        lightboxScroll = { x: window.scrollX, y: window.scrollY };
         setLightboxImage(index);
         lightbox.classList.add("active");
+        document.body.classList.add("lab-lightbox-open-v34");
       });
 
       document.querySelectorAll(".delete-block").forEach((button) => {
