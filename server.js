@@ -5996,6 +5996,7 @@ function renderBlockRecordV3(block, actionBase = WORK_PATH, materialLibrary = []
             <form class="record-form" method="post" action="${actionBase}/update-block-record" data-record-form data-existing-result-labels="${attr(existingResultLabels.join("、"))}" data-original-ages="${attr(block.ages.join(","))}">
               <input type="hidden" name="id" value="${attr(block.id)}">
               <input type="hidden" name="templateApplied" value="0" data-template-applied>
+              <input type="hidden" name="activeTab" value="base" data-active-record-tab-input>
               <section class="record-panel active" data-record-panel="base">
                 <section class="record-section">
                   <h4>基础信息 <small>试块组是最小实验单位</small></h4>
@@ -6285,6 +6286,21 @@ function redirect(res, message = "", basePath = BASE_PATH, hash = "") {
 function safeReturnAnchor(value, fallback = "calendar") {
   const anchor = String(value || "").trim().replace(/^#/, "");
   return /^[A-Za-z0-9:_-]{1,96}$/.test(anchor) ? anchor : fallback;
+}
+
+function safeRecordTab(value, fallback = "base") {
+  const tab = String(value || "").trim();
+  return ["base", "recipe", "results", "images", "tasks"].includes(tab) ? tab : fallback;
+}
+
+function redirectToRecord(res, message, basePath, blockId, tab = "base") {
+  const params = new URLSearchParams();
+  if (message) params.set("msg", message);
+  if (blockId) params.set("openBlock", blockId);
+  params.set("tab", safeRecordTab(tab));
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  const anchor = blockId ? `#record-${encodeURIComponent(blockId)}` : "";
+  redirectTo(res, `${basePath}/${suffix}${anchor}`);
 }
 
 function send(res, status, body, type = "text/html; charset=utf-8", headers = {}) {
@@ -8194,7 +8210,7 @@ async function handleUpdateBlockRecord(req, res, redirectBase = WORK_PATH) {
   });
   if (!found) throw Object.assign(new Error("block not found"), { statusCode: 404 });
   await saveContent(content, { skipSite: redirectBase === WORK_PATH });
-  redirect(res, "试块档案已保存", redirectBase, `record-${id}`);
+  redirectToRecord(res, "试块档案已保存", redirectBase, id, params.get("activeTab"));
 }
 
 async function handleToggleTask(req, res, redirectBase = WORK_PATH) {

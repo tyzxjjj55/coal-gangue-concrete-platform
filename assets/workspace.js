@@ -302,6 +302,8 @@
               panel.hidden = panel.dataset.recordPanel !== key;
               panel.classList.toggle("active", panel.dataset.recordPanel === key);
             });
+            const activeInput = details.querySelector("[data-active-record-tab-input]");
+            if (activeInput) activeInput.value = key || "base";
           });
         });
         details.querySelector("[data-close-record]")?.addEventListener("click", (event) => {
@@ -491,9 +493,12 @@
       };
       document.querySelector("[data-open-all-records]")?.addEventListener("click", () => {
         recordDetails.forEach((details) => { details.open = true; });
+        syncRecordDrawerState();
       });
       document.querySelector("[data-close-all-records]")?.addEventListener("click", () => {
         recordDetails.forEach((details) => { details.open = false; });
+        syncRecordDrawerState();
+        clearRecordHash();
       });
       openRecordFromHash();
       window.addEventListener("hashchange", openRecordFromHash);
