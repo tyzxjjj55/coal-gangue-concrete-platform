@@ -228,6 +228,7 @@
     .archive-actions .chip-button { min-height:36px; padding:0 12px; box-shadow:none; }
     .export-check { display:inline-flex; align-items:center; gap:7px; min-height:34px; padding:0 10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--green); font-size:13px; font-weight:900; }
     .export-check input { width:17px; min-height:17px; padding:0; accent-color:var(--green); }
+    .export-count-v311 { min-height:34px; display:inline-flex; align-items:center; padding:0 10px; border:1px solid #d7e6e0; border-radius:8px; background:#fbfdfc; color:var(--muted); font-size:12px; font-weight:900; white-space:nowrap; }
     .block-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
     .record-details summary { user-select:none; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:14px; padding:14px 16px; background:#fff; transition:background .16s ease; }
     .record-details summary:hover { background:#fbfdfc; }

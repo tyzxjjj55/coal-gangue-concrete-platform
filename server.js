@@ -4343,10 +4343,12 @@ function renderBlockManagementV22(content, actionBase) {
           <input id="blockSearch" type="search" placeholder="搜索名称、煤矸石、n值、粒径、材料、龄期">
           <span class="hint">共 ${blocks.length} 组</span>
           <div class="archive-actions" aria-label="试块导出操作">
-            <button class="chip-button" type="button" data-check-all-export>全选导出</button>
+            <button class="chip-button" type="button" data-check-visible-export>选择当前筛选</button>
+            <button class="chip-button" type="button" data-check-all-export>全选全部</button>
             <button class="chip-button" type="button" data-clear-export>清空选择</button>
             <button class="chip-button" type="submit" form="exportBlocksForm">导出选中 Excel</button>
             <button class="chip-button" type="submit" form="exportBlocksForm" name="exportAll" value="1">导出全部 Excel</button>
+            <span class="export-count-v311" data-export-count>已选 0 组</span>
           </div>
         </div>
         ${renderBlockFilterPanelV31(content)}
@@ -6109,9 +6111,11 @@ function renderBlockListV3(blocks, actionBase = WORK_PATH, content = {}) {
         <input id="blockSearch" type="search" placeholder="搜索名称、煤矸石、n值、粒径、材料、龄期">
         <span class="hint">共 ${blocks.length} 条</span>
         <div class="archive-actions" aria-label="试块档案批量操作">
-          <button class="chip-button" type="button" data-check-all-export>全选导出</button>
+          <button class="chip-button" type="button" data-check-visible-export>选择当前筛选</button>
+          <button class="chip-button" type="button" data-check-all-export>全选全部</button>
           <button class="chip-button" type="button" data-clear-export>清空选择</button>
           <button class="chip-button" type="submit" form="exportBlocksForm">导出选中 Excel</button>
+          <span class="export-count-v311" data-export-count>已选 0 组</span>
           <button class="chip-button" type="button" data-open-all-records>全部展开</button>
           <button class="chip-button" type="button" data-close-all-records>全部收起</button>
         </div>

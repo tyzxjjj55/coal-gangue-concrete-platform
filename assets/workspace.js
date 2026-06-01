@@ -154,6 +154,7 @@
           const matchesFailure = !filters.failure || (card.dataset.failureModes || "").includes(filters.failure);
           card.classList.toggle("hidden", !(matchesKeyword && matchesCategory && matchesGangue && matchesAge && matchesStrength && matchesImage && matchesFailure));
         });
+        updateExportCount();
       };
       if (search) {
         search.addEventListener("input", () => {
@@ -289,6 +290,16 @@
         filters.forEach((filter) => filter.addEventListener("change", applyImageFilters));
       });
       const exportChecks = Array.from(document.querySelectorAll("[data-export-check]"));
+      const updateExportCount = () => {
+        const selected = exportChecks.filter((input) => input.checked).length;
+        const visible = exportChecks.filter((input) => {
+          const card = input.closest("[data-block-card]");
+          return !card || !card.classList.contains("hidden");
+        }).length;
+        document.querySelectorAll("[data-export-count]").forEach((node) => {
+          node.textContent = "已选 " + selected + " 组 / 当前可见 " + visible + " 组";
+        });
+      };
       const normalizeResultNumber = (value) => {
         const text = String(value || "").replace(/MPa/ig, "").replace(/，/g, ".").trim();
         if (!text) return "";
@@ -337,15 +348,23 @@
           if (!confirm(message)) event.preventDefault();
         });
       });
-      document.querySelector("[data-check-all-export]")?.addEventListener("click", () => {
+      document.querySelectorAll("[data-check-all-export]").forEach((button) => button.addEventListener("click", () => {
+        exportChecks.forEach((input) => { input.checked = true; });
+        updateExportCount();
+      }));
+      document.querySelectorAll("[data-check-visible-export]").forEach((button) => button.addEventListener("click", () => {
         exportChecks.forEach((input) => {
           const card = input.closest("[data-block-card]");
           if (!card || !card.classList.contains("hidden")) input.checked = true;
         });
-      });
-      document.querySelector("[data-clear-export]")?.addEventListener("click", () => {
+        updateExportCount();
+      }));
+      document.querySelectorAll("[data-clear-export]").forEach((button) => button.addEventListener("click", () => {
         exportChecks.forEach((input) => { input.checked = false; });
-      });
+        updateExportCount();
+      }));
+      exportChecks.forEach((input) => input.addEventListener("change", updateExportCount));
+      updateExportCount();
       document.getElementById("exportBlocksForm")?.addEventListener("submit", (event) => {
         const submitter = event.submitter;
         const exportAll = submitter && submitter.name === "exportAll";
