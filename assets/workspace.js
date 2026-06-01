@@ -173,26 +173,42 @@
         globalSearch.focus();
       });
       blockFilters.forEach((filter) => filter.addEventListener("change", () => applySearch(search?.value || globalSearch?.value || "")));
-      document.querySelectorAll("#calendar [data-calendar-filter]").forEach((button) => {
-        button.addEventListener("click", () => {
-          const calendar = button.closest("#calendar") || document.getElementById("calendar");
-          if (!calendar) return;
-          const filter = button.dataset.calendarFilter || "";
-          const alreadyActive = button.classList.contains("active");
-          const activeFilter = alreadyActive ? "" : filter;
-          calendar.querySelectorAll("[data-calendar-filter]").forEach((item) => item.classList.toggle("active", activeFilter && item === button));
+      const calendar = document.getElementById("calendar");
+      if (calendar) {
+        const calendarFilterLabels = { overdue: "逾期未完成", today: "今天要处理", next7: "未来 7 天", next14: "未来 14 天", completed: "已完成任务" };
+        const applyCalendarFilter = (activeFilter = "") => {
+          let visibleCount = 0;
+          calendar.querySelectorAll("[data-calendar-filter]").forEach((item) => item.classList.toggle("active", Boolean(activeFilter) && item.dataset.calendarFilter === activeFilter));
           calendar.querySelectorAll("[data-calendar-item]").forEach((item) => {
             const tokens = String(item.dataset.calendarTokens || "").split(/\s+/).filter(Boolean);
-            item.classList.toggle("calendar-filter-hidden", Boolean(activeFilter) && !tokens.includes(activeFilter));
+            const visible = !activeFilter || tokens.includes(activeFilter);
+            item.classList.toggle("calendar-filter-hidden", !visible);
+            if (visible) visibleCount += 1;
+          });
+          calendar.querySelectorAll("[data-calendar-day]").forEach((day) => {
+            const visibleItems = Array.from(day.querySelectorAll("[data-calendar-item]")).filter((item) => !item.classList.contains("calendar-filter-hidden"));
+            day.classList.toggle("calendar-filter-empty-day", Boolean(activeFilter) && visibleItems.length === 0);
+          });
+          calendar.querySelectorAll("[data-calendar-month]").forEach((month) => {
+            const visibleItems = Array.from(month.querySelectorAll("[data-calendar-item]")).filter((item) => !item.classList.contains("calendar-filter-hidden"));
+            month.classList.toggle("calendar-filter-empty-month", Boolean(activeFilter) && visibleItems.length === 0);
           });
           const status = calendar.querySelector("[data-calendar-filter-status]");
-          if (status) {
-            const labels = { overdue: "只看逾期未完成", today: "只看今天要处理", next7: "只看未来 7 天", next14: "只看未来 14 天", completed: "只看已完成任务" };
+          const statusText = calendar.querySelector("[data-calendar-filter-text]");
+          if (status && statusText) {
             status.hidden = !activeFilter;
-            status.textContent = activeFilter ? labels[activeFilter] + "。再次点击同一数字可取消筛选。" : "";
+            statusText.textContent = activeFilter ? "当前只看：" + (calendarFilterLabels[activeFilter] || activeFilter) + "，共 " + visibleCount + " 条。再次点击数字或点清除可取消。" : "";
           }
+          const empty = calendar.querySelector("[data-calendar-filter-empty]");
+          if (empty) empty.hidden = !activeFilter || visibleCount > 0;
+        };
+        calendar.querySelectorAll("[data-calendar-filter]").forEach((button) => {
+          button.addEventListener("click", () => {
+            applyCalendarFilter(button.classList.contains("active") ? "" : (button.dataset.calendarFilter || ""));
+          });
         });
-      });
+        calendar.querySelector("[data-calendar-clear-filter]")?.addEventListener("click", () => applyCalendarFilter(""));
+      }
       document.querySelectorAll("[data-image-filter-panel]").forEach((panel) => {
         const filters = Array.from(panel.querySelectorAll("[data-image-filter]"));
         const gallery = panel.nextElementSibling;

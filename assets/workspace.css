@@ -570,8 +570,12 @@
     .calendar-kpis .today b { color:#d28b34; }
     .calendar-kpis .future b { color:#3d6f98; }
     .calendar-kpis .done b { color:#337861; }
-    .calendar-filter-status { margin:8px 0 0; padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; color:var(--muted); font-size:12px; font-weight:900; }
+    .calendar-filter-status { margin:8px 0 0; padding:9px 11px; display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; color:var(--muted); font-size:12px; font-weight:900; }
+    .calendar-filter-status button { min-height:30px; padding:0 10px; border-radius:8px; box-shadow:none; }
+    .calendar-filter-empty { margin:0; padding:14px; border:1px dashed var(--line); border-radius:8px; background:#fbfdfc; color:var(--muted); font-weight:900; text-align:center; }
     #calendar [data-calendar-item].calendar-filter-hidden { display:none; }
+    #calendar [data-calendar-day].calendar-filter-empty-day { opacity:.36; }
+    #calendar [data-calendar-month].calendar-filter-empty-month { display:none; }
     .calendar-collapse-v22 { padding:0; overflow:hidden; }
     .calendar-collapse-v22 > summary, .create-panel-v22 > summary { cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 18px; }
     .calendar-collapse-v22 > summary::-webkit-details-marker, .create-panel-v22 > summary::-webkit-details-marker { display:none; }

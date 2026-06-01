@@ -5496,8 +5496,12 @@ function renderBlockCalendarV3(content, actionBase = WORK_PATH) {
       </div>
       <div class="calendar-dashboard">
         ${renderCalendarStatsV3(dueItems, referenceDate)}
-        <p class="calendar-filter-status" data-calendar-filter-status hidden></p>
+        <div class="calendar-filter-status" data-calendar-filter-status hidden>
+          <span data-calendar-filter-text></span>
+          <button type="button" data-calendar-clear-filter>清除筛选</button>
+        </div>
         ${renderCalendarAgendaV3(dueItems, actionBase, referenceDate)}
+        <p class="calendar-filter-empty" data-calendar-filter-empty hidden>当前筛选下没有日历事项。</p>
       </div>
       <div class="calendar-board">
         ${months.map((monthKey) => renderCalendarMonthV3(monthKey, dueByDate, actionBase, referenceDate)).join("\n        ")}
@@ -5520,12 +5524,12 @@ function renderCalendarMonthV3(monthKey, dueByDate, actionBase, referenceDate = 
     if (dues.length) classes.push("has-due");
     if (states.has("overdue")) classes.push("has-overdue");
     if (states.has("completed") && dues.every((item) => calendarItemCompletedV22(item))) classes.push("all-completed");
-    cells.push(`<div class="${classes.join(" ")}">
+    cells.push(`<div class="${classes.join(" ")}" data-calendar-day>
           <span class="day-number">${day}</span>
           ${dues.map((item) => renderCalendarActionV22(item, actionBase, `due-pill ${calendarItemStateV3(item, referenceDate)}`)).join("")}
         </div>`);
   }
-  return `<article class="month-card">
+  return `<article class="month-card" data-calendar-month>
           <h3>${formatMonthCnV3(monthKey)}</h3>
           <div class="weekdays"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
           <div class="calendar-days">${cells.join("")}</div>
