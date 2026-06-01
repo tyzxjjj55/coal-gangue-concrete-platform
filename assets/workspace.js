@@ -133,11 +133,20 @@
       const search = document.getElementById("blockSearch");
       const globalSearch = document.getElementById("globalBlockSearch");
       const cards = Array.from(document.querySelectorAll("[data-block-card]"));
+      const blockFilters = Array.from(document.querySelectorAll("[data-block-filter]"));
       const applySearch = (value) => {
         const keyword = String(value || "").trim().toLowerCase();
-          cards.forEach((card) => {
-            card.classList.toggle("hidden", Boolean(keyword) && !card.dataset.search.toLowerCase().includes(keyword));
-          });
+        const filters = Object.fromEntries(blockFilters.map((filter) => [filter.dataset.blockFilter, filter.value || ""]));
+        cards.forEach((card) => {
+          const matchesKeyword = !keyword || (card.dataset.search || "").toLowerCase().includes(keyword);
+          const matchesCategory = !filters.category || card.dataset.category === filters.category;
+          const matchesGangue = !filters.gangue || card.dataset.gangue === filters.gangue;
+          const matchesAge = !filters.age || (card.dataset.ages || "").split(",").includes(filters.age);
+          const matchesStrength = !filters.strength || card.dataset.hasStrength === filters.strength;
+          const matchesImage = !filters.image || card.dataset.hasImage === filters.image;
+          const matchesFailure = !filters.failure || (card.dataset.failureModes || "").includes(filters.failure);
+          card.classList.toggle("hidden", !(matchesKeyword && matchesCategory && matchesGangue && matchesAge && matchesStrength && matchesImage && matchesFailure));
+        });
       };
       if (search) {
         search.addEventListener("input", () => {
@@ -155,6 +164,22 @@
         if (!globalSearch) return;
         applySearch(globalSearch.value);
         globalSearch.focus();
+      });
+      blockFilters.forEach((filter) => filter.addEventListener("change", () => applySearch(search?.value || globalSearch?.value || "")));
+      document.querySelectorAll("[data-image-filter-panel]").forEach((panel) => {
+        const filters = Array.from(panel.querySelectorAll("[data-image-filter]"));
+        const gallery = panel.nextElementSibling;
+        const cards = Array.from(gallery?.querySelectorAll("[data-image-card]") || []);
+        const applyImageFilters = () => {
+          const values = Object.fromEntries(filters.map((filter) => [filter.dataset.imageFilter, filter.value || ""]));
+          cards.forEach((card) => {
+            const ok = (!values.kind || card.dataset.imageKind === values.kind)
+              && (!values.age || card.dataset.imageAge === values.age)
+              && (!values.tag || (card.dataset.imageTags || "").includes(values.tag));
+            card.classList.toggle("hidden", !ok);
+          });
+        };
+        filters.forEach((filter) => filter.addEventListener("change", applyImageFilters));
       });
       const exportChecks = Array.from(document.querySelectorAll("[data-export-check]"));
       const normalizeResultNumber = (value) => {
@@ -313,7 +338,7 @@
         const strength = row.querySelector("[data-strength-mpa]");
         const formatNumber = (value) => {
           if (!Number.isFinite(value)) return "";
-          return String(Math.round(value * 1000) / 1000).replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
+          return String(Math.round(value * 100) / 100).replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1");
         };
         const updateStrength = () => {
           const pressureValue = Number.parseFloat(String(pressure?.value || "").replace(",", "."));

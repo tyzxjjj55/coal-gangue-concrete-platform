@@ -257,33 +257,54 @@ const RECIPE_MATERIAL_CATEGORIES = [
   { id: "water", label: "水" }
 ];
 const LAB_IMAGE_KINDS = [
-  { id: "raw_gangue", label: "煤矸石原始图" },
-  { id: "gradation", label: "级配/称重图" },
-  { id: "mixing", label: "拌合过程图" },
-  { id: "specimen", label: "试块图" },
-  { id: "curing", label: "养护过程图" },
-  { id: "compression_before", label: "抗压前图" },
-  { id: "compression_after", label: "抗压后图" },
-  { id: "splitting_section", label: "劈裂断面图" },
-  { id: "machine_screen", label: "设备读数图" }
+  { id: "raw_gangue", label: "煤矸石原样" },
+  { id: "gradation", label: "筛分级配" },
+  { id: "mixing", label: "搅拌过程" },
+  { id: "forming", label: "成型过程" },
+  { id: "specimen", label: "试块照片" },
+  { id: "curing", label: "养护过程" },
+  { id: "compression_before", label: "抗压前" },
+  { id: "compression_after", label: "抗压后" },
+  { id: "splitting_before", label: "劈裂前" },
+  { id: "splitting_after", label: "劈裂后" },
+  { id: "splitting_section", label: "断面图" },
+  { id: "machine_screen", label: "设备截图" },
+  { id: "other", label: "其他" }
 ];
 const LAB_IMAGE_KIND_ALIASES = {
   gangueRaw: "raw_gangue",
   crushing: "gradation",
   density: "raw_gangue",
   flakiness: "raw_gangue",
-  forming: "specimen",
+  forming: "forming",
   demold: "specimen",
   pressureReading: "machine_screen",
   compressionFailure: "compression_after",
   splitSection: "splitting_section",
   flexuralFailure: "specimen",
   block: "specimen",
-  split: "splitting_section",
-  other: "specimen"
+  split: "splitting_after",
+  splitting: "splitting_after",
+  section: "splitting_section",
+  other: "other"
 };
-const GANGUE_LAB_IMAGE_KIND_IDS = ["raw_gangue", "gradation", "machine_screen"];
-const BLOCK_LAB_IMAGE_KIND_IDS = ["gradation", "mixing", "specimen", "curing", "compression_before", "compression_after", "splitting_section", "machine_screen"];
+const GANGUE_LAB_IMAGE_KIND_IDS = ["raw_gangue", "gradation", "machine_screen", "other"];
+const BLOCK_LAB_IMAGE_KIND_IDS = [
+  "gradation",
+  "mixing",
+  "forming",
+  "specimen",
+  "curing",
+  "compression_before",
+  "compression_after",
+  "splitting_before",
+  "splitting_after",
+  "splitting_section",
+  "machine_screen",
+  "other"
+];
+const FAILURE_MODE_OPTIONS = ["未记录", "界面剥离", "骨料破碎", "基体开裂", "混合破坏", "其他"];
+const LAB_IMAGE_TAG_OPTIONS = ["界面剥离", "骨料破碎", "基体开裂", "裂缝明显", "孔洞明显", "表面完整", "其他"];
 
 let sessionSecret = "";
 
@@ -621,7 +642,7 @@ function calculateResultSamples(samples, options = {}) {
   const zeroPlaceholders = options.ignoreZero ? rawNumbers.filter((number) => number === 0).length : 0;
   const numbers = options.ignoreZero ? rawNumbers.filter((number) => number !== 0) : rawNumbers;
   if (!numbers.length) {
-    return { values, mean: "", std: "", cv: "", min: "", max: "", n: "", meanSource: zeroPlaceholders ? "疑似占位值" : "未录入", zeroPlaceholders };
+    return { values, mean: "", std: "", cv: "", min: "", max: "", n: "", meanSource: zeroPlaceholders ? "0值记录" : "未录入", zeroPlaceholders };
   }
   const mean = numbers.reduce((total, number) => total + number, 0) / numbers.length;
   const variance = numbers.length > 1
@@ -646,7 +667,7 @@ function strengthFromPressureArea(pressureKn, areaMm2) {
   const pressure = parseMeasurementNumber(pressureKn);
   const area = parseMeasurementNumber(areaMm2);
   if (pressure === null || area === null || area <= 0) return "";
-  return formatRecipeNumber((pressure * 1000) / area, 3);
+  return formatRecipeNumber((pressure * 1000) / area, 2);
 }
 
 function assertNonNegativeResultValueV25(value, label) {
@@ -665,6 +686,7 @@ function strengthDiffersFromComputedV25(value, computed) {
 
 function normalizeSampleMeasurements(value, fallbackValues = []) {
   const fallback = parseResultSamples(fallbackValues).map((strengthMpa) => ({
+    specimenNo: "",
     pressureKn: "",
     areaMm2: "",
     strengthMpa,
@@ -675,10 +697,12 @@ function normalizeSampleMeasurements(value, fallbackValues = []) {
   const rows = (Array.isArray(value) ? value : [])
     .map((item) => {
       if (item && typeof item === "object") {
+        const specimenNo = String(item.specimenNo ?? item.no ?? item.specimenId ?? "").trim();
         const pressureKn = String(item.pressureKn ?? item.pressure ?? item.loadKn ?? "").trim();
         const areaMm2 = String(item.areaMm2 ?? item.area ?? item.bearingArea ?? "").trim();
         const computed = strengthFromPressureArea(pressureKn, areaMm2);
         return {
+          specimenNo,
           pressureKn,
           areaMm2,
           strengthMpa: String(item.strengthMpa ?? item.strength ?? item.value ?? computed ?? "").trim() || computed,
@@ -688,6 +712,7 @@ function normalizeSampleMeasurements(value, fallbackValues = []) {
         };
       }
       return {
+        specimenNo: "",
         pressureKn: "",
         areaMm2: "",
         strengthMpa: String(item || "").trim(),
@@ -721,7 +746,7 @@ function normalizeMetricResultEntry(value, legacyValue = "", options = {}) {
   const hasSamples = Boolean(sampleStats.n);
   const hasOnlyZeroPlaceholders = !hasSamples && sampleStats.zeroPlaceholders > 0;
   const mean = hasSamples ? sampleStats.mean : manualMean;
-  const sourceLabel = hasSamples ? sampleStats.meanSource : (hasOnlyZeroPlaceholders ? "疑似占位值" : (manualMean ? "手动录入" : "未录入"));
+  const sourceLabel = hasSamples ? sampleStats.meanSource : (hasOnlyZeroPlaceholders ? "0值记录" : (manualMean ? "手动录入" : "未录入"));
   const measurementFailureMode = sampleMeasurements.map((item) => item.failureMode).filter(Boolean).join("；");
   const measurementRemark = sampleMeasurements.map((item) => item.remark).filter(Boolean).join("；");
   return {
@@ -1586,16 +1611,12 @@ function syncExperimentDataModelV25(content) {
   const blocks = getTestBlocks(content);
   const gangues = getCoalGangueDb(content);
   const batchRows = gangues.map((item) => {
-    const completeness = coalGangueCompletenessV31(item);
     return {
       id: item.id,
       name: item.name,
       source: item.source,
       shortCode: item.shortCode,
       particleRanges: item.particleRanges,
-      completenessScore: completeness.score,
-      missingFields: completeness.missing,
-      modelAnalysisRecommendation: completeness.modelReady ? "可用于模型分析" : "暂不建议用于模型分析",
       note: item.otherInfo,
       modelSource: "coalGangueDb"
     };
@@ -1670,6 +1691,27 @@ function labImageKindLabel(value) {
   return LAB_IMAGE_KINDS.find((item) => item.id === normalizeLabImageKind(value))?.label || "其他实验图";
 }
 
+function normalizeImageTags(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+  return String(value || "")
+    .split(/[\s,，、;；]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function renderFailureModeSelect(name, selected = "") {
+  const value = String(selected || "").trim();
+  const options = FAILURE_MODE_OPTIONS.map((item) => (
+    `<option value="${item === "未记录" ? "" : attr(item)}" ${(item === value || (!value && item === "未记录")) ? "selected" : ""}>${html(item)}</option>`
+  ));
+  if (value && value !== "未记录" && !FAILURE_MODE_OPTIONS.includes(value)) {
+    options.push(`<option value="${attr(value)}" selected>${html(value)}</option>`);
+  }
+  return `<select name="${attr(name)}">${options.join("")}</select>`;
+}
+
 function labImageKindsForTarget(targetType) {
   const ids = targetType === "gangue" ? GANGUE_LAB_IMAGE_KIND_IDS : BLOCK_LAB_IMAGE_KIND_IDS;
   return ids.map((id) => LAB_IMAGE_KINDS.find((item) => item.id === id)).filter(Boolean);
@@ -1696,6 +1738,8 @@ function normalizeLabImages(value, options = {}) {
         metric: String(item.metric || "").trim(),
         strengthMPa: String(item.strengthMPa || item.strengthMpa || "").trim(),
         failureMode: String(item.failureMode || "").trim(),
+        tags: normalizeImageTags(item.tags || item.imageTags || item.tag),
+        note: String(item.note || "").trim(),
         createdAt: String(item.createdAt || item.date || "").trim()
       };
     })
@@ -3808,16 +3852,16 @@ function strengthQualityFlagsForEntryV31(block, age, metric, row, entry) {
   });
   const hasRawStrength = positiveSampleCount > 0;
   if (hasZeroPlaceholder) {
-    flags.push({ code: "zero-placeholder", title: "疑似占位值", detail: "strengthMPa 为 0，默认不参与统计" });
+    flags.push({ code: "zero-placeholder", title: "可核对 0 值记录", detail: "强度为 0，默认按占位记录处理，可后续补充真实值" });
   }
   if (hasStrength && positiveSampleCount < 3) {
-    flags.push({ code: "insufficient-samples", title: "试件数量不足", detail: `有效试件 ${positiveSampleCount}/3` });
+    flags.push({ code: "insufficient-samples", title: "可继续补充试件", detail: `当前已录入 ${positiveSampleCount} 个试件` });
   }
   if (hasStrength && !row.testDate) {
-    flags.push({ code: "missing-test-date", title: "缺试验日期", detail: "有强度值但未填写 testDate" });
+    flags.push({ code: "missing-test-date", title: "可补充试验日期", detail: "有强度值，可补充对应试验日期" });
   }
   if (hasStrength && (!hasRawLoad || !hasRawStrength)) {
-    flags.push({ code: "missing-raw-samples", title: "缺原始荷载/样本", detail: "有均值但缺原始荷载或原始强度样本" });
+    flags.push({ code: "missing-raw-samples", title: "可补充原始荷载", detail: "有均值记录，可继续补充原始荷载或强度样本" });
   }
   return flags.map((flag) => ({
     ...flag,
@@ -3895,40 +3939,32 @@ function dataHealthItemsV23(content) {
   const groups = [
     {
       key: "strength",
-      title: "缺强度",
+      title: "可补充强度记录",
       items: blocks.filter((block) => !blockHasStrength(block)).map((block) => ({ label: block.name, href: `#record-${block.id}` }))
     },
     {
       key: "date",
-      title: "缺到期日期",
+      title: "可补充成型日期/龄期",
       items: blocks.filter((block) => !block.madeDate || !normalizeAges(block.ages).length).map((block) => ({ label: block.name, href: `#record-${block.id}` }))
     },
     {
       key: "crushing",
-      title: "缺压碎值",
+      title: "可补充压碎值",
       items: gangues.filter((item) => !item.batchCrushingValue).map((item) => ({ label: item.name, href: `#gangue-${item.id}` }))
     },
     {
       key: "waterAbsorption",
-      title: "缺吸水率",
+      title: "可补充吸水率",
       items: gangues.filter((item) => !item.coarseWaterAbsorption && !item.fineWaterAbsorption).map((item) => ({ label: item.name, href: `#gangue-${item.id}` }))
     },
     {
       key: "density",
-      title: "缺表观密度",
+      title: "可补充表观密度",
       items: gangues.filter((item) => !item.coarseApparentDensity && !item.fineApparentDensity).map((item) => ({ label: item.name, href: `#gangue-${item.id}` }))
     },
     {
-      key: "gangueCompleteness",
-      title: "煤矸石完整度低",
-      items: gangues
-        .map((item) => ({ item, completeness: coalGangueCompletenessV31(item) }))
-        .filter((row) => row.completeness.score < 60)
-        .map((row) => ({ label: `${row.item.name} 完整度 ${row.completeness.score}%：暂不建议用于模型分析`, href: `#gangue-${row.item.id}` }))
-    },
-    {
       key: "images",
-      title: "缺图片",
+      title: "可补充实验图片",
       items: [
         ...gangues.filter((item) => !normalizeLabImages(item.images).length).map((item) => ({ label: item.name, href: `#gangue-${item.id}` })),
         ...blocks.filter((block) => !normalizeLabImages(block.images).length).map((block) => ({ label: block.name, href: `#record-${block.id}` }))
@@ -3936,75 +3972,62 @@ function dataHealthItemsV23(content) {
     },
     {
       key: "cv",
-      title: "CV 异常",
+      title: "CV 可核对",
       items: cvAlerts
     },
     {
       key: "zeroPlaceholder",
-      title: "疑似占位值",
+      title: "可核对 0 值记录",
       items: qualityItems("zero-placeholder")
     },
     {
       key: "insufficientSamples",
-      title: "试件数量不足",
+      title: "可继续补充试件",
       items: qualityItems("insufficient-samples")
     },
     {
       key: "missingTestDate",
-      title: "强度缺试验日期",
+      title: "可补充试验日期",
       items: qualityItems("missing-test-date")
     },
     {
       key: "missingRawSamples",
-      title: "缺原始荷载/样本",
+      title: "可补充原始荷载",
       items: qualityItems("missing-raw-samples")
     },
     {
       key: "gangueRelation",
-      title: "未关联煤矸石",
+      title: "可关联煤矸石",
       items: specimenGroups.filter((item) => !item.coalGangueBatchId).map((item) => ({ label: item.name, href: `#record-${item.legacyBlockId || item.id}` }))
     },
     {
       key: "gradationRelation",
-      title: "未关联级配",
+      title: "可关联级配",
       items: specimenGroups.filter((item) => !item.gradationPlanId).map((item) => ({ label: item.name, href: `#record-${item.legacyBlockId || item.id}` }))
     },
     {
       key: "day28",
-      title: "无 28d 强度",
-      items: specimenGroups.filter((item) => !resultValueFor(item.id, 28, "compressionStrength")).map((item) => ({ label: item.name, href: `#record-${item.legacyBlockId || item.id}` }))
+      title: "可补充 28d 强度",
+      items: specimenGroups
+        .filter((item) => normalizeAges(item.ages).includes(28) && !resultValueFor(item.id, 28, "compressionStrength"))
+        .map((item) => ({ label: item.name, href: `#record-${item.legacyBlockId || item.id}` }))
     },
     {
       key: "coreAges",
-      title: "龄期数据缺失",
+      title: "可补充已选龄期结果",
       items: specimenGroups.flatMap((item) => [3, 7, 28]
         .filter((age) => normalizeAges(item.ages).includes(age) && !resultValueFor(item.id, age, "compressionStrength"))
         .map((age) => ({ label: `${item.name} ${age}d`, href: `#record-${item.legacyBlockId || item.id}` })))
     },
     {
-      key: "coreAgeCoverage",
-      title: "3/7/28 龄期覆盖不完整",
-      items: blocks.map((block) => {
-        const missing = [3, 7, 28].filter((age) => !resultValueFor(specimenGroupIdForBlockV25(block), age, "compressionStrength"));
-        return missing.length ? { label: `${block.name} 缺 ${missing.map((age) => `${age}d`).join("、")}`, href: `#record-${block.id}` } : null;
-      }).filter(Boolean)
-    },
-    {
-      key: "strengthRange",
-      title: "强度异常",
-      items: testResults.map((item) => ({ item, value: parseMeasurementNumber(item.strengthMPa) }))
-        .filter((row) => row.value !== null && (row.value <= 0 || row.value > 120))
-        .map((row) => ({ label: `${row.item.metricLabel || row.item.metric} ${row.item.age}d ${formatRecipeNumber(row.value, 3)}MPa`, href: resultHref(row.item) }))
-    },
-    {
       key: "duplicateResults",
-      title: "重复测试结果",
+      title: "可整理重复结果",
       items: Array.from(resultByKey.values()).filter((items) => items.length > 1)
         .map((items) => ({ label: `${items[0].specimenGroupId} ${items[0].age}d ${items[0].metric}`, href: resultHref(items[0]) }))
     },
     {
       key: "abnormalNotes",
-      title: "异常缺备注",
+      title: "可补充异常备注",
       items: testResults.filter((item) => item.abnormalFlag && !String(item.note || "").trim())
         .map((item) => ({ label: `${item.metricLabel || item.metric} ${item.age}d`, href: resultHref(item) }))
     }
@@ -4016,12 +4039,12 @@ function renderDataHealthPanelV23(content) {
   const groups = dataHealthItemsV23(content);
   const total = groups.reduce((sum, group) => sum + group.count, 0);
   return `<section class="dashboard-card-v22 data-health-v23" id="data-health">
-      <div class="section-head-v22"><div><p class="eyebrow">Data Health</p><h2>实验数据健康检查</h2><p>核对实验关系、龄期强度、异常备注、煤矸石指标和图片归档。</p></div><strong>${total} 项待补</strong></div>
+      <div class="section-head-v22"><div><p class="eyebrow">Follow-up</p><h2>待补充事项</h2><p>这里按实验记录流程提示可继续补充的内容，不判断数据是否有效，也不影响当前记录使用。</p></div><strong>${total} 项可补</strong></div>
       <div class="health-grid-v23">
         ${groups.map((group) => `<article class="health-card-v23 ${group.count ? "todo" : "ok"}">
           <span>${html(group.title)}</span>
           <b>${group.count}</b>
-          ${group.count ? `<div>${group.items.slice(0, 4).map((item) => `<a href="${attr(item.href)}" ${item.href.startsWith("#record-") ? `data-open-record="${attr(item.href.replace("#record-", ""))}" data-record-tab-target="results"` : ""}>${html(item.label)}</a>`).join("")}${group.count > 4 ? `<small>还有 ${group.count - 4} 项</small>` : ""}</div>` : `<em>完整</em>`}
+          ${group.count ? `<div>${group.items.slice(0, 4).map((item) => `<a href="${attr(item.href)}" ${item.href.startsWith("#record-") ? `data-open-record="${attr(item.href.replace("#record-", ""))}" data-record-tab-target="results"` : ""}>${html(item.label)}</a>`).join("")}${group.count > 4 ? `<small>还有 ${group.count - 4} 项</small>` : ""}</div>` : `<em>已整理</em>`}
         </article>`).join("")}
       </div>
     </section>`;
@@ -4030,7 +4053,7 @@ function renderDataHealthPanelV23(content) {
 function renderAnomalyPanelV22(content) {
   const items = abnormalItemsV22(content);
   return `<section class="dashboard-card-v22" id="anomalies">
-      <div class="section-head-v22"><div><p class="eyebrow">Checks</p><h2>异常提醒</h2><p>严重、警告和需人工确认分开显示，避免把真实异常和录入错误混在一起。</p></div></div>
+      <div class="section-head-v22"><div><p class="eyebrow">Notes</p><h2>记录提示</h2><p>提示可继续补充或核对的实验记录，不给数据打分，也不判断可用性。</p></div></div>
       ${items.length ? `<div class="anomaly-form-v22">
         <p class="anomaly-hint-v22">点每条右侧的“删除”按钮即可隐藏这条提醒，不会改实验数据。</p>
         <div class="anomaly-list-v22">
@@ -4044,7 +4067,7 @@ function renderAnomalyPanelV22(content) {
             <em class="swipe-hint-v22">左滑删除</em>
           </article>`).join("")}
         </div>
-      </div>` : `<p class="empty-v22">暂无异常提醒。</p>`}
+      </div>` : `<p class="empty-v22">暂无记录提示。</p>`}
     </section>`;
 }
 
@@ -4057,7 +4080,6 @@ function renderGangueOverviewV22(content) {
     const blocks = blocksForGangueV3(content, item.id);
     const resultStats = resultStatsForBlocksV3(blocks);
     const rangeText = item.particleRanges.length ? item.particleRanges.join("，") : "未填";
-    const completeness = coalGangueCompletenessV31(item);
     return `<article class="gangue-summary-v22">
           <strong>${html(item.name)}</strong>
           <span>来源：${html(item.source || "未填")}</span>
@@ -4066,7 +4088,6 @@ function renderGangueOverviewV22(content) {
           <span>强度结果：${resultStats.filled}/${resultStats.total}</span>
           <span>压碎值：${html(item.batchCrushingValue || "未填")}</span>
           <span>吸水率：${html(item.coarseWaterAbsorption || item.fineWaterAbsorption || "未填")}</span>
-          <span>完整度：${completeness.score}%${completeness.modelReady ? "" : " · 暂不建议用于模型分析"}</span>
           <div><a href="#gangue-${attr(item.id)}">查看档案</a><a href="#gangue-${attr(item.id)}">新建试块</a></div>
         </article>`;
   }).join("")}
@@ -4111,6 +4132,48 @@ function blockSearchTextV3(block, content = {}) {
     ...ageText,
     ...materialText
   ].filter(Boolean).join(" ");
+}
+
+function blockFilterAttrsV31(block, content = {}) {
+  const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
+  const category = normalizeBlockCategory(block.blockCategory);
+  const ageText = normalizeAges(block.ages).join(",");
+  const hasStrength = blockResultDueItemsV22([block]).some((item) => item.filled && metricResultNumber(item.result) > 0);
+  const hasImage = normalizeLabImages(block.images, {
+    targetType: "block",
+    blockId: block.id,
+    gangueBatchId: record.gangueAggregateId
+  }).length > 0;
+  const failureModes = blockStrengthQualityRowsV31(block)
+    .map((row) => normalizeMetricResultEntry((row.row.metricResults || {})[row.metric.id], (row.row.metrics || {})[row.metric.id], {
+      age: row.age,
+      metric: row.metric.id,
+      dueDate: addDays(block.madeDate, row.age)
+    }))
+    .flatMap((entry) => normalizeSampleMeasurements(entry.sampleMeasurements).map((sample) => sample.failureMode))
+    .filter(Boolean)
+    .join(",");
+  return [
+    `data-category="${attr(category)}"`,
+    `data-gangue="${attr(record.gangueAggregateId || "")}"`,
+    `data-made-date="${attr(block.madeDate || "")}"`,
+    `data-ages="${attr(ageText)}"`,
+    `data-has-strength="${hasStrength ? "1" : "0"}"`,
+    `data-has-image="${hasImage ? "1" : "0"}"`,
+    `data-failure-modes="${attr(failureModes)}"`
+  ].join(" ");
+}
+
+function renderBlockFilterPanelV31(content = {}) {
+  const gangues = getCoalGangueDb(content);
+  return `<div class="block-filter-panel-v31" data-block-filter-panel>
+      <label><span>类型</span><select data-block-filter="category"><option value="">全部</option><option value="road">道路</option><option value="spray">喷浆</option><option value="other">其他</option></select></label>
+      <label><span>煤矸石</span><select data-block-filter="gangue"><option value="">全部批次</option>${gangues.map((item) => `<option value="${attr(item.id)}">${html(item.name)}</option>`).join("")}</select></label>
+      <label><span>龄期</span><select data-block-filter="age"><option value="">全部龄期</option><option value="3">3d</option><option value="7">7d</option><option value="28">28d</option></select></label>
+      <label><span>强度</span><select data-block-filter="strength"><option value="">不限</option><option value="1">已有强度</option><option value="0">未录强度</option></select></label>
+      <label><span>图片</span><select data-block-filter="image"><option value="">不限</option><option value="1">已有图片</option><option value="0">未传图片</option></select></label>
+      <label><span>破坏形态</span><select data-block-filter="failure"><option value="">全部</option>${FAILURE_MODE_OPTIONS.filter((item) => item !== "未记录").map((item) => `<option value="${attr(item)}">${html(item)}</option>`).join("")}</select></label>
+    </div>`;
 }
 
 function blockConfigChipsV22(block, content, record) {
@@ -4262,11 +4325,12 @@ function renderBlockManagementV22(content, actionBase) {
             <button class="chip-button" type="submit" form="exportBlocksForm" name="exportAll" value="1">导出全部 Excel</button>
           </div>
         </div>
+        ${renderBlockFilterPanelV31(content)}
         <form id="exportBlocksForm" method="post" action="${actionBase}/export-blocks"></form>
         ${blocks.length ? `<div class="recent-block-grid-v22 all-blocks-v22">
           ${blocks.map((block) => {
     const searchText = blockSearchTextV3(block, content);
-    return `<div data-block-card data-search="${attr(searchText)}">
+    return `<div data-block-card data-search="${attr(searchText)}" ${blockFilterAttrsV31(block, content)}>
             <label class="export-check"><input form="exportBlocksForm" type="checkbox" name="blockIds" value="${attr(block.id)}" data-export-check><span>导出</span></label>
             ${renderResearchBlockCardV22(block, content)}
           </div>`;
@@ -4656,8 +4720,8 @@ function abnormalItemsV22(content, referenceDate = today()) {
       addItem({
         id: `cv:${item.block.id}:${item.age}:${item.metric.id}`,
         level: "warning",
-        title: "变异系数偏高",
-        text: `${item.block.name} · ${item.age}d ${item.metric.label} CV ${item.result.cv}%`
+        title: "CV 可核对",
+        text: `${item.block.name} · ${item.age}d ${item.metric.label} CV ${item.result.cv}%，仅作记录参考`
       });
     }
   });
@@ -4666,8 +4730,8 @@ function abnormalItemsV22(content, referenceDate = today()) {
       addItem({
         id: `gangue-core:${gangue.id}`,
         level: "warning",
-        title: "煤矸石关键指标缺失",
-        text: `${gangue.name} 还缺压碎值或吸水率`
+        title: "煤矸石指标可补",
+        text: `${gangue.name} 可继续补充压碎值或吸水率`
       });
     }
   });
@@ -4677,16 +4741,16 @@ function abnormalItemsV22(content, referenceDate = today()) {
     const hasCompression = blockResultDueItemsV22([block]).some((item) => item.filled && item.metric.id === "compressionStrength");
     const hasSplit = blockResultDueItemsV22([block]).some((item) => item.filled && /split|劈裂/.test(item.metric.id + item.metric.label));
     if (hasAnyResult && !images.length) {
-      addItem({ id: `block-no-image:${block.id}`, level: "warning", title: "结果缺少图片", text: `${block.name} 已有结果，但还没有上传试验图片` });
+      addItem({ id: `block-no-image:${block.id}`, level: "warning", title: "结果可补图片", text: `${block.name} 已有结果，可继续上传试验图片` });
     }
     if (hasCompression && !images.some((image) => ["machine_screen", "compression_before", "compression_after"].includes(image.imageType || image.kind))) {
-      addItem({ id: `block-compression-image:${block.id}`, level: "warning", title: "抗压图片未归档", text: `${block.name} 建议上传压力读数或抗压破坏图` });
+      addItem({ id: `block-compression-image:${block.id}`, level: "warning", title: "抗压图片可归档", text: `${block.name} 可上传压力读数或抗压破坏图` });
     }
     if (hasSplit && !images.some((image) => ["splitting_section"].includes(image.imageType || image.kind))) {
-      addItem({ id: `block-split-image:${block.id}`, level: "warning", title: "劈裂图片未归档", text: `${block.name} 建议上传劈裂断面图` });
+      addItem({ id: `block-split-image:${block.id}`, level: "warning", title: "劈裂图片可归档", text: `${block.name} 可上传劈裂断面图` });
     }
     if (!hasAnyResult && !images.length) {
-      addItem({ id: `block-empty:${block.id}`, level: "tip", title: "资料待补", text: `${block.name} 暂无强度结果和图片` });
+      addItem({ id: `block-empty:${block.id}`, level: "tip", title: "资料可补", text: `${block.name} 可继续补充强度结果和图片` });
     }
     const compressionRows = block.ages
       .map((age) => ({ age, result: compressionResultByAgeV22(block, age) }))
@@ -4700,8 +4764,8 @@ function abnormalItemsV22(content, referenceDate = today()) {
         addItem({
           id: `strength-drop:${block.id}:${previous.age}:${current.age}`,
           level: "confirm",
-          title: "强度回落需确认",
-          text: `${block.name} ${current.age}d 低于 ${previous.age}d 的 95%，建议核对数据`
+          title: "强度回落可核对",
+          text: `${block.name} ${current.age}d 低于 ${previous.age}d 的 95%，可按原始记录核对`
         });
       }
     }
@@ -4817,8 +4881,9 @@ function renderLabUploadFormV3(targetType, targetId, actionBase, defaultKind = "
         <label class="field"><span>关联龄期</span><input name="imageAgeDays" placeholder="例：3 / 7 / 28"></label>
         <label class="field"><span>关联指标</span><input name="imageMetric" placeholder="例：抗压强度"></label>
         <label class="field"><span>关联强度 MPa</span><input name="imageStrengthMPa" inputmode="decimal" placeholder="例：24.8"></label>
-        <label class="field"><span>破坏形态</span><input name="imageFailureMode" placeholder="例：正常破坏"></label>
+        <label class="field"><span>破坏形态</span>${renderFailureModeSelect("imageFailureMode", "")}</label>
       </div>
+      <label class="field"><span>图片标签</span><input name="imageTags" placeholder="可选：界面剥离、裂缝明显、孔洞明显"></label>
       <label class="field"><span>图片说明</span><input name="imageCaption" placeholder="例：原始矸石、成型后、劈裂后、称重记录"></label>
       <input name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif" multiple required>
       <div class="mini-progress" data-upload-progress>
@@ -4836,8 +4901,18 @@ function renderLabImageGalleryV3(images, targetType, targetId, actionBase) {
     gangueBatchId: targetType === "gangue" ? targetId : ""
   });
   if (!normalized.length) return `<p class="hint">还没有上传实验图片。</p>`;
-  return `<div class="lab-gallery">
-      ${normalized.map((image) => `<figure class="lab-photo">
+  const typeOptions = Array.from(new Set(normalized.map((image) => image.imageType).filter(Boolean)));
+  const ageOptions = Array.from(new Set(normalized.map((image) => image.ageDays).filter(Boolean))).sort((a, b) => Number(a) - Number(b));
+  const tagOptions = Array.from(new Set(normalized.flatMap((image) => image.tags || []).filter(Boolean)));
+  return `<div class="lab-image-filter-panel" data-image-filter-panel>
+      <label><span>图片类型</span><select data-image-filter="kind"><option value="">全部</option>${typeOptions.map((id) => `<option value="${attr(id)}">${html(labImageKindLabel(id))}</option>`).join("")}</select></label>
+      <label><span>龄期</span><select data-image-filter="age"><option value="">全部</option>${ageOptions.map((age) => `<option value="${attr(age)}">${html(age)}d</option>`).join("")}</select></label>
+      <label><span>标签</span><select data-image-filter="tag"><option value="">全部</option>${tagOptions.map((tag) => `<option value="${attr(tag)}">${html(tag)}</option>`).join("")}</select></label>
+    </div>
+    <div class="lab-gallery">
+      ${normalized.map((image) => {
+    const tagText = image.tags && image.tags.length ? image.tags.join("、") : "未标注";
+    return `<figure class="lab-photo" data-image-card data-image-kind="${attr(image.imageType)}" data-image-age="${attr(image.ageDays)}" data-image-tags="${attr(tagText)}">
         <a href="${attr(image.src)}" data-lightbox-image data-download="${attr(image.src)}">
           <img src="${attr(image.src)}" alt="${attr(image.title || labImageKindLabel(image.kind))}" loading="lazy">
         </a>
@@ -4849,7 +4924,7 @@ function renderLabImageGalleryV3(images, targetType, targetId, actionBase) {
     image.strengthMPa ? `${html(image.strengthMPa)} MPa` : "",
     image.failureMode ? html(image.failureMode) : ""
   ].filter(Boolean).join(" · ")}</small>` : ""}
-          <small>${html(labImageKindLabel(image.kind))}${image.caption ? ` · ${html(image.caption)}` : ""}</small>
+          <small>${html(labImageKindLabel(image.kind))} · 标签：${html(tagText)}${(image.caption || image.note) ? ` · ${html(image.caption || image.note)}` : ""}</small>
           <small><a href="${attr(image.src)}" target="_blank" rel="noopener">查看原图</a> · <a href="${attr(image.src)}" download>下载</a></small>
         </figcaption>
         <form method="post" action="${actionBase}/delete-lab-image">
@@ -4858,7 +4933,8 @@ function renderLabImageGalleryV3(images, targetType, targetId, actionBase) {
           <input type="hidden" name="src" value="${attr(image.src)}">
           <button class="danger delete-lab-image" type="submit">删除图片</button>
         </form>
-      </figure>`).join("")}
+      </figure>`;
+  }).join("")}
     </div>`;
 }
 
@@ -4974,7 +5050,7 @@ function renderNestedBlockListV3(blocks, actionBase, content, title = "试块档
         ${blocks.map((block) => {
     const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
     const dueText = block.ages.map((age) => `${age}天 ${formatDateCnV3(addDays(block.madeDate, age))}`).join("；");
-    return `<article class="block-card" id="block-${attr(block.id)}" data-block-card data-search="${attr(blockSearchTextV3(block, content))}">
+    return `<article class="block-card" id="block-${attr(block.id)}" data-block-card data-search="${attr(blockSearchTextV3(block, content))}" ${blockFilterAttrsV31(block, content)}>
           <div class="block-head">
             <div>
               <div class="block-title">
@@ -5115,11 +5191,15 @@ function renderCoalGangueCardV3(item, actionBase = WORK_PATH) {
   const ranges = item.particleRanges.length ? item.particleRanges : defaultParticleRanges();
   const gradations = [...item.gradations, {}, {}, {}].slice(0, Math.max(item.gradations.length + 2, 4));
   const crushingSummary = calculateGangueCrushingSummary(item);
-  const completeness = coalGangueCompletenessV31(item);
+  const propertySummary = [
+    `压碎值：${item.batchCrushingValue || "可补"}`,
+    `吸水率：${item.coarseWaterAbsorption || item.fineWaterAbsorption || "可补"}`,
+    `表观密度：${item.coarseApparentDensity || item.fineApparentDensity || "可补"}`
+  ].join(" · ");
   return `<details class="gangue-card" id="gangue-edit-${attr(item.id)}">
       <summary>
         <strong>${html(item.name)}</strong>
-        <span>${html(item.source || "未填来源")}${item.shortCode ? ` · 短码 ${html(item.shortCode)}` : ""} · 完整度 ${completeness.score}%${completeness.modelReady ? "" : " · 暂不建议用于模型分析"} · ${ranges.length} 个粒径区间 · ${item.gradations.length} 个级配${crushingSummary.text ? ` · 本批压碎值 ${html(crushingSummary.text)}` : ""}</span>
+        <span>${html(item.source || "未填来源")}${item.shortCode ? ` · 短码 ${html(item.shortCode)}` : ""} · ${ranges.length} 个粒径区间 · ${item.gradations.length} 个级配${crushingSummary.text ? ` · 本批压碎值 ${html(crushingSummary.text)}` : ""}</span>
       </summary>
       <form class="gangue-form" method="post" action="${actionBase}/update-gangue">
         <input type="hidden" name="id" value="${attr(item.id)}">
@@ -5137,7 +5217,7 @@ function renderCoalGangueCardV3(item, actionBase = WORK_PATH) {
           <label class="field"><span>MB/亚甲蓝值</span><input name="mbValue" value="${attr(item.mbValue)}" placeholder="例：1.2"></label>
           <label class="field wide"><span>其他信息</span><input name="otherInfo" value="${attr(item.otherInfo)}"></label>
         </div>
-        <div class="gangue-crushing-summary">煤矸石性质完整度：${completeness.score}%（${completeness.done}/${completeness.total}）${completeness.modelReady ? "" : " · 暂不建议用于模型分析"}${completeness.missing.length ? ` · 缺：${html(completeness.missing.join("、"))}` : ""}</div>
+        <div class="gangue-crushing-summary">性质记录：${html(propertySummary)}。这些字段都可以后续继续补充。</div>
         <h4>压碎值 <small>每个粒径填 3 次，自动取平均；最大平均值作为本批骨料压碎值</small></h4>
         <div class="gangue-crushing-summary">本批骨料压碎值：${crushingSummary.text ? `${html(crushingSummary.range)} 粒径 · ${html(crushingSummary.text)}` : "未计算"}</div>
         <table class="gangue-range-table">
@@ -5784,6 +5864,7 @@ function renderAgeResultsV3(block, record) {
     });
     const defaultArea = defaultBearingAreaMm2V25(block.specimenSize || record.specimenSize, metric.id);
     const specimenRows = [0, 1, 2].map((index) => result.sampleMeasurements[index] || {
+      specimenNo: String(index + 1),
       pressureKn: "",
       areaMm2: defaultArea,
       strengthMpa: result.sampleValues[index] || "",
@@ -5807,23 +5888,23 @@ function renderAgeResultsV3(block, record) {
               </div>
               <input type="hidden" name="manualMean_${key}_${attr(metric.id)}" value="${attr(manualMeanValue)}">
       <div class="specimen-table-v22">
-                <div class="specimen-row-v22 head"><span>试件</span><span>压力 kN</span><span>受压面积 mm²</span><span>强度 MPa</span><span>破坏形态</span><span>备注</span></div>
+                <div class="specimen-row-v22 head"><span>试件编号</span><span>压力 kN</span><span>受压面积 mm²</span><span>强度 MPa</span><span>破坏形态</span><span>备注</span></div>
                 ${specimenRows.map((sample, index) => `<div class="specimen-row-v22" data-specimen-row>
-                  <span>${index + 1}</span>
+                  <input name="sampleSpecimenNo_${key}_${attr(metric.id)}_${index}" value="${attr(sample.specimenNo || index + 1)}" placeholder="${index + 1}">
                   <input name="samplePressure_${key}_${attr(metric.id)}_${index}" value="${attr(sample.pressureKn)}" inputmode="decimal" data-pressure-kn placeholder="例：450">
                   <input name="sampleArea_${key}_${attr(metric.id)}_${index}" value="${attr(sample.areaMm2 || defaultArea)}" inputmode="decimal" data-area-mm2 placeholder="例：${attr(defaultArea || "22500")}">
                   <input name="sampleStrength_${key}_${attr(metric.id)}_${index}" value="${attr(formatMpaNumberInput(sample.strengthMpa))}" inputmode="decimal" data-strength-mpa placeholder="可手填 MPa">
-                  <input name="sampleFailureMode_${key}_${attr(metric.id)}_${index}" value="${attr(sample.failureMode)}" placeholder="例：正常破坏">
+                  ${renderFailureModeSelect(`sampleFailureMode_${key}_${metric.id}_${index}`, sample.failureMode || "未记录")}
                   <input name="sampleRemark_${key}_${attr(metric.id)}_${index}" value="${attr(sample.remark)}" placeholder="读数说明">
                 </div>`).join("")}
                 <div class="specimen-summary-v22" data-specimen-summary>
+                  <span>当前已录入 <b data-n>${html(result.n || "0")}</b> 个试件 / 可继续补充</span>
                   <span>均值 <b data-mean>${html(meanDisplay)}</b></span>
                   <span>标准差 <b data-std>${html(stdDisplay)}</b></span>
                   <span>CV <b data-cv>${html(result.cv ? `${result.cv}%` : "空")}</b></span>
                   <span>最小 <b data-min>${html(minDisplay)}</b></span>
                   <span>最大 <b data-max>${html(maxDisplay)}</b></span>
-                  <span>n <b data-n>${html(result.n || "空")}</b></span>
-                  <em data-cv-warning hidden>CV 超过 15%，建议核对试件离散性</em>
+                  <em data-cv-warning hidden>CV 仅供参考，可按需要核对记录。</em>
                 </div>
               </div>
             </div>`;
@@ -5961,7 +6042,7 @@ function renderBlockListV3(blocks, actionBase = WORK_PATH, content = {}) {
     const record = normalizeBlockRecord(block.record, block.ages, block.metrics, block.recipeMaterials);
     const dueText = block.ages.map((age) => `${age}天 ${formatDateCnV3(addDays(block.madeDate, age))}`).join("；");
     const searchText = blockSearchTextV3(block, content);
-    return `<article class="block-card" id="block-${attr(block.id)}" data-block-card data-search="${attr(searchText)}">
+    return `<article class="block-card" id="block-${attr(block.id)}" data-block-card data-search="${attr(searchText)}" ${blockFilterAttrsV31(block, content)}>
           <div class="block-head">
             <div>
               <div class="block-title">
@@ -6949,6 +7030,7 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
   const imageMetric = String(getText("imageMetric") || "").trim();
   const imageStrengthMPa = String(getText("imageStrengthMPa") || "").trim();
   const imageFailureMode = String(getText("imageFailureMode") || "").trim();
+  const imageTags = normalizeImageTags(getText("imageTags"));
   const images = await validateUploadedImages(parts);
   if (!["gangue", "block"].includes(targetType) || !targetId) {
     throw Object.assign(new Error("missing image target"), { statusCode: 400 });
@@ -6977,6 +7059,8 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
       metric: imageMetric,
       strengthMPa: imageStrengthMPa,
       failureMode: imageFailureMode,
+      tags: imageTags,
+      note: caption,
       createdAt: new Date().toISOString()
     });
   }
@@ -7403,9 +7487,8 @@ function createBlocksExportWorkbook(content, blocks) {
     ]);
   });
 
-  const rawResultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "试件序号", "压力kN", "受压面积mm2", "强度MPa", "破坏形态", "备注", "值来源"]];
-  const statResultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "均值", "标准差", "CV%", "最小值", "最大值", "n", "均值来源", "质量标记", "备注"]];
-  const qualityFlagRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "质量标记", "说明", "定位"]];
+  const rawResultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "试件编号", "压力kN", "受压面积mm2", "强度MPa", "破坏形态", "备注", "值来源"]];
+  const statResultRows = [["试块组ID", "煤矸石ID", "试块组名称", "龄期", "指标", "到期日期", "试验日期", "均值", "标准差", "CV%", "最小值", "最大值", "n", "均值来源", "备注"]];
   normalized.forEach(({ block, record, metrics }) => {
     const results = normalizeAgeResults(record, block.ages, metrics);
     block.ages.forEach((age) => {
@@ -7416,14 +7499,13 @@ function createBlocksExportWorkbook(content, blocks) {
           metric: metric.id,
           dueDate: addDays(block.madeDate, age)
         });
-        const qualityFlags = strengthQualityFlagsForEntryV31(block, age, metric, row, entry);
         const measurements = (entry.sampleMeasurements || []).filter((sample) => (
           sample.pressureKn || sample.areaMm2 || sample.strengthMpa || sample.failureMode || sample.remark
         ));
         if (measurements.length) {
           measurements.forEach((sample, index) => rawResultRows.push([
             block.id, record.gangueAggregateId, block.name, age, metric.label, addDays(block.madeDate, age), row.testDate || "",
-            index + 1, sample.pressureKn, sample.areaMm2, sample.strengthMpa, sample.failureMode, sample.remark, entry.meanSource
+            sample.specimenNo || index + 1, sample.pressureKn, sample.areaMm2, sample.strengthMpa, sample.failureMode, sample.remark, entry.meanSource
           ]));
         } else if (entry.manualMean) {
           rawResultRows.push([
@@ -7433,68 +7515,27 @@ function createBlocksExportWorkbook(content, blocks) {
         }
         statResultRows.push([
           block.id, record.gangueAggregateId, block.name, age, metric.label, addDays(block.madeDate, age), row.testDate || "",
-          entry.mean, entry.std, entry.cv, entry.min, entry.max, entry.n, entry.meanSource,
-          qualityFlags.map((flag) => flag.title).join("；"),
-          entry.remark || row.resultNote || ""
+          entry.mean, entry.std, entry.cv, entry.min, entry.max, entry.n, entry.meanSource, entry.remark || row.resultNote || ""
         ]);
-        qualityFlags.forEach((flag) => qualityFlagRows.push([
-          block.id, record.gangueAggregateId, block.name, age, metric.label, flag.title, flag.detail, flag.href
-        ]));
       });
     });
   });
 
-  const imageRows = [["图片路径", "图片类型", "旧类型", "目标类型", "试块组ID", "试块组名称", "煤矸石ID", "煤矸石名称", "龄期", "指标", "强度MPa", "破坏形态", "标题", "说明", "上传时间"]];
-  const imageDatasetRows = [["图片路径", "图片类型", "试块组ID", "试块组名称", "煤矸石ID", "煤矸石名称", "应用类型", "级配范围", "最大粒径mm", "Talbot n", "龄期", "指标", "强度MPa", "破坏形态", "煤矸石完整度%", "压碎值", "吸水率", "表观密度"]];
-  const labelsRows = [["图片路径", "label_strength_mpa", "label_age_days", "label_metric", "label_failure_mode", "label_image_type", "label_application_type", "label_gangue_batch", "label_talbot_n", "label_max_particle_mm"]];
+  const imageRows = [["图片路径", "图片类型", "旧类型", "目标类型", "试块组ID", "试块组名称", "煤矸石ID", "煤矸石名称", "龄期", "指标", "强度MPa", "破坏形态", "标签", "标题", "说明/备注", "上传时间"]];
   normalized.forEach(({ block, record }) => {
     const gangue = relatedGangues.find((item) => item.id === record.gangueAggregateId);
-    const gradationMeta = blockGradationMetaV31(block, record);
     normalizeLabImages(block.images, { targetType: "block", blockId: block.id, gangueBatchId: record.gangueAggregateId }).forEach((image) => imageRows.push([
       image.src, image.imageType, image.legacyKind, image.targetType, image.blockId || block.id, block.name,
-      image.gangueBatchId || record.gangueAggregateId, gangue?.name || record.gangueAggregateName, image.ageDays, image.metric, image.strengthMPa, image.failureMode, image.title, image.caption, image.createdAt
+      image.gangueBatchId || record.gangueAggregateId, gangue?.name || record.gangueAggregateName, image.ageDays, image.metric, image.strengthMPa, image.failureMode,
+      (image.tags || []).join("；") || "未标注", image.title, image.note || image.caption, image.createdAt
     ]));
-    normalizeLabImages(block.images, { targetType: "block", blockId: block.id, gangueBatchId: record.gangueAggregateId }).forEach((image) => {
-      const completeness = gangue ? coalGangueCompletenessV31(gangue) : { score: "" };
-      const waterAbsorption = gangue ? (gangue.coarseWaterAbsorption || gangue.fineWaterAbsorption || "") : "";
-      const apparentDensity = gangue ? (gangue.coarseApparentDensity || gangue.fineApparentDensity || "") : "";
-      imageDatasetRows.push([
-        image.src, image.imageType, image.blockId || block.id, block.name, image.gangueBatchId || record.gangueAggregateId,
-        gangue?.name || record.gangueAggregateName, gradationMeta.applicationType, gradationMeta.gradingRange, gradationMeta.maxParticleSizeMm, gradationMeta.talbotN,
-        image.ageDays, image.metric, image.strengthMPa, image.failureMode, completeness.score, gangue?.batchCrushingValue || "", waterAbsorption, apparentDensity
-      ]);
-      labelsRows.push([
-        image.src, image.strengthMPa, image.ageDays, image.metric, image.failureMode, image.imageType, gradationMeta.applicationType,
-        image.gangueBatchId || record.gangueAggregateId, gradationMeta.talbotN, gradationMeta.maxParticleSizeMm
-      ]);
-    });
   });
   relatedGangues.forEach((gangue) => normalizeLabImages(gangue.images, { targetType: "gangue", gangueBatchId: gangue.id }).forEach((image) => imageRows.push([
-    image.src, image.imageType, image.legacyKind, image.targetType, image.blockId, "", image.gangueBatchId || gangue.id, gangue.name, image.ageDays, image.metric, image.strengthMPa, image.failureMode, image.title, image.caption, image.createdAt
+    image.src, image.imageType, image.legacyKind, image.targetType, image.blockId, "", image.gangueBatchId || gangue.id, gangue.name, image.ageDays, image.metric, image.strengthMPa, image.failureMode,
+    (image.tags || []).join("；") || "未标注", image.title, image.note || image.caption, image.createdAt
   ])));
-  relatedGangues.forEach((gangue) => {
-    const completeness = coalGangueCompletenessV31(gangue);
-    const waterAbsorption = gangue.coarseWaterAbsorption || gangue.fineWaterAbsorption || "";
-    const apparentDensity = gangue.coarseApparentDensity || gangue.fineApparentDensity || "";
-    normalizeLabImages(gangue.images, { targetType: "gangue", gangueBatchId: gangue.id }).forEach((image) => {
-      imageDatasetRows.push([
-        image.src, image.imageType, "", "", image.gangueBatchId || gangue.id, gangue.name, "", "", "", "",
-        image.ageDays, image.metric, image.strengthMPa, image.failureMode, completeness.score, gangue.batchCrushingValue || "", waterAbsorption, apparentDensity
-      ]);
-      labelsRows.push([image.src, image.strengthMPa, image.ageDays, image.metric, image.failureMode, image.imageType, "", image.gangueBatchId || gangue.id, "", ""]);
-    });
-  });
 
-  const completenessRows = [["煤矸石ID", "煤矸石编号/名称", "完整度%", "完成项", "总项", "缺失项", "模型分析建议"]];
-  relatedGangues.forEach((item) => {
-    const completeness = coalGangueCompletenessV31(item);
-    completenessRows.push([
-      item.id, item.name, completeness.score, completeness.done, completeness.total, completeness.missing.join("；"),
-      completeness.modelReady ? "可用于模型分析" : "暂不建议用于模型分析"
-    ]);
-  });
-
-  const healthRows = [["检查项", "记录", "定位"]];
+  const healthRows = [["待补充项", "记录", "定位"]];
   dataHealthItemsV23({ ...content, testBlocks: blocks, coalGangueDb: relatedGangues }).forEach((group) => {
     group.items.forEach((item) => healthRows.push([group.title, item.label, item.href]));
   });
@@ -7506,12 +7547,8 @@ function createBlocksExportWorkbook(content, blocks) {
     { name: "强度原始值", rows: rawResultRows, widths: [22, 22, 26, 10, 18, 12, 12, 10, 12, 14, 12, 18, 34, 14] },
     { name: "强度统计值", rows: statResultRows, widths: [22, 22, 26, 10, 18, 12, 12, 12, 12, 10, 12, 12, 8, 14, 34] },
     { name: "煤矸石批次表", rows: gangueRows, widths: [22, 24, 14, 22, 12, 34, 12, 16, 82, 42, 42, 42, 42, 14, 14, 16, 16, 36, 32, 36, 20] },
-    { name: "图片索引表", rows: imageRows, widths: [42, 18, 16, 12, 22, 26, 22, 24, 10, 16, 12, 18, 24, 34, 22] },
-    { name: "数据健康检查表", rows: healthRows, widths: [18, 48, 36] },
-    { name: "strength_quality_flags", rows: qualityFlagRows, widths: [22, 22, 26, 10, 18, 18, 42, 36] },
-    { name: "coal_gangue_completeness", rows: completenessRows, widths: [22, 28, 12, 10, 10, 46, 28] },
-    { name: "image_dataset_index", rows: imageDatasetRows, widths: [42, 18, 22, 26, 22, 24, 14, 18, 14, 12, 10, 18, 12, 18, 14, 14, 14, 14] },
-    { name: "labels", rows: labelsRows, widths: [42, 16, 12, 18, 18, 18, 16, 22, 12, 16] }
+    { name: "图片索引表", rows: imageRows, widths: [42, 18, 16, 12, 22, 26, 22, 24, 10, 16, 12, 18, 24, 24, 34, 22] },
+    { name: "待补充事项", rows: healthRows, widths: [22, 56, 36] }
   ]);
 }
 
@@ -7849,7 +7886,7 @@ async function handleAddBlock(req, res, redirectBase = BASE_PATH) {
     note: String(params.get("note") || "").trim()
   }, ...getTestBlocks(content)];
   await saveContent(content, { skipSite: redirectBase === WORK_PATH });
-  redirect(res, "试块已登记，日历已更新", redirectBase, `block-${blockId}`);
+  redirect(res, "试块已登记，已打开试块详情", redirectBase, `record-${blockId}`);
 }
 
 async function handleDeleteBlock(req, res, redirectBase = BASE_PATH) {
@@ -7895,6 +7932,7 @@ async function handleUpdateRecipeMaterialLibrary(req, res, redirectBase = WORK_P
 
 function sampleMeasurementsFromParams(params, ageKey, metricId, specimenSize = DEFAULT_SPECIMEN_SIZE) {
   return [0, 1, 2].map((index) => {
+    const specimenNo = String(params.get(`sampleSpecimenNo_${ageKey}_${metricId}_${index}`) || (index + 1)).trim();
     const pressureKn = String(params.get(`samplePressure_${ageKey}_${metricId}_${index}`) || "").trim();
     const defaultArea = pressureKn ? defaultBearingAreaMm2V25(specimenSize, metricId) : "";
     const areaMm2 = String(params.get(`sampleArea_${ageKey}_${metricId}_${index}`) || defaultArea || "").trim();
@@ -7905,6 +7943,7 @@ function sampleMeasurementsFromParams(params, ageKey, metricId, specimenSize = D
     assertNonNegativeResultValueV25(areaMm2, "受压面积");
     assertNonNegativeResultValueV25(strengthMpa, "强度");
     return {
+      specimenNo,
       pressureKn,
       areaMm2,
       strengthMpa,
@@ -8094,12 +8133,12 @@ async function handleDeleteReminder(req, res, redirectBase = WORK_PATH) {
 async function handleDismissAnomalies(req, res, redirectBase = WORK_PATH) {
   const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
   const ids = normalizeDismissedAnomalyIds(params.getAll("anomalyIds"));
-  if (!ids.length) return redirect(res, "先勾选要删除的异常提醒", redirectBase, "anomalies");
+  if (!ids.length) return redirect(res, "先勾选要删除的记录提示", redirectBase, "anomalies");
   const content = await readContent();
   const merged = normalizeDismissedAnomalyIds([...(content.dismissedAnomalies || []), ...ids]);
   content.dismissedAnomalies = merged.slice(-500);
   await saveContent(content, { skipSite: true });
-  redirect(res, `已删除 ${ids.length} 条异常提醒`, redirectBase, "anomalies");
+  redirect(res, `已删除 ${ids.length} 条记录提示`, redirectBase, "anomalies");
 }
 
 async function handleSendReminder(req, res) {
