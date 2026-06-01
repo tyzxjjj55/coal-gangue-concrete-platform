@@ -594,10 +594,12 @@
     .result-flag-v25 { min-height:42px; display:flex; align-items:center; gap:8px; padding:0 11px; border:1px solid var(--line); border-radius:8px; background:#fffaf0; color:#8a5800; font-weight:900; }
     .result-flag-v25 input { width:18px; min-height:18px; margin:0; accent-color:#d28b34; }
     .specimen-table-v22 { display:grid; gap:7px; overflow-x:auto; }
-    .specimen-row-v22 { min-width:900px; display:grid; grid-template-columns:82px repeat(3,minmax(112px,1fr)) minmax(150px,1fr) minmax(160px,1.2fr); gap:8px; align-items:center; }
+    .specimen-row-v22 { min-width:980px; display:grid; grid-template-columns:82px repeat(3,minmax(112px,1fr)) minmax(150px,1fr) minmax(160px,1.2fr) 58px; gap:8px; align-items:center; }
     .specimen-row-v22.head { color:var(--muted); font-size:12px; font-weight:900; }
     .specimen-row-v22 > span:first-child { color:var(--green); font-weight:900; }
     .specimen-row-v22 [data-strength-mpa] { background:#f3f8f6; color:var(--green); font-weight:900; }
+    .remove-specimen-v33 { width:100%; min-height:38px; padding:0; border-color:#ead4d4; background:#fff7f7; color:#a44848; box-shadow:none; }
+    .remove-specimen-v33:hover { border-color:#d9a9a9; color:#893838; transform:none; }
     .add-specimen-v32 { justify-self:start; margin-top:4px; }
     .specimen-summary-v22 { min-width:820px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:10px; border:1px solid #d8e6e0; border-radius:8px; background:#f8fbfa; }
     .specimen-summary-v22 span { min-height:30px; display:inline-flex; align-items:center; gap:6px; padding:0 9px; border-radius:999px; background:#fff; color:var(--muted); font-size:12px; font-weight:900; }

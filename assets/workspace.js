@@ -402,6 +402,25 @@
         });
         updateSpecimenSummary(table);
       });
+      const clearSpecimenRow = (row, index, defaultArea) => {
+        row.querySelectorAll("input, select").forEach((field) => {
+          if (field.name?.startsWith("sampleSpecimenNo_")) field.value = String(index + 1);
+          else if (field.matches("[data-area-mm2]")) field.value = defaultArea || "";
+          else if (field.tagName === "SELECT") field.value = "";
+          else field.value = "";
+        });
+      };
+      const renumberSpecimenRows = (table) => {
+        Array.from(table.querySelectorAll("[data-specimen-row]")).forEach((row, index) => {
+          row.querySelectorAll("input, select").forEach((field) => {
+            if (field.name) field.name = field.name.replace(/_(\d+)$/, "_" + index);
+            if (field.name?.startsWith("sampleSpecimenNo_") && !String(field.value || "").trim()) {
+              field.value = String(index + 1);
+            }
+            field.placeholder = field.placeholder?.replace(/^\d+$/, String(index + 1)) || field.placeholder;
+          });
+        });
+      };
       document.addEventListener("click", (event) => {
         const button = event.target.closest("[data-add-specimen-row]");
         if (!button) return;
@@ -426,7 +445,25 @@
           else field.value = "";
         });
         button.before(template);
+        renumberSpecimenRows(table);
         bindSpecimenRow(template);
+        updateSpecimenSummary(table);
+      });
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-remove-specimen-row]");
+        if (!button) return;
+        event.preventDefault();
+        const table = button.closest("[data-specimen-table]");
+        const row = button.closest("[data-specimen-row]");
+        if (!table || !row) return;
+        const rows = Array.from(table.querySelectorAll("[data-specimen-row]"));
+        const minRows = 3;
+        if (rows.length <= minRows) {
+          clearSpecimenRow(row, rows.indexOf(row), table.dataset.defaultArea || "");
+        } else {
+          row.remove();
+        }
+        renumberSpecimenRows(table);
         updateSpecimenSummary(table);
       });
       const openRecordFromHash = () => {

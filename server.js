@@ -5940,7 +5940,7 @@ function renderAgeResultsV3(block, record) {
               </div>
               <input type="hidden" name="manualMean_${key}_${attr(metric.id)}" value="${attr(manualMeanValue)}">
       <div class="specimen-table-v22" data-specimen-table data-age-key="${attr(key)}" data-metric-id="${attr(metric.id)}" data-default-area="${attr(defaultArea || "")}" data-max-specimens="${MAX_DYNAMIC_SPECIMENS}">
-                <div class="specimen-row-v22 head"><span>试件编号</span><span>压力 kN</span><span>受压面积 mm²</span><span>强度 MPa</span><span>破坏形态</span><span>备注</span></div>
+                <div class="specimen-row-v22 head"><span>试件编号</span><span>压力 kN</span><span>受压面积 mm²</span><span>强度 MPa</span><span>破坏形态</span><span>备注</span><span>操作</span></div>
                 ${specimenRows.map((sample, index) => `<div class="specimen-row-v22" data-specimen-row>
                   <input name="sampleSpecimenNo_${key}_${attr(metric.id)}_${index}" value="${attr(sample.specimenNo || index + 1)}" placeholder="${index + 1}">
                   <input name="samplePressure_${key}_${attr(metric.id)}_${index}" value="${attr(sample.pressureKn)}" inputmode="decimal" data-pressure-kn placeholder="例：450">
@@ -5948,6 +5948,7 @@ function renderAgeResultsV3(block, record) {
                   <input name="sampleStrength_${key}_${attr(metric.id)}_${index}" value="${attr(formatMpaNumberInput(sample.strengthMpa))}" inputmode="decimal" data-strength-mpa placeholder="可手填 MPa">
                   ${renderFailureModeSelect(`sampleFailureMode_${key}_${metric.id}_${index}`, sample.failureMode || "未记录")}
                   <input name="sampleRemark_${key}_${attr(metric.id)}_${index}" value="${attr(sample.remark)}" placeholder="读数说明">
+                  <button class="icon-button remove-specimen-v33" type="button" data-remove-specimen-row title="删除或清空这一行">删</button>
                 </div>`).join("")}
                 <button class="chip-button add-specimen-v32" type="button" data-add-specimen-row>添加试件</button>
                 <div class="specimen-summary-v22" data-specimen-summary>
