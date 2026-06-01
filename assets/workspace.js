@@ -211,6 +211,39 @@
         });
         calendar.querySelector("[data-calendar-clear-filter]")?.addEventListener("click", () => applyCalendarFilter(""));
       }
+      const updateChartSelection = (compare) => {
+        if (!compare) return;
+        const toggles = Array.from(compare.querySelectorAll("[data-chart-block-toggle]"));
+        const selected = new Set(toggles.filter((input) => input.checked).map((input) => input.value));
+        const rows = Array.from(compare.querySelectorAll("[data-chart-block]"));
+        rows.forEach((row) => { row.hidden = !selected.has(row.dataset.chartBlock || ""); });
+        const status = compare.querySelector("[data-chart-selection-status]");
+        if (status) {
+          const maxText = status.textContent.split("·").slice(1).join("·").trim();
+          status.textContent = selected.size + " / " + toggles.length + " 组试块" + (maxText ? " · " + maxText : "");
+        }
+        const empty = compare.querySelector("[data-chart-selection-empty]");
+        if (empty) empty.hidden = selected.size > 0;
+      };
+      document.querySelectorAll("[data-chart-compare]").forEach(updateChartSelection);
+      document.addEventListener("change", (event) => {
+        const toggle = event.target.closest("[data-chart-block-toggle]");
+        if (!toggle) return;
+        updateChartSelection(toggle.closest("[data-chart-compare]"));
+      });
+      document.addEventListener("click", (event) => {
+        const action = event.target.closest("[data-chart-select-default], [data-chart-select-all], [data-chart-select-none]");
+        if (!action) return;
+        event.preventDefault();
+        const compare = action.closest("[data-chart-compare]");
+        const toggles = Array.from(compare?.querySelectorAll("[data-chart-block-toggle]") || []);
+        toggles.forEach((input) => {
+          if (action.matches("[data-chart-select-all]")) input.checked = true;
+          else if (action.matches("[data-chart-select-none]")) input.checked = false;
+          else input.checked = input.dataset.chartDefault === "1";
+        });
+        updateChartSelection(compare);
+      });
       const flashTarget = (target) => {
         if (!target) return;
         target.classList.remove("focus-flash-v39");

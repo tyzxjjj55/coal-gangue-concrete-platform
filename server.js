@@ -3719,15 +3719,28 @@ function trendGroupsV22(content) {
 
 function renderTrendRowsForGroupV22(group) {
   if (!group || !group.rows.length) return `<p class="empty-v22" data-chart-empty>这个批次还没有可展示的抗压强度。</p>`;
+  const defaultIds = new Set(group.rows.slice(0, 6).map((row) => row.id));
   return `<div class="chart-compare-v251" data-chart-compare>
       <div class="chart-toolbar-v251">
-        <span>${group.rows.length} 组试块 · 最大值 ${html(formatMpaValue(group.max))}</span>
+        <span data-chart-selection-status>${Math.min(group.rows.length, 6)} / ${group.rows.length} 组试块 · 最大值 ${html(formatMpaValue(group.max))}</span>
+        <span class="chart-toolbar-actions-v310">
+          <button class="secondary chart-mini-action-v310" type="button" data-chart-select-default>最近 6 组</button>
+          <button class="secondary chart-mini-action-v310" type="button" data-chart-select-all>全选</button>
+          <button class="secondary chart-mini-action-v310" type="button" data-chart-select-none>清空</button>
+        </span>
         <button class="secondary chart-expand-v251" type="button" data-chart-expand>放大查看</button>
       </div>
+      <div class="chart-block-picker-v310" aria-label="选择要对比的试块组">
+        ${group.rows.map((row, index) => `<label title="${attr(`${row.gangueName}｜${row.blockName}`)}">
+          <input type="checkbox" data-chart-block-toggle value="${attr(row.id)}" ${defaultIds.has(row.id) ? "checked" : ""} data-chart-default="${index < 6 ? "1" : "0"}">
+          <span>${html(row.blockName)}</span>
+        </label>`).join("")}
+      </div>
+      <p class="empty-v22 chart-selection-empty-v310" data-chart-selection-empty hidden>还没有选择试块组，勾选上方试块后显示柱状图。</p>
       <div class="chart-canvas-v251" data-chart-canvas>
         <div class="chart-scale-v251"><span>${html(formatMpaValue(group.max))}</span><span>${html(formatMpaValue(group.max / 2))}</span><span>0 MPa</span></div>
         <div class="bar-chart-v23 chart-bars-v251" data-chart-row>
-          ${group.rows.map((row) => `<article class="bar-group-v23" data-chart-block="${attr(row.id)}">
+          ${group.rows.map((row) => `<article class="bar-group-v23" data-chart-block="${attr(row.id)}" ${defaultIds.has(row.id) ? "" : "hidden"}>
             <div class="bar-columns-v23">
               ${row.values.map((item) => {
     const height = Math.max(8, Math.min(100, (item.number / group.max) * 100));

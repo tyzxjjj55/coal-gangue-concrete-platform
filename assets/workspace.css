@@ -464,7 +464,14 @@
     .chart-current-v22 select { min-height:34px; min-width:160px; padding:0 34px 0 10px; border:1px solid #cbded7; border-radius:8px; background:#fff; color:var(--ink); font:inherit; font-size:13px; }
     .chart-compare-v251 { display:grid; gap:12px; }
     .chart-toolbar-v251 { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px; border:1px solid #d7e6e0; border-radius:8px; background:#fbfdfc; color:var(--muted); font-size:12px; font-weight:900; }
+    .chart-toolbar-actions-v310 { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .chart-mini-action-v310 { min-height:30px; padding:0 9px; box-shadow:none; font-size:12px; }
     .chart-expand-v251 { min-height:32px; padding:0 10px; box-shadow:none; }
+    .chart-block-picker-v310 { display:flex; gap:7px; overflow-x:auto; padding:2px 1px 4px; }
+    .chart-block-picker-v310 label { min-height:34px; max-width:220px; display:inline-flex; align-items:center; gap:7px; flex:0 0 auto; padding:0 10px; border:1px solid #d7e6e0; border-radius:999px; background:#fff; color:var(--muted); font-size:12px; font-weight:900; cursor:pointer; }
+    .chart-block-picker-v310 input { width:16px; min-height:16px; margin:0; accent-color:var(--green); }
+    .chart-block-picker-v310 span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .chart-selection-empty-v310 { margin:0; }
     .chart-canvas-v251 { display:grid; grid-template-columns:58px minmax(0,1fr); gap:10px; align-items:stretch; }
     .chart-canvas-v251 { cursor:zoom-in; }
     .chart-scale-v251 { height:248px; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end; padding:6px 0 22px; color:var(--muted); font-size:11px; font-weight:900; }
