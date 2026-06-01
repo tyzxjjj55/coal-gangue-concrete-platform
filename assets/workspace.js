@@ -174,6 +174,7 @@
       });
       blockFilters.forEach((filter) => filter.addEventListener("change", () => applySearch(search?.value || globalSearch?.value || "")));
       const calendar = document.getElementById("calendar");
+      let applyCalendarFilterExternal = null;
       if (calendar) {
         const calendarFilterLabels = { overdue: "逾期未完成", today: "今天要处理", next7: "未来 7 天", next14: "未来 14 天", completed: "已完成任务" };
         const applyCalendarFilter = (activeFilter = "") => {
@@ -202,6 +203,7 @@
           const empty = calendar.querySelector("[data-calendar-filter-empty]");
           if (empty) empty.hidden = !activeFilter || visibleCount > 0;
         };
+        applyCalendarFilterExternal = applyCalendarFilter;
         calendar.querySelectorAll("[data-calendar-filter]").forEach((button) => {
           button.addEventListener("click", () => {
             applyCalendarFilter(button.classList.contains("active") ? "" : (button.dataset.calendarFilter || ""));
@@ -209,6 +211,35 @@
         });
         calendar.querySelector("[data-calendar-clear-filter]")?.addEventListener("click", () => applyCalendarFilter(""));
       }
+      const flashTarget = (target) => {
+        if (!target) return;
+        target.classList.remove("focus-flash-v39");
+        void target.offsetWidth;
+        target.classList.add("focus-flash-v39");
+        window.setTimeout(() => target.classList.remove("focus-flash-v39"), 1300);
+      };
+      document.addEventListener("click", (event) => {
+        const drilldown = event.target.closest("[data-calendar-drilldown]");
+        if (drilldown) {
+          event.preventDefault();
+          const target = document.getElementById("calendar");
+          if (target) {
+            history.replaceState(null, "", location.pathname + location.search + "#calendar");
+            target.scrollIntoView({ block: "start", behavior: "smooth" });
+            window.setTimeout(() => {
+              applyCalendarFilterExternal?.(drilldown.dataset.calendarDrilldown || "");
+              flashTarget(target);
+            }, 80);
+          }
+          return;
+        }
+        const focusLink = event.target.closest("[data-focus-target]");
+        if (focusLink) {
+          const target = document.getElementById(focusLink.dataset.focusTarget || "");
+          if (!target) return;
+          window.setTimeout(() => flashTarget(target), 180);
+        }
+      });
       document.querySelectorAll("[data-image-filter-panel]").forEach((panel) => {
         const filters = Array.from(panel.querySelectorAll("[data-image-filter]"));
         const gallery = panel.nextElementSibling;

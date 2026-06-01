@@ -385,6 +385,11 @@
     .metric-card-v22.info { background:#f3f8fc; border-color:#c8dcef; }
     .metric-card-v22.info:before { background:#3d6f98; }
     .metric-card-v22.info strong { color:#3d6f98; }
+    .focus-flash-v39 { animation:focusFlashV39 1.15s ease; }
+    @keyframes focusFlashV39 {
+      0%, 100% { box-shadow:0 14px 36px rgba(20,38,35,.06); }
+      28% { box-shadow:0 0 0 4px rgba(210,139,52,.24), 0 18px 42px rgba(20,38,35,.14); }
+    }
     .visual-insights-v22 { margin-bottom:16px; }
     .visual-map-grid-v22 { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr); gap:14px; align-items:start; }
     .progress-matrix-v22 { overflow:hidden; border:1px solid var(--line); border-radius:8px; background:#fbfdfc; }

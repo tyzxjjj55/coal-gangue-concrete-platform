@@ -3511,8 +3511,8 @@ function renderMetricCardsV22(content) {
   return `<section class="metric-grid-v22" aria-label="核心指标">
       <a class="metric-card-v22 neutral" href="#gangue-archive" aria-label="查看煤矸石档案"><span>煤矸石批次</span><strong>${stats.gangues}</strong><small>已建档材料批次</small></a>
       <a class="metric-card-v22 neutral" href="#block-management" aria-label="查看试块管理"><span>试块组数</span><strong>${stats.blockGroups}</strong><small>以试块组为统计单位</small></a>
-      <a class="metric-card-v22 ${stats.dueUnrecorded ? "danger" : "ok"}" href="#today-tasks" aria-label="查看到期未录任务"><span>到期未录</span><strong>${stats.dueUnrecorded}</strong><small>今天及以前应完成</small></a>
-      <a class="metric-card-v22 info" href="#calendar" aria-label="查看未来待测日历"><span>未来待测</span><strong>${stats.futurePending}</strong><small>未来 7 天未录结果</small></a>
+      <a class="metric-card-v22 ${stats.dueUnrecorded ? "danger" : "ok"}" href="#today-tasks" data-focus-target="today-tasks" aria-label="查看到期未录任务"><span>到期未录</span><strong>${stats.dueUnrecorded}</strong><small>今天及以前应完成</small></a>
+      <a class="metric-card-v22 info" href="#calendar" data-calendar-drilldown="next7" aria-label="查看未来待测日历"><span>未来待测</span><strong>${stats.futurePending}</strong><small>未来 7 天未录结果</small></a>
       <a class="metric-card-v22 success" href="#analysis" aria-label="查看已录结果分析"><span>已录结果</span><strong>${stats.resultFilled}/${stats.resultTotal}</strong><small><i style="--p:${stats.resultPercent}%"></i>完成率 ${stats.resultPercent}%</small></a>
     </section>`;
 }
