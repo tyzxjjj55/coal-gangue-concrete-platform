@@ -5,6 +5,8 @@ node_modules/
 .env
 .env.*
 data/session-secret
+data/album_users.json
+data/album_logs.json
 data/work-uploads/
 *.pem
 *.key

@@ -52,6 +52,8 @@ const UPLOAD_TMP_DIR = process.env.UPLOAD_TMP_DIR || path.join(os.tmpdir(), "xx5
 const CONTENT_FILE = path.join(DATA_DIR, "content.json");
 const REMINDER_STATE_FILE = path.join(DATA_DIR, "reminder-state.json");
 const SESSION_SECRET_FILE = path.join(DATA_DIR, "session-secret");
+const ALBUM_USERS_FILE = path.join(DATA_DIR, "album_users.json");
+const ALBUM_LOG_FILE = path.join(DATA_DIR, "album_logs.json");
 const BACKUP_DIR = path.join(DATA_DIR, "backups");
 const BACKUP_KEEP = Number(process.env.BACKUP_KEEP || 30);
 const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_BYTES || 20 * 1024 * 1024);
@@ -73,6 +75,9 @@ const LOGIN_ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
 const LOGIN_ATTEMPT_LIMIT = 8;
 const CSRF_COOKIE_NAME = "xx520_csrf_token";
 const CSRF_TOKEN_BYTES = 24;
+const ALBUM_ADMIN_COOKIE = "xx520_claw_album_admin";
+const ALBUM_PRIVATE_COOKIE = "xx520_claw_album_private";
+const ALBUM_INITIAL_PASSWORD = process.env.ALBUM_INITIAL_PASSWORD || "xx520";
 const WORK_LOGIN_USER = process.env.WORK_LOGIN_USER || "xx";
 const WORK_LOGIN_PASS = requiredEnv("WORK_LOGIN_PASS");
 const ADMIN_LOGIN_USER = process.env.ADMIN_LOGIN_USER || WORK_LOGIN_USER;
@@ -470,6 +475,68 @@ function ensureCsrfToken(req, res) {
     setCsrfCookie(res, token);
   }
   return token;
+}
+
+function albumPasswordHash(password, salt = crypto.randomBytes(16).toString("base64url")) {
+  const hash = crypto.pbkdf2Sync(String(password || ""), salt, 120000, 32, "sha256").toString("base64url");
+  return `pbkdf2_sha256$120000$${salt}$${hash}`;
+}
+
+function verifyAlbumPassword(password, storedHash) {
+  const parts = String(storedHash || "").split("$");
+  if (parts.length !== 4 || parts[0] !== "pbkdf2_sha256") return false;
+  const iterations = Number(parts[1]);
+  if (!Number.isFinite(iterations) || iterations < 10000) return false;
+  const expected = crypto.pbkdf2Sync(String(password || ""), parts[2], iterations, 32, "sha256").toString("base64url");
+  const expectedBuffer = Buffer.from(expected);
+  const storedBuffer = Buffer.from(parts[3]);
+  return expectedBuffer.length === storedBuffer.length && crypto.timingSafeEqual(expectedBuffer, storedBuffer);
+}
+
+function albumSessionSignature(username, role, expiresAt) {
+  return crypto
+    .createHmac("sha256", sessionSecret)
+    .update(`album-admin.${username}.${role}.${expiresAt}`)
+    .digest("base64url");
+}
+
+function albumSessionCookieValue(user) {
+  const expiresAt = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
+  const username = String(user.username || "");
+  const role = String(user.role || "editor");
+  return `${encodeURIComponent(username)}.${role}.${expiresAt}.${albumSessionSignature(username, role, expiresAt)}`;
+}
+
+function albumUserFromSession(req) {
+  if (!sessionSecret) return null;
+  const value = parseCookies(req).get(ALBUM_ADMIN_COOKIE) || "";
+  const [encodedUsername, role, expiresAtText, signature] = value.split(".");
+  const username = decodeURIComponent(encodedUsername || "");
+  const expiresAt = Number(expiresAtText);
+  if (!username || !["admin", "editor"].includes(role) || !Number.isFinite(expiresAt) || expiresAt < Math.floor(Date.now() / 1000) || !signature) {
+    return null;
+  }
+  const expected = albumSessionSignature(username, role, expiresAt);
+  const expectedBuffer = Buffer.from(expected);
+  const signatureBuffer = Buffer.from(signature);
+  if (expectedBuffer.length !== signatureBuffer.length || !crypto.timingSafeEqual(expectedBuffer, signatureBuffer)) return null;
+  return { username, role };
+}
+
+function setAlbumAdminCookie(res, user) {
+  appendSetCookie(res, `${ALBUM_ADMIN_COOKIE}=${albumSessionCookieValue(user)}; Path=/; Max-Age=${SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Lax`);
+}
+
+function clearAlbumAdminCookie(res) {
+  appendSetCookie(res, `${ALBUM_ADMIN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`);
+}
+
+function setAlbumPrivateCookie(res) {
+  appendSetCookie(res, `${ALBUM_PRIVATE_COOKIE}=${encodeURIComponent(sessionCookieValue("album-private"))}; Path=/; Max-Age=${SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Lax`);
+}
+
+function validAlbumPrivateSession(req) {
+  return validSession(req, ALBUM_PRIVATE_COOKIE, "album-private") || Boolean(albumUserFromSession(req));
 }
 
 function csrfField(token) {
@@ -1941,7 +2008,7 @@ async function backupIfExists(filePath, label) {
 
 async function writeAtomic(filePath, data) {
   await fsp.mkdir(path.dirname(filePath), { recursive: true });
-  const temp = `${filePath}.tmp-${process.pid}-${Date.now()}`;
+  const temp = `${filePath}.tmp-${process.pid}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
   await fsp.writeFile(temp, data);
   await fsp.rename(temp, filePath);
 }
@@ -2085,6 +2152,65 @@ async function saveContent(content, options = {}) {
   const run = saveContentQueue.then(() => saveContentNow(content, options));
   saveContentQueue = run.catch(() => {});
   return run;
+}
+
+async function readAlbumUsers() {
+  await ensureDirs();
+  try {
+    const users = JSON.parse(await fsp.readFile(ALBUM_USERS_FILE, "utf8"));
+    if (Array.isArray(users) && users.length) return users;
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  const createdAt = new Date().toISOString();
+  const users = [
+    { username: "xx", password_hash: albumPasswordHash(ALBUM_INITIAL_PASSWORD), role: "admin", created_at: createdAt, last_login_at: "", enabled: true },
+    { username: "qq", password_hash: albumPasswordHash(ALBUM_INITIAL_PASSWORD), role: "editor", created_at: createdAt, last_login_at: "", enabled: true }
+  ];
+  await writeAtomic(ALBUM_USERS_FILE, `${JSON.stringify(users, null, 2)}\n`);
+  return users;
+}
+
+async function saveAlbumUsers(users) {
+  await writeAtomic(ALBUM_USERS_FILE, `${JSON.stringify(users, null, 2)}\n`);
+}
+
+async function authenticateAlbumUser(username, password) {
+  const users = await readAlbumUsers();
+  const user = users.find((item) => item.username === username && item.enabled !== false);
+  if (!user || !verifyAlbumPassword(password, user.password_hash)) return null;
+  user.last_login_at = new Date().toISOString();
+  await saveAlbumUsers(users);
+  return { username: user.username, role: user.role === "admin" ? "admin" : "editor" };
+}
+
+function albumCan(user, action) {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return ["upload", "edit", "categorize", "visibility", "cover", "viewLogs"].includes(action);
+}
+
+async function readAlbumLogs() {
+  try {
+    const logs = JSON.parse(await fsp.readFile(ALBUM_LOG_FILE, "utf8"));
+    return Array.isArray(logs) ? logs : [];
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return [];
+  }
+}
+
+async function appendAlbumLog(req, user, action, detail = "") {
+  const logs = await readAlbumLogs();
+  logs.unshift({
+    at: new Date().toISOString(),
+    user: user?.username || "",
+    role: user?.role || "",
+    action,
+    detail: String(detail || "").slice(0, 400),
+    ip: clientIp(req)
+  });
+  await writeAtomic(ALBUM_LOG_FILE, `${JSON.stringify(logs.slice(0, 500), null, 2)}\n`);
 }
 
 let contentMutationQueue = Promise.resolve();
@@ -7005,6 +7131,395 @@ async function handlePrivateGallery(req, res, url) {
   return send(res, 404, "Not found", "text/plain; charset=utf-8");
 }
 
+function isClawHost(req) {
+  const host = String(req.headers.host || "").split(":")[0].toLowerCase();
+  return host === "claw.xx520.xyz";
+}
+
+function albumLoginRedirect(res, next = "/admin/photos") {
+  return redirectTo(res, `/admin/login?next=${encodeURIComponent(safeNext(next, "/admin/photos", ["/admin", "/album"]))}`);
+}
+
+function albumRequireAdmin(req, res, url) {
+  const user = albumUserFromSession(req);
+  if (user) return user;
+  if (req.method === "GET" || req.method === "HEAD") {
+    albumLoginRedirect(res, `${url.pathname}${url.search}`);
+    return null;
+  }
+  redirectTo(res, "/admin/login?next=%2Fadmin%2Fphotos");
+  return null;
+}
+
+function albumNav(user, active = "photos") {
+  const items = [
+    ["photos", "/admin/photos", "相册编辑", true],
+    ["upload", "/admin/upload", "上传图片", true],
+    ["categories", "/admin/categories", "相册分类", true],
+    ["preview", "/album/", "公开预览", true],
+    ["logs", "/admin/logs", "操作日志", true],
+    ["users", "/admin/users", "用户管理", user?.role === "admin"],
+    ["settings", "/admin/settings", "系统设置", user?.role === "admin"]
+  ];
+  return `<nav class="album-nav" aria-label="相册后台导航">
+    ${items.filter((item) => item[3]).map(([id, href, label]) => `<a class="${id === active ? "active" : ""}" href="${href}">${html(label)}</a>`).join("")}
+    <a href="/admin/logout">退出</a>
+  </nav>`;
+}
+
+function albumAdminShell(user, active, title, body) {
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${html(title)} - Claw Album</title>
+  <style>
+    :root{--bg:#f5f7f6;--ink:#172526;--muted:#667675;--line:#dce7e2;--green:#2f7d67;--green2:#e8f4ef;--gold:#b99046;--red:#b94a48;--card:#fff}
+    *{box-sizing:border-box}body{margin:0;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;color:var(--ink);background:linear-gradient(135deg,#f8faf9,#eef5f1 48%,#faf3e6)}
+    .album-shell{min-height:100vh;display:grid;grid-template-columns:240px 1fr}.album-side{padding:28px 18px;background:#17332d;color:#fff}.album-brand{display:block;text-decoration:none;color:#fff;margin-bottom:24px}.album-brand strong{display:block;font-size:22px}.album-brand span{color:#b9d7cd;font-size:13px}.album-nav{display:grid;gap:8px}.album-nav a{padding:11px 12px;border-radius:9px;text-decoration:none;color:#dceee8;font-weight:800}.album-nav a.active,.album-nav a:hover{background:#e8f4ef;color:#17332d}.album-main{padding:30px;min-width:0}.topline{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}.kicker{margin:0 0 5px;color:var(--green);font-weight:950;text-transform:uppercase;letter-spacing:.08em}.topline h1{margin:0;font-size:32px}.role{color:var(--muted);font-weight:800}.panel{background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 18px 55px rgba(24,42,38,.08);margin-bottom:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.btn,button{border:0;border-radius:9px;padding:10px 13px;background:var(--green);color:#fff;text-decoration:none;font-weight:900;cursor:pointer}.btn.ghost,button.ghost{background:#fff;color:var(--green);border:1px solid var(--line)}.btn.danger,button.danger{background:var(--red)}input,textarea,select{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 10px;font:inherit;background:#fff;color:var(--ink)}label{display:grid;gap:6px;font-size:13px;font-weight:850;color:#425553}.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}.photo-card{border:1px solid var(--line);border-radius:13px;background:#fff;overflow:hidden}.photo-thumb{aspect-ratio:4/3;background:#eef4f1;display:block;position:relative}.photo-thumb img{width:100%;height:100%;object-fit:cover;display:block}.photo-body{display:grid;gap:9px;padding:12px}.photo-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:12px}.chip{display:inline-flex;border-radius:999px;padding:3px 8px;background:var(--green2);color:var(--green);font-weight:900}.chip.gold{background:#fbf3e2;color:#8a651e}.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.stat b{font-size:28px;display:block}.logs{display:grid;gap:8px}.log-row{padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff}.muted{color:var(--muted)}@media(max-width:860px){.album-shell{grid-template-columns:1fr}.stats,.grid-2{grid-template-columns:1fr}.album-main{padding:18px}.topline{display:block}}
+  </style>
+</head>
+<body>
+  <div class="album-shell">
+    <aside class="album-side">
+      <a class="album-brand" href="/admin/photos"><strong>Claw Album</strong><span>图片管理与相册编辑</span></a>
+      ${albumNav(user, active)}
+    </aside>
+    <main class="album-main">
+      <div class="topline"><div><p class="kicker">Album Admin</p><h1>${html(title)}</h1></div><div class="role">${html(user.username)} · ${user.role === "admin" ? "管理员" : "编辑"}</div></div>
+      ${body}
+    </main>
+  </div>
+</body>
+</html>`;
+}
+
+function renderAlbumLogin(error = "", next = "/admin/photos", options = {}) {
+  const title = options.privateMode ? "私密相册登录" : "相册后台登录";
+  const subtitle = options.privateMode ? "登录后查看私密相册。" : "登录后进入图片管理和相册编辑。";
+  const action = options.privateMode ? "/album/private/login" : "/admin/login";
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${html(title)}</title>
+  <style>:root{--ink:#172526;--muted:#667675;--line:#dce7e2;--green:#2f7d67}*{box-sizing:border-box}body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;background:linear-gradient(135deg,#f8faf9,#edf5f1 48%,#faf3e6);color:var(--ink)}main{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:0 24px 70px rgba(24,42,38,.14)}h1{margin:0;font-size:28px}p{color:var(--muted);line-height:1.6}.mark{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:#e8f4ef;color:var(--green);font-weight:950;margin-bottom:16px}label{display:block;margin:14px 0 7px;font-weight:850;color:#445856}input{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px;font:inherit}button{width:100%;margin-top:18px;border:0;border-radius:9px;padding:12px;background:var(--green);color:#fff;font-weight:950;font:inherit}.error{padding:10px;border-radius:9px;background:#fff0ed;color:#b94a48;font-weight:850}</style></head>
+  <body><main><div class="mark">相</div><h1>${html(title)}</h1><p>${html(subtitle)}</p>${error ? `<div class="error">${html(error)}</div>` : ""}
+  <form method="post" action="${action}"><input type="hidden" name="next" value="${attr(next)}">${options.privateMode ? "" : `<label>账号<input name="username" value="xx" autocomplete="username"></label>`}<label>口令<input name="passcode" type="password" autocomplete="current-password" autofocus></label><button type="submit">进入</button></form></main></body></html>`;
+}
+
+function albumTagsText(item) {
+  if (Array.isArray(item.tags)) return item.tags.join(", ");
+  return String(item.tags || "").trim();
+}
+
+function albumSummary(content) {
+  const photos = Array.isArray(content.gallery) ? content.gallery : [];
+  return {
+    total: photos.length,
+    publicCount: photos.filter((item) => !item.private).length,
+    privateCount: photos.filter((item) => item.private).length,
+    albumCount: new Set(photos.map((item) => String(item.album || DEFAULT_ALBUM).trim() || DEFAULT_ALBUM)).size
+  };
+}
+
+function albumOptions(content, selected = "") {
+  const names = [...new Set((content.gallery || []).map((item) => String(item.album || DEFAULT_ALBUM).trim() || DEFAULT_ALBUM))].sort();
+  if (!names.length) names.push(DEFAULT_ALBUM);
+  return names.map((name) => `<option value="${attr(name)}"${name === selected ? " selected" : ""}>${html(name)}</option>`).join("");
+}
+
+function renderAlbumPhotosAdmin(content, user, message = "") {
+  const photos = Array.isArray(content.gallery) ? content.gallery : [];
+  const summary = albumSummary(content);
+  const cards = photos.map((item) => {
+    const source = item.src || "";
+    return `<article class="photo-card">
+      <label class="photo-thumb"><input type="checkbox" name="src" value="${attr(source)}" form="batch-delete-form" style="position:absolute;margin:8px;width:auto"><img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "相册图片")}"></label>
+      <form class="photo-body" method="post" action="/api/album/update-photo">
+        <input type="hidden" name="src" value="${attr(source)}">
+        <div class="photo-meta"><span class="chip ${item.private ? "gold" : ""}">${item.private ? "私密" : "公开"}</span>${item.cover ? `<span class="chip">封面</span>` : ""}<span>${html(item.album || DEFAULT_ALBUM)}</span></div>
+        <label>标题<input name="title" value="${attr(item.title || "")}"></label>
+        <label>描述<textarea name="caption" rows="2">${html(item.caption || item.description || "")}</textarea></label>
+        <label>标签<input name="tags" value="${attr(albumTagsText(item))}" placeholder="逗号分隔"></label>
+        <div class="grid-2">
+          <label>分类<input name="album" value="${attr(item.album || DEFAULT_ALBUM)}"></label>
+          <label>可见性<select name="private"><option value="0"${item.private ? "" : " selected"}>公开</option><option value="1"${item.private ? " selected" : ""}>私密</option></select></label>
+        </div>
+        <div class="toolbar"><button type="submit">保存</button><button class="ghost" name="cover" value="1" type="submit">设为封面</button><a class="btn ghost" href="${attr(source)}" target="_blank" rel="noopener">原图</a></div>
+      </form>
+    </article>`;
+  }).join("");
+  const body = `
+    ${message ? `<section class="panel"><strong>${html(message)}</strong></section>` : ""}
+    <section class="panel stats">
+      <div class="stat"><b>${summary.total}</b><span class="muted">全部图片</span></div>
+      <div class="stat"><b>${summary.publicCount}</b><span class="muted">公开</span></div>
+      <div class="stat"><b>${summary.privateCount}</b><span class="muted">私密</span></div>
+      <div class="stat"><b>${summary.albumCount}</b><span class="muted">相册分类</span></div>
+    </section>
+    <section class="panel"><div class="toolbar"><a class="btn" href="/admin/upload">上传图片</a><a class="btn ghost" href="/album/" target="_blank" rel="noopener">查看相册预览</a><a class="btn ghost" href="/album/private" target="_blank" rel="noopener">查看私密相册</a></div></section>
+    <section class="panel"><form id="batch-delete-form" method="post" action="/api/album/delete-photos" class="toolbar"><input name="confirm" placeholder="删除请填写 DELETE" style="max-width:220px"><button class="danger" type="submit"${albumCan(user, "delete") ? "" : " disabled"}>删除选中</button>${albumCan(user, "delete") ? "" : `<span class="muted">当前用户不能删除图片</span>`}</form></section>
+    <section class="photo-grid">${cards || `<div class="panel">还没有图片，先上传几张。</div>`}</section>`;
+  return albumAdminShell(user, "photos", "相册编辑", body);
+}
+
+function renderAlbumUploadAdmin(content, user) {
+  const body = `<section class="panel">
+    <form method="post" action="/api/album/upload" enctype="multipart/form-data">
+      <div class="grid-2">
+        <label>图片<input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" multiple required></label>
+        <label>分类<select name="albumName">${albumOptions(content)}</select></label>
+        <label>标题<input name="imageTitle" placeholder="可留空，默认用文件名"></label>
+        <label>标签<input name="imageTags" placeholder="逗号分隔"></label>
+      </div>
+      <label>描述<textarea name="imageCaption" rows="3"></textarea></label>
+      <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="privateAlbum" style="width:auto"> 上传到私密相册</label>
+      <button type="submit">上传</button>
+    </form>
+  </section>`;
+  return albumAdminShell(user, "upload", "上传图片", body);
+}
+
+function renderAlbumCategoriesAdmin(content, user) {
+  const albums = getAlbums(content).concat(getAlbums(content, { private: true }));
+  const rows = albums.map((album) => `<div class="log-row"><strong>${html(album.name)}</strong><div class="muted">${album.items.length} 张图片</div></div>`).join("");
+  return albumAdminShell(user, "categories", "相册分类", `<section class="panel"><p class="muted">分类来自图片的相册字段，可在相册编辑页直接调整。</p><div class="logs">${rows || "暂无分类"}</div></section>`);
+}
+
+function renderAlbumLogsAdmin(user, logs) {
+  const rows = logs.slice(0, 100).map((log) => `<div class="log-row"><strong>${html(log.action)}</strong><div>${html(log.detail)}</div><div class="muted">${html(log.at)} · ${html(log.user)} · ${html(log.ip)}</div></div>`).join("");
+  return albumAdminShell(user, "logs", "操作日志", `<section class="panel logs">${rows || "暂无日志"}</section>`);
+}
+
+function renderAlbumUsersAdmin(users, user) {
+  const rows = users.map((item) => `<div class="log-row"><strong>${html(item.username)}</strong><div class="muted">${html(item.role)} · ${item.enabled === false ? "已禁用" : "启用"} · last ${html(item.last_login_at || "never")}</div></div>`).join("");
+  return albumAdminShell(user, "users", "用户管理", `<section class="panel logs">${rows}</section>`);
+}
+
+function renderAlbumSettingsAdmin(content, user) {
+  const summary = albumSummary(content);
+  const body = `<section class="panel"><div class="stats"><div class="stat"><b>${summary.total}</b><span class="muted">图片</span></div><div class="stat"><b>${OBJECT_STORAGE_CONFIG.enabled ? "ON" : "OFF"}</b><span class="muted">对象存储</span></div><div class="stat"><b>${summary.privateCount}</b><span class="muted">私密图</span></div><div class="stat"><b>${summary.albumCount}</b><span class="muted">分类</span></div></div></section>`;
+  return albumAdminShell(user, "settings", "系统设置", body);
+}
+
+function renderAlbumBrowse(content, options = {}) {
+  const privateMode = options.private === true;
+  const albums = getAlbums(content, { private: privateMode });
+  const title = privateMode ? "私密相册" : "相册";
+  const sections = albums.map((album) => `<section class="album-public-section"><h2>${html(album.name)}</h2><div class="album-public-grid">${album.items.map((item) => `<figure><a href="${attr(item.src)}" target="_blank" rel="noopener"><img src="${attr(imagePreviewSrc(item))}" alt="${attr(item.title || "相册图片")}"></a><figcaption><strong>${html(item.title || "未命名图片")}</strong><span>${html(item.caption || item.description || "")}</span><a href="${attr(item.src)}" download>下载原图</a></figcaption></figure>`).join("")}</div></section>`).join("");
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${html(title)}</title>
+  <style>:root{--ink:#172526;--muted:#667675;--line:#dce7e2;--green:#2f7d67}*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;color:var(--ink);background:linear-gradient(135deg,#f8faf9,#eef5f1 48%,#faf3e6)}main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:34px 0 54px}.hero{display:flex;align-items:end;justify-content:space-between;gap:18px;padding-bottom:20px;border-bottom:1px solid var(--line)}h1{font-size:clamp(32px,5vw,54px);margin:0}.muted{color:var(--muted)}.btn{border-radius:9px;padding:10px 13px;background:#fff;border:1px solid var(--line);color:var(--green);font-weight:900;text-decoration:none}.album-public-section{margin-top:28px}.album-public-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:15px}figure{margin:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 18px 55px rgba(24,42,38,.08)}img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}figcaption{display:grid;gap:6px;padding:12px}figcaption span{color:var(--muted);font-size:13px;line-height:1.5}figcaption a{color:var(--green);font-weight:850;text-decoration:none}</style></head>
+  <body><main><section class="hero"><div><p class="muted">Claw Album</p><h1>${html(title)}</h1><p class="muted">${privateMode ? "登录后查看私密图片和下载原图。" : "公开图片浏览和原图下载。"}</p></div><a class="btn" href="/admin/photos">进入后台</a></section>${sections || `<section class="album-public-section"><p class="muted">暂无图片。</p></section>`}</main></body></html>`;
+}
+
+async function handleAlbumLogin(req, res, url) {
+  const next = safeNext(url.searchParams.get("next"), "/admin/photos", ["/admin", "/album"]);
+  if (req.method === "GET" || req.method === "HEAD") return send(res, 200, renderAlbumLogin("", next));
+  if (req.method !== "POST") return send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+  const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
+  const username = String(params.get("username") || "").trim();
+  const passcode = String(params.get("passcode") || "");
+  const user = await authenticateAlbumUser(username, passcode);
+  if (!user) return send(res, 401, renderAlbumLogin("账号或口令不对。", next));
+  setAlbumAdminCookie(res, user);
+  setCsrfCookie(res, csrfCookieValue());
+  await appendAlbumLog(req, user, "login", "album admin login");
+  return redirectTo(res, safeNext(params.get("next"), next, ["/admin", "/album"]));
+}
+
+async function handleAlbumPrivateLogin(req, res, url) {
+  const next = safeNext(url.searchParams.get("next"), "/album/private", ["/album"]);
+  if (req.method === "GET" || req.method === "HEAD") return send(res, 200, renderAlbumLogin("", next, { privateMode: true }));
+  if (req.method !== "POST") return send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
+  const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
+  if (String(params.get("passcode") || "") !== PRIVATE_GALLERY_PASS) {
+    return send(res, 401, renderAlbumLogin("口令不对。", next, { privateMode: true }));
+  }
+  setAlbumPrivateCookie(res);
+  setCsrfCookie(res, csrfCookieValue());
+  return redirectTo(res, safeNext(params.get("next"), next, ["/album"]));
+}
+
+async function handleAlbumUpload(req, res, user) {
+  if (!albumCan(user, "upload")) return send(res, 403, "Forbidden", "text/plain; charset=utf-8");
+  return handleMultipartPost(req, res, async (parts) => {
+    const getText = (name) => parts.find((part) => part.name === name)?.body.toString("utf8").trim() || "";
+    const images = await validateUploadedImages(parts);
+    const content = await readContent();
+    const title = getText("imageTitle");
+    const caption = getText("imageCaption");
+    const tags = normalizeImageTags(getText("imageTags"));
+    const album = getText("albumName") || DEFAULT_ALBUM;
+    const isPrivate = ["1", "on", "true", "yes"].includes(getText("privateAlbum").toLowerCase());
+    const targetDir = isPrivate ? PRIVATE_UPLOAD_DIR : UPLOAD_DIR;
+    const publicPath = isPrivate ? PRIVATE_UPLOAD_PATH : PUBLIC_UPLOAD_PATH;
+    const uploaded = [];
+    await ensureDirs();
+    for (let index = 0; index < images.length; index += 1) {
+      const image = images[index];
+      const safeBase = path.basename(image.filename, path.extname(image.filename)).replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 42) || "image";
+      const imageTitle = title || path.basename(image.filename, path.extname(image.filename)) || "相册图片";
+      const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeBase}${image.extension}`;
+      const targetPath = path.join(targetDir, filename);
+      await moveUploadedTempFile(image, targetPath);
+      await uploadObjectFromFile(`${publicPath}/${filename}`, targetPath, image.detectedType);
+      uploaded.push({ src: `${publicPath}/${filename}`, title: images.length === 1 ? imageTitle : `${imageTitle} ${index + 1}`, caption, tags, album, private: isPrivate, createdAt: new Date().toISOString() });
+    }
+    content.gallery = [...uploaded, ...(content.gallery || [])];
+    await saveContent(content);
+    await appendAlbumLog(req, user, "upload", `${uploaded.length} photos to ${album}`);
+    return redirectTo(res, "/admin/photos?msg=uploaded");
+  });
+}
+
+async function handleAlbumUpdatePhoto(req, res, user) {
+  if (!albumCan(user, "edit")) return send(res, 403, "Forbidden", "text/plain; charset=utf-8");
+  const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
+  const src = String(params.get("src") || "");
+  const content = await readContent();
+  const nextAlbum = String(params.get("album") || DEFAULT_ALBUM).trim() || DEFAULT_ALBUM;
+  const nextPrivate = params.get("private") === "1";
+  const setCover = params.get("cover") === "1";
+  let found = false;
+  content.gallery = (content.gallery || []).map((item) => {
+    if (item.src === src) {
+      found = true;
+      return {
+        ...item,
+        title: String(params.get("title") || "").trim(),
+        caption: String(params.get("caption") || "").trim(),
+        tags: normalizeImageTags(params.get("tags")),
+        album: nextAlbum,
+        private: nextPrivate,
+        cover: setCover ? true : item.cover === true,
+        updatedAt: new Date().toISOString()
+      };
+    }
+    if (setCover && String(item.album || DEFAULT_ALBUM) === nextAlbum && Boolean(item.private) === nextPrivate) {
+      return { ...item, cover: false };
+    }
+    return item;
+  });
+  if (!found) return send(res, 404, "Not found", "text/plain; charset=utf-8");
+  await saveContent(content);
+  await appendAlbumLog(req, user, setCover ? "set-cover" : "update-photo", src);
+  return redirectTo(res, "/admin/photos?msg=saved");
+}
+
+async function removeGalleryFileBySrc(src) {
+  if (src.startsWith(`${PUBLIC_UPLOAD_PATH}/`)) {
+    await fsp.rm(path.join(UPLOAD_DIR, path.basename(src)), { force: true });
+    await removeObject(src);
+  }
+  if (src.startsWith(`${PRIVATE_UPLOAD_PATH}/`)) {
+    await fsp.rm(path.join(PRIVATE_UPLOAD_DIR, path.basename(src)), { force: true });
+    await removeObject(src);
+  }
+  const info = thumbnailInfo(src);
+  if (info) {
+    await fsp.rm(info.thumbPath, { force: true });
+    await removeObject(info.thumbSrc);
+  }
+}
+
+async function handleAlbumDeletePhotos(req, res, user) {
+  if (!albumCan(user, "delete")) return send(res, 403, "Forbidden", "text/plain; charset=utf-8");
+  const params = new URLSearchParams((await parseBody(req)).toString("utf8"));
+  const srcs = params.getAll("src").filter(Boolean);
+  if (String(params.get("confirm") || "") !== "DELETE") return send(res, 400, "Delete confirmation required", "text/plain; charset=utf-8");
+  const content = await readContent();
+  const removeSet = new Set(srcs);
+  const removed = (content.gallery || []).filter((item) => removeSet.has(item.src));
+  content.gallery = (content.gallery || []).filter((item) => !removeSet.has(item.src));
+  for (const item of removed) await removeGalleryFileBySrc(item.src);
+  await saveContent(content);
+  await appendAlbumLog(req, user, "delete-photos", `${removed.length} photos`);
+  return redirectTo(res, "/admin/photos?msg=deleted");
+}
+
+async function routeAlbumSystem(req, res, url) {
+  if (url.pathname === "/health") return send(res, 200, "ok", "text/plain; charset=utf-8");
+  if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === PUBLIC_UPLOAD_PATH || url.pathname.startsWith(`${PUBLIC_UPLOAD_PATH}/`))) {
+    return serveStaticFromPrefix(req, res, url.pathname, PUBLIC_UPLOAD_PATH, UPLOAD_DIR, { cacheControl: "public, max-age=604800", objectFallback: true });
+  }
+  if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === PUBLIC_THUMB_PATH || url.pathname.startsWith(`${PUBLIC_THUMB_PATH}/`))) {
+    return serveStaticFromPrefix(req, res, url.pathname, PUBLIC_THUMB_PATH, PUBLIC_THUMB_DIR, { cacheControl: "public, max-age=604800", objectFallback: true });
+  }
+  if (url.pathname === PRIVATE_GALLERY_PATH || url.pathname.startsWith(`${PRIVATE_GALLERY_PATH}/`)) {
+    return redirectTo(res, "/album/private");
+  }
+  if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === PRIVATE_UPLOAD_PATH || url.pathname.startsWith(`${PRIVATE_UPLOAD_PATH}/`))) {
+    if (!validAlbumPrivateSession(req)) return redirectTo(res, "/album/private/login?next=%2Falbum%2Fprivate");
+    return serveStaticFromPrefix(req, res, url.pathname, PRIVATE_UPLOAD_PATH, PRIVATE_UPLOAD_DIR, { objectFallback: true });
+  }
+  if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === PRIVATE_THUMB_PATH || url.pathname.startsWith(`${PRIVATE_THUMB_PATH}/`))) {
+    if (!validAlbumPrivateSession(req)) return redirectTo(res, "/album/private/login?next=%2Falbum%2Fprivate");
+    return serveStaticFromPrefix(req, res, url.pathname, PRIVATE_THUMB_PATH, PRIVATE_THUMB_DIR, { objectFallback: true });
+  }
+  if (url.pathname === "/" || url.pathname === "/admin" || url.pathname === "/admin/") {
+    return albumUserFromSession(req) ? redirectTo(res, "/admin/photos") : albumLoginRedirect(res, "/admin/photos");
+  }
+  if (url.pathname === "/admin/login") return handleAlbumLogin(req, res, url);
+  if (url.pathname === "/admin/logout") {
+    const user = albumUserFromSession(req);
+    if (user) await appendAlbumLog(req, user, "logout", "album admin logout");
+    clearAlbumAdminCookie(res);
+    clearCsrfCookie(res);
+    return redirectTo(res, "/admin/login");
+  }
+  if (url.pathname === "/album/private/login") return handleAlbumPrivateLogin(req, res, url);
+  if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/album/") {
+    const content = await readContent();
+    return send(res, 200, renderAlbumBrowse(content));
+  }
+  if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === "/album/private" || url.pathname === "/album/private/")) {
+    if (!validAlbumPrivateSession(req)) return redirectTo(res, "/album/private/login?next=%2Falbum%2Fprivate");
+    const content = await readContent();
+    return send(res, 200, renderAlbumBrowse(content, { private: true }));
+  }
+  if (url.pathname.startsWith("/admin/")) {
+    const user = albumRequireAdmin(req, res, url);
+    if (!user) return;
+    const content = await readContent();
+    const message = url.searchParams.get("msg") || "";
+    if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/admin/photos") {
+      return sendProtectedHtml(req, res, 200, renderAlbumPhotosAdmin(content, user, message));
+    }
+    if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/admin/upload") {
+      return sendProtectedHtml(req, res, 200, renderAlbumUploadAdmin(content, user));
+    }
+    if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/admin/categories") {
+      return sendProtectedHtml(req, res, 200, renderAlbumCategoriesAdmin(content, user));
+    }
+    if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/admin/preview") {
+      return redirectTo(res, "/album/");
+    }
+    if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/admin/logs") {
+      return sendProtectedHtml(req, res, 200, renderAlbumLogsAdmin(user, await readAlbumLogs()));
+    }
+    if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/admin/users") {
+      if (user.role !== "admin") return send(res, 403, "Forbidden", "text/plain; charset=utf-8");
+      return sendProtectedHtml(req, res, 200, renderAlbumUsersAdmin(await readAlbumUsers(), user));
+    }
+    if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/admin/settings") {
+      if (user.role !== "admin") return send(res, 403, "Forbidden", "text/plain; charset=utf-8");
+      return sendProtectedHtml(req, res, 200, renderAlbumSettingsAdmin(content, user));
+    }
+    return send(res, 404, "Not found", "text/plain; charset=utf-8");
+  }
+  if (url.pathname.startsWith("/api/album/")) {
+    const user = albumRequireAdmin(req, res, url);
+    if (!user) return;
+    if (req.method === "POST" && url.pathname === "/api/album/upload") return queueContentMutation(() => handleAlbumUpload(req, res, user));
+    if (req.method === "POST" && !(await verifyCsrfRequest(req, res, url))) return;
+    if (req.method === "POST" && url.pathname === "/api/album/update-photo") return queueContentMutation(() => handleAlbumUpdatePhoto(req, res, user));
+    if (req.method === "POST" && url.pathname === "/api/album/delete-photos") return queueContentMutation(() => handleAlbumDeletePhotos(req, res, user));
+    return send(res, 404, "Not found", "text/plain; charset=utf-8");
+  }
+  if (url.pathname.startsWith(WORK_PATH) || url.pathname.startsWith(BASE_PATH) || url.pathname.includes("review") || url.pathname.includes("subscribe")) {
+    return send(res, 404, "Not found", "text/plain; charset=utf-8");
+  }
+  return send(res, 404, "Not found", "text/plain; charset=utf-8");
+}
+
 function smtpReady() {
   return Boolean(nodemailer && SMTP_CONFIG.host && SMTP_CONFIG.user && SMTP_CONFIG.pass && SMTP_CONFIG.to);
 }
@@ -8465,6 +8980,7 @@ async function handleSendReminder(req, res) {
 
 async function route(req, res) {
   const url = new URL(req.url, "http://localhost");
+  if (isClawHost(req)) return routeAlbumSystem(req, res, url);
   if (url.pathname === "/health") return send(res, 200, "ok", "text/plain; charset=utf-8");
   if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === "/assets" || url.pathname.startsWith("/assets/"))) {
     return serveStaticFromPrefix(req, res, url.pathname, "/assets", ASSETS_DIR, { cacheControl: "public, max-age=604800, immutable" });
