@@ -8,6 +8,7 @@ const { execFile } = require("child_process");
 let nodemailer = null;
 let mssql = null;
 let Busboy = null;
+let Minio = null;
 try {
   nodemailer = require("nodemailer");
 } catch {
@@ -22,6 +23,11 @@ try {
   Busboy = require("busboy");
 } catch {
   Busboy = null;
+}
+try {
+  Minio = require("minio");
+} catch {
+  Minio = null;
 }
 
 const PORT = Number(process.env.PORT || 5710);
@@ -51,6 +57,16 @@ const BACKUP_KEEP = Number(process.env.BACKUP_KEEP || 30);
 const MAX_UPLOAD_BYTES = Number(process.env.MAX_UPLOAD_BYTES || 20 * 1024 * 1024);
 const MAX_UPLOAD_TOTAL_BYTES = Number(process.env.MAX_UPLOAD_TOTAL_BYTES || MAX_UPLOAD_BYTES * 12);
 const THUMB_WIDTH = Number(process.env.THUMB_WIDTH || 900);
+const OBJECT_STORAGE_CONFIG = {
+  enabled: ["1", "true", "yes", "on"].includes(String(process.env.OBJECT_STORAGE_ENABLED || "").toLowerCase()),
+  endPoint: process.env.OBJECT_STORAGE_ENDPOINT || process.env.S3_ENDPOINT || "",
+  port: Number(process.env.OBJECT_STORAGE_PORT || process.env.S3_PORT || 443),
+  useSSL: String(process.env.OBJECT_STORAGE_USE_SSL || process.env.S3_USE_SSL || "true") !== "false",
+  accessKey: process.env.OBJECT_STORAGE_ACCESS_KEY || process.env.S3_ACCESS_KEY || "",
+  secretKey: process.env.OBJECT_STORAGE_SECRET_KEY || process.env.S3_SECRET_KEY || "",
+  bucket: process.env.OBJECT_STORAGE_BUCKET || process.env.S3_BUCKET || "xx520-admin",
+  region: process.env.OBJECT_STORAGE_REGION || process.env.S3_REGION || "us-east-1"
+};
 const DEFAULT_ALBUM = "默认相册";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const LOGIN_ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
@@ -469,8 +485,14 @@ function injectCsrfFields(body, token) {
 }
 
 function safeNext(value, fallback, prefixes) {
-  const next = String(value || "").trim();
+  let next = String(value || "").trim();
   if (!next.startsWith("/") || next.startsWith("//")) return fallback;
+  for (const prefix of prefixes) {
+    const duplicatedPrefix = `${prefix}${prefix}`;
+    if (next === duplicatedPrefix || next.startsWith(`${duplicatedPrefix}/`)) {
+      next = `${prefix}${next.slice(duplicatedPrefix.length) || "/"}`;
+    }
+  }
   return prefixes.some((prefix) => next === prefix || next.startsWith(`${prefix}/`)) ? next : fallback;
 }
 
@@ -2024,6 +2046,7 @@ async function ensureThumbnails(content) {
       if (!(await pathExists(info.thumbPath))) {
         await createThumbnail(info.sourcePath, info.thumbPath);
       }
+      await uploadObjectFromFile(info.thumbSrc, info.thumbPath, "image/jpeg");
     } catch (error) {
       console.error("thumbnail generation failed", item.src, error.message || error);
       item.thumb = item.src;
@@ -6369,6 +6392,111 @@ function mimeType(filePath) {
   }[extension] || "application/octet-stream";
 }
 
+let objectStorageClient = null;
+
+function objectStorageReady() {
+  return Boolean(
+    Minio
+    && OBJECT_STORAGE_CONFIG.enabled
+    && OBJECT_STORAGE_CONFIG.endPoint
+    && OBJECT_STORAGE_CONFIG.accessKey
+    && OBJECT_STORAGE_CONFIG.secretKey
+    && OBJECT_STORAGE_CONFIG.bucket
+  );
+}
+
+function getObjectStorageClient() {
+  if (!objectStorageReady()) return null;
+  if (!objectStorageClient) {
+    objectStorageClient = new Minio.Client({
+      endPoint: OBJECT_STORAGE_CONFIG.endPoint,
+      port: OBJECT_STORAGE_CONFIG.port,
+      useSSL: OBJECT_STORAGE_CONFIG.useSSL,
+      accessKey: OBJECT_STORAGE_CONFIG.accessKey,
+      secretKey: OBJECT_STORAGE_CONFIG.secretKey,
+      region: OBJECT_STORAGE_CONFIG.region,
+      pathStyle: true
+    });
+  }
+  return objectStorageClient;
+}
+
+function objectKeyFromPublicPath(publicPath) {
+  return String(publicPath || "").replace(/^\/+/, "").replace(/\\/g, "/");
+}
+
+async function uploadObjectFromFile(publicPath, filePath, contentType = "") {
+  const client = getObjectStorageClient();
+  if (!client) return false;
+  const key = objectKeyFromPublicPath(publicPath);
+  if (!key) return false;
+  try {
+    await client.fPutObject(
+      OBJECT_STORAGE_CONFIG.bucket,
+      key,
+      filePath,
+      contentType ? { "Content-Type": contentType } : {}
+    );
+    return true;
+  } catch (error) {
+    console.error("object storage upload failed", key, error.message || error);
+    return false;
+  }
+}
+
+async function removeObject(publicPath) {
+  const client = getObjectStorageClient();
+  if (!client) return false;
+  const key = objectKeyFromPublicPath(publicPath);
+  if (!key) return false;
+  try {
+    await client.removeObject(OBJECT_STORAGE_CONFIG.bucket, key);
+    return true;
+  } catch (error) {
+    if (error && ["NoSuchKey", "NotFound"].includes(error.code)) return false;
+    console.error("object storage delete failed", key, error.message || error);
+    return false;
+  }
+}
+
+async function serveObjectFromStorage(req, res, publicPath, options = {}) {
+  const client = getObjectStorageClient();
+  if (!client) return false;
+  const key = objectKeyFromPublicPath(publicPath);
+  if (!key) return false;
+  try {
+    const stat = await client.statObject(OBJECT_STORAGE_CONFIG.bucket, key);
+    const contentType = (stat.metaData && (stat.metaData["content-type"] || stat.metaData["Content-Type"]))
+      || mimeType(key);
+    res.writeHead(200, {
+      "Content-Type": contentType,
+      "Content-Length": stat.size,
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Referrer-Policy": "same-origin",
+      "Strict-Transport-Security": "max-age=31536000",
+      "Cache-Control": options.cacheControl || "private, max-age=86400"
+    });
+    if (req.method === "HEAD") {
+      res.end();
+      return true;
+    }
+    const objectStream = await client.getObject(OBJECT_STORAGE_CONFIG.bucket, key);
+    objectStream.on("error", (error) => {
+      console.error("object storage stream failed", key, error.message || error);
+      if (!res.headersSent) res.writeHead(502);
+      res.end();
+    });
+    objectStream.pipe(res);
+    return true;
+  } catch (error) {
+    if (!["NoSuchKey", "NotFound"].includes(error.code)) {
+      console.error("object storage read failed", key, error.message || error);
+    }
+    return false;
+  }
+}
+
 async function serveStaticFromPrefix(req, res, urlPath, prefix, rootDir, options = {}) {
   let relative = "";
   try {
@@ -6401,7 +6529,10 @@ async function serveStaticFromPrefix(req, res, urlPath, prefix, rootDir, options
     if (req.method === "HEAD") return res.end();
     fs.createReadStream(target).pipe(res);
   } catch (error) {
-    if (error.code === "ENOENT") return send(res, 404, "Not found", "text/plain; charset=utf-8");
+    if (error.code === "ENOENT") {
+      if (options.objectFallback && await serveObjectFromStorage(req, res, urlPath, options)) return;
+      return send(res, 404, "Not found", "text/plain; charset=utf-8");
+    }
     throw error;
   }
 }
@@ -6809,7 +6940,10 @@ async function handleCustomLogin(req, res, url, scope) {
     return send(res, 429, renderLoginPage(loginOptions(scope, loginNextFromUrl, "Too many failed attempts. Try again in 10 minutes.")));
   }
   const loginParams = new URLSearchParams((await parseBody(req)).toString("utf8"));
-  const loginNext = safeNext(loginParams.get("next"), loginNextFromUrl, loginProfile.prefixes);
+  let loginNext = safeNext(loginParams.get("next"), loginNextFromUrl, loginProfile.prefixes);
+  if (loginNext === loginProfile.login || loginNext.startsWith(`${loginProfile.login}?`)) {
+    loginNext = loginProfile.home;
+  }
   const loginUser = String(loginParams.get("username") || "").trim();
   const loginPass = String(loginParams.get("password") || "");
   if (!loginProfile.validate(loginUser, loginPass)) {
@@ -6843,10 +6977,10 @@ async function handlePrivateGallery(req, res, url) {
   if (url.pathname === `${PRIVATE_GALLERY_PATH}/logout`) return handleCustomLogout(res, "album");
   if (!ensureAuthed(req, res, url, "album")) return;
   if (url.pathname === PRIVATE_UPLOAD_PATH || url.pathname.startsWith(`${PRIVATE_UPLOAD_PATH}/`)) {
-    return serveStaticFromPrefix(req, res, url.pathname, PRIVATE_UPLOAD_PATH, PRIVATE_UPLOAD_DIR);
+    return serveStaticFromPrefix(req, res, url.pathname, PRIVATE_UPLOAD_PATH, PRIVATE_UPLOAD_DIR, { objectFallback: true });
   }
   if (url.pathname === PRIVATE_THUMB_PATH || url.pathname.startsWith(`${PRIVATE_THUMB_PATH}/`)) {
-    return serveStaticFromPrefix(req, res, url.pathname, PRIVATE_THUMB_PATH, PRIVATE_THUMB_DIR);
+    return serveStaticFromPrefix(req, res, url.pathname, PRIVATE_THUMB_PATH, PRIVATE_THUMB_DIR, { objectFallback: true });
   }
   if (req.method !== "GET" && req.method !== "HEAD") {
     return send(res, 405, "Method not allowed", "text/plain; charset=utf-8");
@@ -7095,7 +7229,9 @@ async function handleUpload(req, res) {
     const safeBase = path.basename(image.filename, path.extname(image.filename)).replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 42) || "image";
     const imageTitle = title || path.basename(image.filename, path.extname(image.filename)) || "相册图片";
     const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeBase}${extension}`;
-    await moveUploadedTempFile(image, path.join(targetDir, filename));
+    const targetPath = path.join(targetDir, filename);
+    await moveUploadedTempFile(image, targetPath);
+    await uploadObjectFromFile(`${publicPath}/${filename}`, targetPath, image.detectedType);
     uploaded.push({
       src: `${publicPath}/${filename}`,
       title: images.length === 1 ? imageTitle : `${imageTitle} ${i + 1}`,
@@ -7142,7 +7278,9 @@ async function handleUploadLabImage(req, res, redirectBase = WORK_PATH) {
     const extension = image.extension;
     const safeBase = path.basename(image.filename, path.extname(image.filename)).replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 42) || "lab-image";
     const filename = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}-${safeBase}${extension}`;
-    await moveUploadedTempFile(image, path.join(WORK_UPLOAD_DIR, filename));
+    const targetPath = path.join(WORK_UPLOAD_DIR, filename);
+    await moveUploadedTempFile(image, targetPath);
+    await uploadObjectFromFile(`${WORK_FILE_PATH}/${filename}`, targetPath, image.detectedType);
     const baseTitle = title || path.basename(image.filename, path.extname(image.filename)) || labImageKindLabel(kind);
     uploaded.push({
       src: `${WORK_FILE_PATH}/${filename}`,
@@ -7226,6 +7364,7 @@ async function handleDeleteLabImage(req, res, redirectBase = WORK_PATH) {
   }
   if (removed && src.startsWith(`${WORK_FILE_PATH}/`)) {
     await fsp.rm(path.join(WORK_UPLOAD_DIR, path.basename(src)), { force: true });
+    await removeObject(src);
   }
   await saveContent(content, { skipSite: true });
   if (targetType === "block") {
@@ -7299,13 +7438,18 @@ async function handleDeleteImage(req, res) {
   content.gallery = content.gallery.filter((item) => item.src !== src);
   if (src.startsWith(`${PUBLIC_UPLOAD_PATH}/`)) {
     await fsp.rm(path.join(UPLOAD_DIR, path.basename(src)), { force: true });
+    await removeObject(src);
   }
   if (src.startsWith(`${PRIVATE_UPLOAD_PATH}/`)) {
     await fsp.rm(path.join(PRIVATE_UPLOAD_DIR, path.basename(src)), { force: true });
+    await removeObject(src);
   }
   for (const item of removed) {
     const info = thumbnailInfo(item.src);
-    if (info) await fsp.rm(info.thumbPath, { force: true });
+    if (info) {
+      await fsp.rm(info.thumbPath, { force: true });
+      await removeObject(info.thumbSrc);
+    }
   }
   await saveContent(content);
   redirect(res, "图片已删除");
@@ -8325,6 +8469,12 @@ async function route(req, res) {
   if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === "/assets" || url.pathname.startsWith("/assets/"))) {
     return serveStaticFromPrefix(req, res, url.pathname, "/assets", ASSETS_DIR, { cacheControl: "public, max-age=604800, immutable" });
   }
+  if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === PUBLIC_UPLOAD_PATH || url.pathname.startsWith(`${PUBLIC_UPLOAD_PATH}/`))) {
+    return serveStaticFromPrefix(req, res, url.pathname, PUBLIC_UPLOAD_PATH, UPLOAD_DIR, { cacheControl: "public, max-age=604800", objectFallback: true });
+  }
+  if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === PUBLIC_THUMB_PATH || url.pathname.startsWith(`${PUBLIC_THUMB_PATH}/`))) {
+    return serveStaticFromPrefix(req, res, url.pathname, PUBLIC_THUMB_PATH, PUBLIC_THUMB_DIR, { cacheControl: "public, max-age=604800", objectFallback: true });
+  }
   if (isPrivatePath(url.pathname)) return handlePrivateGallery(req, res, url);
   if (url.pathname === BASE_PATH) {
     res.writeHead(308, { Location: `${BASE_PATH}/` });
@@ -8345,7 +8495,7 @@ async function route(req, res) {
     }
     if (!ensureAuthed(req, res, url, "work")) return;
     if ((req.method === "GET" || req.method === "HEAD") && isWorkFileRequest) {
-      return serveStaticFromPrefix(req, res, url.pathname, WORK_FILE_PATH, WORK_UPLOAD_DIR);
+      return serveStaticFromPrefix(req, res, url.pathname, WORK_FILE_PATH, WORK_UPLOAD_DIR, { objectFallback: true });
     }
     if ((req.method === "GET" || req.method === "HEAD") && url.pathname === `${WORK_PATH}/`) {
       const content = await readContent();

@@ -27,3 +27,5 @@ data/content.json.bak*
 
 # Local GitHub deploy keys, if ever stored near the project by mistake
 .ssh/
+
+.npm/
