@@ -6442,11 +6442,13 @@ async function parseMultipart(buffer, contentType, options = {}) {
     parser.on("fieldsLimit", () => fail(Object.assign(new Error("too many fields"), { statusCode: 413 })));
     parser.on("partsLimit", () => fail(Object.assign(new Error("too many multipart parts"), { statusCode: 413 })));
     parser.on("error", (error) => fail(Object.assign(error, { statusCode: 400 })));
-    parser.on("finish", () => {
+    const complete = () => {
       if (settled) return;
       settled = true;
       resolve(parts);
-    });
+    };
+    parser.on("finish", complete);
+    parser.on("close", complete);
     parser.end(buffer);
   });
 }
@@ -6840,7 +6842,7 @@ async function parseMultipartStream(req, options = {}) {
     parser.on("fieldsLimit", () => rejectWithCleanup(Object.assign(new Error("too many fields"), { statusCode: 413 })));
     parser.on("partsLimit", () => rejectWithCleanup(Object.assign(new Error("too many multipart parts"), { statusCode: 413 })));
     parser.on("error", (error) => rejectWithCleanup(Object.assign(error, { statusCode: 400 })));
-    parser.on("finish", () => {
+    const complete = () => {
       if (settled) return;
       Promise.all(fileTasks)
         .then(() => {
@@ -6848,7 +6850,9 @@ async function parseMultipartStream(req, options = {}) {
           resolve(parts);
         })
         .catch((error) => rejectWithCleanup(Object.assign(error, { statusCode: 400 })));
-    });
+    };
+    parser.on("finish", complete);
+    parser.on("close", complete);
     req.pipe(parser);
   });
 }
@@ -7263,17 +7267,96 @@ function renderAlbumPhotosAdmin(content, user, message = "") {
 
 function renderAlbumUploadAdmin(content, user) {
   const body = `<section class="panel">
-    <form method="post" action="/api/album/upload" enctype="multipart/form-data">
+    <form id="album-upload-form" method="post" action="/api/album/upload" enctype="multipart/form-data">
       <div class="grid-2">
-        <label>图片<input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" multiple required></label>
+        <label>图片<input id="album-upload-files" type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" multiple required></label>
         <label>分类<select name="albumName">${albumOptions(content)}</select></label>
+        <label>新建相册<input name="albumNameNew" placeholder="填写后会自动创建并归入该分类"></label>
         <label>标题<input name="imageTitle" placeholder="可留空，默认用文件名"></label>
         <label>标签<input name="imageTags" placeholder="逗号分隔"></label>
       </div>
       <label>描述<textarea name="imageCaption" rows="3"></textarea></label>
       <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="privateAlbum" style="width:auto"> 上传到私密相册</label>
-      <button type="submit">上传</button>
+      <div id="album-upload-feedback" class="muted" style="margin:10px 0">支持 JPG、PNG、WebP、GIF，单张最多 ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB。</div>
+      <div style="height:10px;background:#e8f0ed;border-radius:999px;overflow:hidden;margin:10px 0"><div id="album-upload-progress" style="height:100%;width:0;background:var(--green);transition:width .2s"></div></div>
+      <button id="album-upload-submit" type="submit">上传</button>
     </form>
+    <script>
+      (() => {
+        const form = document.getElementById("album-upload-form");
+        const filesInput = document.getElementById("album-upload-files");
+        const feedback = document.getElementById("album-upload-feedback");
+        const progress = document.getElementById("album-upload-progress");
+        const submit = document.getElementById("album-upload-submit");
+        const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+        const allowedExts = /\\.(jpe?g|png|webp|gif)$/i;
+        const maxFileSize = ${MAX_UPLOAD_BYTES};
+        const maxTotalSize = ${MAX_UPLOAD_TOTAL_BYTES};
+        function setMessage(text, danger = false) {
+          feedback.textContent = text;
+          feedback.style.color = danger ? "var(--red)" : "var(--muted)";
+        }
+        function validateFiles() {
+          const files = Array.from(filesInput.files || []);
+          if (!files.length) return "请选择要上传的图片。";
+          let total = 0;
+          for (const file of files) {
+            total += file.size || 0;
+            if (!allowedTypes.has(file.type) && !allowedExts.test(file.name || "")) return "只支持 JPG、PNG、WebP、GIF 图片。";
+            if (file.size > maxFileSize) return file.name + " 超过单张大小限制。";
+          }
+          if (total > maxTotalSize) return "本次选择的图片总大小过大，请分批上传。";
+          return "";
+        }
+        filesInput.addEventListener("change", () => {
+          const error = validateFiles();
+          if (error) {
+            progress.style.width = "0";
+            setMessage(error, true);
+            return;
+          }
+          const files = Array.from(filesInput.files || []);
+          const totalMb = files.reduce((sum, file) => sum + (file.size || 0), 0) / 1024 / 1024;
+          setMessage("已选择 " + files.length + " 张，合计 " + totalMb.toFixed(1) + " MB。");
+        });
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          const error = validateFiles();
+          if (error) {
+            setMessage(error, true);
+            return;
+          }
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", form.action);
+          xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+          xhr.upload.addEventListener("progress", (event) => {
+            if (!event.lengthComputable) return;
+            const percent = Math.max(1, Math.min(100, Math.round(event.loaded / event.total * 100)));
+            progress.style.width = percent + "%";
+            setMessage("正在上传 " + percent + "%");
+          });
+          xhr.addEventListener("load", () => {
+            if (xhr.status >= 200 && xhr.status < 400) {
+              progress.style.width = "100%";
+              setMessage("上传完成，正在返回相册编辑。");
+              window.location.href = "/admin/photos?msg=uploaded";
+              return;
+            }
+            progress.style.width = "0";
+            setMessage(xhr.responseText || "上传失败，请稍后重试。", true);
+            submit.disabled = false;
+          });
+          xhr.addEventListener("error", () => {
+            progress.style.width = "0";
+            setMessage("网络中断，上传失败。", true);
+            submit.disabled = false;
+          });
+          submit.disabled = true;
+          setMessage("开始上传...");
+          xhr.send(new FormData(form));
+        });
+      })();
+    </script>
   </section>`;
   return albumAdminShell(user, "upload", "上传图片", body);
 }
@@ -7347,7 +7430,7 @@ async function handleAlbumUpload(req, res, user) {
     const title = getText("imageTitle");
     const caption = getText("imageCaption");
     const tags = normalizeImageTags(getText("imageTags"));
-    const album = getText("albumName") || DEFAULT_ALBUM;
+    const album = getText("albumNameNew") || getText("albumName") || DEFAULT_ALBUM;
     const isPrivate = ["1", "on", "true", "yes"].includes(getText("privateAlbum").toLowerCase());
     const targetDir = isPrivate ? PRIVATE_UPLOAD_DIR : UPLOAD_DIR;
     const publicPath = isPrivate ? PRIVATE_UPLOAD_PATH : PUBLIC_UPLOAD_PATH;
@@ -7454,7 +7537,11 @@ async function routeAlbumSystem(req, res, url) {
     if (!validAlbumPrivateSession(req)) return redirectTo(res, "/album/private/login?next=%2Falbum%2Fprivate");
     return serveStaticFromPrefix(req, res, url.pathname, PRIVATE_THUMB_PATH, PRIVATE_THUMB_DIR, { objectFallback: true });
   }
-  if (url.pathname === "/" || url.pathname === "/admin" || url.pathname === "/admin/") {
+  if ((req.method === "GET" || req.method === "HEAD") && url.pathname === "/") {
+    const content = await readContent();
+    return send(res, 200, renderAlbumBrowse(content));
+  }
+  if (url.pathname === "/admin" || url.pathname === "/admin/") {
     return albumUserFromSession(req) ? redirectTo(res, "/admin/photos") : albumLoginRedirect(res, "/admin/photos");
   }
   if (url.pathname === "/admin/login") return handleAlbumLogin(req, res, url);
